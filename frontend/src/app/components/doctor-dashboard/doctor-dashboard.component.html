@@ -1,0 +1,331 @@
+<div class="dashboard-container">
+    <!-- Glassmorphic Header -->
+    <nav class="navbar glass-header py-3 mb-5">
+        <div class="container-fluid px-4 px-lg-5">
+            <a class="navbar-brand d-flex align-items-center" routerLink="/doctor-dashboard">
+                <i class="bi bi-heart-pulse text-primary me-2 fs-4"></i>
+                <span class="fs-4 brand-title">MedTrack<span class="fw-light text-secondary">Plus</span></span>
+            </a>
+
+            <div class="d-flex align-items-center">
+                <button class="btn btn-light rounded-circle shadow-sm border" (click)="logout()" title="Logout">
+                    <i class="bi bi-box-arrow-right text-danger"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container px-4 px-lg-5">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-6 fw-bold mb-3">Welcome to your Workspace</h1>
+                <p class="lead text-muted mx-auto" style="max-width: 600px;">
+                    Manage patient care with precision. Issue prescriptions, view records, and track appointments
+                    securely.
+                </p>
+            </div>
+        </div>
+
+        <!-- Renewal Requests Section -->
+        <div class="row mb-5" *ngIf="renewalRequests.length > 0">
+            <div class="col-12">
+                <div class="card apollo-card border-0 mb-4 h-100">
+                    <div
+                        class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold text-dark m-0">
+                            <i class="bi bi-arrow-repeat me-2 text-warning"></i>Renewal Requests
+                        </h5>
+                        <span class="badge bg-warning text-dark rounded-pill">{{renewalRequests.length}} New</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4 py-3 border-bottom">Patient</th>
+                                        <th class="py-3 border-bottom">Prescription</th>
+                                        <th class="py-3 border-bottom">Original Date</th>
+                                        <th class="pe-4 py-3 border-bottom text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let req of renewalRequests">
+                                        <td class="ps-4 py-3 font-weight-bold">
+                                            {{ req.prescription?.patient?.fullName || 'Patient' }}
+                                        </td>
+                                        <td class="py-3">
+                                            <span *ngFor="let item of req.prescription?.items; let last = last">
+                                                {{item.medicineName}} ({{item.dosage}}) {{!last ? ', ' : ''}}
+                                            </span>
+                                        </td>
+                                        <td class="py-3 text-muted small">{{ req.prescription?.createdAt |
+                                            date:'mediumDate' }}</td>
+                                        <td class="pe-4 py-3 text-end">
+                                            <button class="btn btn-sm btn-success rounded-pill me-2"
+                                                (click)="approveRenewal(req.id)">
+                                                Approve
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger rounded-pill"
+                                                (click)="denyRenewal(req.id)">
+                                                Deny
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointment Requests Section -->
+        <div class="row mb-5" *ngIf="appointments.length > 0">
+            <div class="col-12">
+                <div class="card apollo-card border-0 mb-4 h-100">
+                    <div
+                        class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold text-dark m-0">
+                            <i class="bi bi-calendar-event me-2 text-primary"></i>Appointment Requests
+                        </h5>
+                        <span class="badge bg-primary rounded-pill">{{appointments.length}} New</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4 py-3 border-bottom">Patient</th>
+                                        <th class="py-3 border-bottom">Date Preferred</th>
+                                        <th class="py-3 border-bottom">Reason</th>
+                                        <th class="pe-4 py-3 border-bottom text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let appt of appointments">
+                                        <td class="ps-4 py-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle bg-primary-subtle text-primary me-3 small fw-bold d-flex align-items-center justify-content-center"
+                                                    style="width: 32px; height: 32px; border-radius: 50%;">{{
+                                                    appt.patient?.fullName?.charAt(0) || 'P' }}</div>
+                                                <div class="fw-bold">{{ appt.patient?.fullName }}</div>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">{{ appt.appointmentDate | date:'medium' }}</td>
+                                        <td class="py-3 text-muted small">{{ appt.notes || 'No notes provided' }}</td>
+                                        <td class="pe-4 py-3 text-end">
+                                            <button class="btn btn-sm btn-success rounded-pill me-2"
+                                                (click)="approveAppointment(appt.id)">
+                                                <i class="bi bi-check-lg me-1"></i> Approve
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger rounded-pill"
+                                                (click)="rejectAppointment(appt.id)">
+                                                <i class="bi bi-x-lg me-1"></i> Reject
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drafts Section -->
+        <div class="row mb-5" *ngIf="draftPrescriptions.length > 0">
+            <div class="col-12">
+                <div class="d-flex align-items-center mb-3">
+                    <h5 class="fw-bold text-secondary mb-0 me-2">Drafts</h5>
+                    <span class="badge bg-warning text-dark">{{draftPrescriptions.length}}</span>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4 col-lg-3" *ngFor="let draft of draftPrescriptions">
+                        <div class="apollo-card p-3 h-100 position-relative border-warning border-start border-4">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span
+                                    class="badge bg-warning-subtle text-warning border border-warning-subtle">DRAFT</span>
+                                <small class="text-muted">{{draft.createdAt | date:'MMM d, h:mm a'}}</small>
+                            </div>
+                            <h6 class="fw-bold mb-1">{{draft.patient?.fullName || draft.patientEmail}}</h6>
+                            <p class="small text-muted mb-3">{{draft.items?.length || 0}} items</p>
+                            <a [routerLink]="['/prescription']" [queryParams]="{id: draft.id}"
+                                class="btn btn-sm btn-outline-dark w-100 stretched-link">
+                                <i class="bi bi-pencil-square me-1"></i> Continue Editing
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issued Prescriptions Timeline Section -->
+        <div class="row mb-5" *ngIf="issuedPrescriptions.length > 0">
+            <div class="col-12">
+                <div class="card apollo-card border-0 mb-4 h-100">
+                    <div
+                        class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold text-dark m-0">
+                            <i class="bi bi-clock-history me-2 text-primary"></i>Active Prescription Journey
+                        </h5>
+                        <span class="badge bg-primary rounded-pill">{{issuedPrescriptions.length}} Total</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <tbody>
+                                    <tr *ngFor="let rx of issuedPrescriptions">
+                                        <td class="ps-3 py-3 w-25">
+                                            <div class="fw-bold">{{ rx.patient?.fullName || rx.patientEmail }}</div>
+                                            <div class="small text-muted">{{ rx.createdAt | date:'MMM d, yyyy' }}</div>
+                                        </td>
+                                        <td class="py-3 w-50">
+                                            <div
+                                                class="d-flex align-items-center justify-content-between position-relative w-100 px-3">
+                                                <!-- Background Line -->
+                                                <div class="position-absolute top-50 start-0 w-100"
+                                                    style="height: 4px; background-color: #e9ecef; z-index: 1; transform: translateY(-50%);">
+                                                </div>
+                                                <!-- Progress Line -->
+                                                <div class="position-absolute top-50 start-0"
+                                                    [ngStyle]="{'width': rx.status === 'DISPENSED' || rx.status === 'EXPIRED' ? '100%' : '50%'}"
+                                                    style="height: 4px; background-color: #28a745; z-index: 1; transform: translateY(-50%); transition: width 0.4s ease;">
+                                                </div>
+
+                                                <!-- Node 1: Prescribed -->
+                                                <div class="position-relative d-flex flex-column align-items-center"
+                                                    style="z-index: 2;">
+                                                    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center border border-white border-3 shadow-sm"
+                                                        style="width: 24px; height: 24px;">
+                                                        <i class="bi bi-check" style="font-size: 0.8rem;"></i>
+                                                    </div>
+                                                    <span class="small fw-bold mt-1"
+                                                        style="font-size: 0.75rem;">Prescribed</span>
+                                                </div>
+
+                                                <!-- Node 2: Dispensed -->
+                                                <div class="position-relative d-flex flex-column align-items-center"
+                                                    style="z-index: 2;">
+                                                    <div class="rounded-circle d-flex align-items-center justify-content-center border border-white border-3 shadow-sm"
+                                                        [ngClass]="rx.status === 'DISPENSED' || rx.status === 'EXPIRED' ? 'bg-success text-white' : 'bg-light text-muted'"
+                                                        style="width: 24px; height: 24px;">
+                                                        <i class="bi bi-check" style="font-size: 0.8rem;"
+                                                            *ngIf="rx.status === 'DISPENSED' || rx.status === 'EXPIRED'"></i>
+                                                        <span
+                                                            *ngIf="rx.status !== 'DISPENSED' && rx.status !== 'EXPIRED'"
+                                                            style="font-size: 0.5rem; width: 8px; height: 8px; border-radius: 50%; background-color: #adb5bd;"></span>
+                                                    </div>
+                                                    <span class="small fw-bold mt-1"
+                                                        [ngClass]="rx.status === 'DISPENSED' || rx.status === 'EXPIRED' ? 'text-success' : 'text-muted'"
+                                                        style="font-size: 0.75rem;">Dispensed</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="pe-3 py-3 text-end">
+                                            <a [routerLink]="['/prescription']" [queryParams]="{id: rx.id}"
+                                                class="btn btn-sm btn-outline-primary rounded-pill">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Row -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-4 col-lg-2">
+                <div
+                    class="apollo-card p-3 d-flex flex-column align-items-center justify-content-center h-100 text-center">
+                    <h6 class="text-secondary small text-uppercase mb-2">Total Rx</h6>
+                    <h3 class="fw-bold text-dark mb-0">{{analytics.totalPrescriptions}}</h3>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2">
+                <div
+                    class="apollo-card p-3 d-flex flex-column align-items-center justify-content-center h-100 text-center">
+                    <h6 class="text-secondary small text-uppercase mb-2">Pending</h6>
+                    <h3 class="fw-bold text-warning mb-0">{{analytics.pendingCount}}</h3>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2">
+                <div
+                    class="apollo-card p-3 d-flex flex-column align-items-center justify-content-center h-100 text-center">
+                    <h6 class="text-secondary small text-uppercase mb-2">Active Patients</h6>
+                    <h3 class="fw-bold text-primary mb-0">{{analytics.activePatientsCount || 0}}</h3>
+                </div>
+            </div>
+
+            <!-- Adherence Doughnut (CSS) -->
+            <div class="col-md-12 col-lg-6">
+                <div class="apollo-card p-3 d-flex align-items-center justify-content-between h-100">
+                    <div class="d-flex flex-column">
+                        <h6 class="text-secondary small text-uppercase mb-1">Global Adherence</h6>
+                        <h3 class="fw-bold text-dark mb-1">{{analytics.adherenceRate || 0}}%</h3>
+                        <p class="small text-muted mb-0">Average adherence across all patients</p>
+                    </div>
+
+                    <!-- CSS Conic Gradient Doughnut -->
+                    <div class="position-relative"
+                        [style.background]="'conic-gradient(var(--secondary-color) 0% ' + (analytics.adherenceRate || 0) + '%, #e2e8f0 ' + (analytics.adherenceRate || 0) + '% 100%)'"
+                        style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <div style="width: 60px; height: 60px; background: white; border-radius: 50%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3-Card Grid -->
+        <div class="row justify-content-center g-4">
+
+            <!-- Issue Prescription -->
+            <div class="col-md-6 col-lg-4">
+                <a routerLink="/prescription" class="apollo-card text-center d-flex flex-column align-items-center">
+                    <div class="icon-box-lg">
+                        <i class="bi bi-file-earmark-medical-fill"></i>
+                    </div>
+                    <h4>Issue Prescription</h4>
+                    <p class="mb-4">Create new digital prescriptions with auto-generated PDFs and secure signatures.</p>
+                    <span class="btn-apollo-primary mt-auto">
+                        Start New <i class="bi bi-arrow-right ms-1"></i>
+                    </span>
+                </a>
+            </div>
+
+            <!-- My Patients -->
+            <div class="col-md-6 col-lg-4">
+                <div class="apollo-card text-center d-flex flex-column align-items-center">
+                    <div class="icon-box-lg bg-success-subtle text-success">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <h4>My Patients</h4>
+                    <p class="mb-4">Access detailed patient history, active medications, and contact information.</p>
+                    <a routerLink="/patients" class="btn btn-outline-success rounded-pill px-4 fw-bold mt-auto">
+                        View Records
+                    </a>
+                </div>
+            </div>
+
+            <!-- Appointments -->
+            <div class="col-md-6 col-lg-4">
+                <div class="apollo-card text-center d-flex flex-column align-items-center">
+                    <div class="icon-box-lg bg-warning-subtle text-warning">
+                        <i class="bi bi-calendar-check-fill"></i>
+                    </div>
+                    <h4>Appointments</h4>
+                    <p class="mb-4">View your daily schedule, upcoming consultations, and theatre bookings.</p>
+                    <a routerLink="/doctor-appointments"
+                        class="btn btn-outline-warning text-dark rounded-pill px-4 fw-bold mt-auto">
+                        Check Schedule
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

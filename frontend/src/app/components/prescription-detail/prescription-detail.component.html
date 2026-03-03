@@ -1,0 +1,94 @@
+<div class="detail-container" *ngIf="prescription; else loader">
+    <div class="header">
+        <h1>Prescription #{{ prescription.id }}</h1>
+        <div class="actions">
+            <button (click)="downloadPdf()" class="btn primary">Download PDF</button>
+            <button *ngIf="isDoctor" (click)="renewPrescription()" class="btn btn-apollo-primary ms-2"><i
+                    class="bi bi-files me-1"></i> Renew / Clone</button>
+            \n <!-- Pharmacist Actions -->
+            <button *ngIf="isPharmacist && prescription.status === 'ISSUED'" (click)="dispensePrescription()"
+                class="btn success">Dispense Prescription</button>
+            <button *ngIf="isPharmacist && prescription.status === 'ISSUED'" (click)="requestClarification()"
+                class="btn warning">Request Clarification</button>
+            \n <button *ngIf="!isDoctor && !isPharmacist && prescription.status === 'EXPIRED'"
+                (click)="requestRenewal()" class="btn warning">Request
+                Renewal</button>
+            <a routerLink="/prescriptions" class="back-link">Back</a>
+        </div>
+    </div>
+
+    <div class="grid-layout">
+        <div class="main-content">
+            <div class="section">
+                <h2>Medication Details</h2>
+                <div *ngFor="let item of prescription.items" class="med-item">
+                    <h3>{{ item.medicineName }}</h3>
+                    <p><strong>Dosage:</strong> {{ item.dosage }}</p>
+                    <p><strong>Timing:</strong> {{ item.dosageTiming || 'As advised' }}</p>
+                    <p><strong>Duration:</strong> {{ item.startDate | date }} to {{ item.endDate | date }}</p>
+                </div>
+            </div>
+
+            <div class="section audit-section">
+                <div class="audit-header" (click)="showAudit = !showAudit">
+                    <h2>Previous Versions / History</h2>
+                    <span class="toggle-icon">{{ showAudit ? '▼' : '▶' }}</span>
+                </div>
+                <div class="timeline" *ngIf="showAudit">
+                    <div *ngFor="let audit of auditHistory" class="timeline-item">
+                        <div class="marker"></div>
+                        <div class="content">
+                            <h4>Version {{ audit.version }}</h4>
+                            <p>{{ audit.changeReason }}</p>
+                            <small>{{ audit.modifiedAt | date:'medium' }} by {{ audit.modifiedBy }}</small>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="marker start"></div>
+                        <div class="content">
+                            <h4>Created</h4>
+                            <small>Initial Version</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <!-- Glassmorphic Doctor Card -->
+            <div class="card doctor-card glass">
+                <div class="doctor-badge">
+                    <i class="bi bi-patch-check-fill text-primary"></i> verified
+                </div>
+                <h3>Doctor Identity</h3>
+                <p class="doctor-name"><strong>{{ prescription.doctor?.fullName }}</strong></p>
+                <p class="doctor-spec">{{ prescription.doctor?.specialization }}</p>
+                <p class="doctor-email"><i class="bi bi-envelope me-2"></i> {{ prescription.doctor?.email }}</p>
+                <p class="doctor-license">License: {{ prescription.doctor?.medicalLicenseNumber }}</p>
+            </div>
+            \n <!-- Adherence Graph -->
+            <div class="adherence-section mt-4">
+                <app-adherence-graph [prescriptionId]="prescription.id!"
+                    [prescription]="prescription"></app-adherence-graph>
+            </div>
+            \n <div class="card status-card mt-4">
+                <h3>Status</h3>
+                <span class="badge" [class.approved]="prescription.status === 'ISSUED'"
+                    [class.pending]="prescription.status === 'PENDING'"
+                    [class.dispensed]="prescription.status === 'DISPENSED'">
+                    {{ prescription.status }}
+                </span>
+                <p>Expires: {{ prescription.expiryDate | date }}</p>
+                <div *ngIf="prescription.isDispensed" class="dispense-info">
+                    <small>Dispensed by: {{ prescription.pharmacist?.fullName }}</small>
+                    <br>
+                    <small>Time: {{ prescription.dispensedAt | date:'medium' }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-template #loader>
+    <div class="loading">Loading details...</div>
+</ng-template>

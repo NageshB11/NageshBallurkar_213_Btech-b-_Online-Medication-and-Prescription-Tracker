@@ -1,0 +1,43 @@
+.landing-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: var(--surface-gradient);
+    padding: 1rem;
+}
+
+/* Glass card defaults are handled by global styles, specific tweaks here */
+.glass-card {
+    text-align: center;
+    max-width: 480px;
+    /* Slightly wider than default for welcome message */
+}
+
+.welcome-title {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.welcome-text {
+    color: #475569;
+    font-size: 1.1rem;
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+.btn-primary,
+.btn-secondary {
+    text-decoration: none;
+    display: block;
+    text-align: center;
+}

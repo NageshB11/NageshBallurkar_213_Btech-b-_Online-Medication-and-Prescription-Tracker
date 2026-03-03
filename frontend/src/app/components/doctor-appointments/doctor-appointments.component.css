@@ -1,0 +1,51 @@
+/* Glassmorphism panel style */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    /* Floating Cards Requirement */
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+/* Status Badge Colors (Tailwind classes used in HTML, but defined here for fallback/scoped) */
+.bg-yellow-100 {
+    background-color: #FEF3C7;
+}
+
+.text-yellow-800 {
+    color: #92400E;
+}
+
+.bg-green-100 {
+    background-color: #D1FAE5;
+}
+
+.text-green-800 {
+    color: #065F46;
+}
+
+.bg-red-100 {
+    background-color: #FEE2E2;
+}
+
+.text-red-800 {
+    color: #991B1B;
+}
+
+.bg-blue-100 {
+    background-color: #DBEAFE;
+}
+
+.text-blue-800 {
+    color: #1E40AF;
+}
+
+.bg-gray-100 {
+    background-color: #F3F4F6;
+}
+
+.text-gray-800 {
+    color: #1F2937;
+}

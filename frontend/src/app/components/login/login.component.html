@@ -1,0 +1,135 @@
+<div class="login-container d-flex align-items-center justify-content-center min-vh-100 p-3">
+  <div class="card border-0 shadow-xl rounded-4 overflow-hidden w-100" style="max-width: 900px;">
+    <div class="row g-0">
+      <!-- Left Side: Visual -->
+      <div class="col-lg-6 d-none d-lg-block position-relative">
+        <img
+          src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
+          alt="Male Doctor" class="img-fluid h-100 w-100 object-fit-cover">
+        <div class="position-absolute bottom-0 start-0 w-100 p-5 text-start bg-gradient-to-t from-dark">
+          <div class="text-white" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
+            <h2 class="fw-bold mb-2">SECURE MEDICAL PORTAL</h2>
+            <p class="lead mb-0 opacity-90">Your health, our priority. Safe and reliable access to your records.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side: Form -->
+      <div class="col-lg-6 bg-white">
+        <div class="p-5 h-100 d-flex flex-column justify-content-center">
+
+          <div class="mb-4">
+            <div class="d-flex align-items-center mb-3">
+              <i class="bi bi-heart-pulse-fill text-primary fs-3 me-2"></i>
+              <span class="fs-4 fw-bold text-dark">MedTrack Plus</span>
+            </div>
+            <h2 class="fw-bold text-dark mb-1">WELCOME</h2>
+            <p class="text-muted">Sign in to access your health.</p>
+          </div>
+
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+            <!-- Role Toggle (Logos) -->
+            <div class="mb-4">
+              <label class="form-label small fw-bold text-secondary mb-3">Select Your Role</label>
+              <div class="row g-2">
+                <!-- Patient -->
+                <div class="col-3">
+                  <label class="cursor-pointer w-100 h-100">
+                    <input type="radio" name="role" value="PATIENT" formControlName="role" class="d-none peer">
+                    <div
+                      class="role-card p-2 rounded-3 text-center border transition-all h-100 d-flex flex-column justify-content-center">
+                      <div class="icon-circle bg-primary bg-opacity-10 text-primary mx-auto mb-2">
+                        <i class="bi bi-person-fill fs-5"></i>
+                      </div>
+                      <span class="d-block small fw-bold text-muted" style="font-size: 0.75rem;">Patient</span>
+                    </div>
+                  </label>
+                </div>
+                <!-- Doctor -->
+                <div class="col-3">
+                  <label class="cursor-pointer w-100 h-100">
+                    <input type="radio" name="role" value="DOCTOR" formControlName="role" class="d-none peer">
+                    <div
+                      class="role-card p-2 rounded-3 text-center border transition-all h-100 d-flex flex-column justify-content-center">
+                      <div class="icon-circle bg-success bg-opacity-10 text-success mx-auto mb-2">
+                        <i class="bi bi-heart-pulse-fill fs-5"></i>
+                      </div>
+                      <span class="d-block small fw-bold text-muted" style="font-size: 0.75rem;">Doctor</span>
+                    </div>
+                  </label>
+                </div>
+                <!-- Pharmacist -->
+                <div class="col-3">
+                  <label class="cursor-pointer w-100 h-100">
+                    <input type="radio" name="role" value="PHARMACIST" formControlName="role" class="d-none peer">
+                    <div
+                      class="role-card p-2 rounded-3 text-center border transition-all h-100 d-flex flex-column justify-content-center">
+                      <div class="icon-circle bg-warning bg-opacity-10 text-warning mx-auto mb-2">
+                        <i class="bi bi-capsule fs-5"></i>
+                      </div>
+                      <span class="d-block small fw-bold text-muted" style="font-size: 0.75rem;">Pharm</span>
+                    </div>
+                  </label>
+                </div>
+                <!-- Admin -->
+                <div class="col-3">
+                  <label class="cursor-pointer w-100 h-100">
+                    <input type="radio" name="role" value="ADMIN" formControlName="role" class="d-none peer">
+                    <div
+                      class="role-card p-2 rounded-3 text-center border transition-all h-100 d-flex flex-column justify-content-center">
+                      <div class="icon-circle bg-danger bg-opacity-10 text-danger mx-auto mb-2">
+                        <i class="bi bi-shield-lock-fill fs-5"></i>
+                      </div>
+                      <span class="d-block small fw-bold text-muted" style="font-size: 0.75rem;">Admin</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="email" class="form-label small fw-bold text-secondary">Email Address</label>
+              <input type="email" class="form-control form-control-lg rounded-3 border-secondary-subtle" id="email"
+                formControlName="email">
+              <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+                class="text-danger small mt-1">
+                Valid email is required
+              </div>
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+              <label for="password" class="form-label small fw-bold text-secondary">Password</label>
+              <input type="password" class="form-control form-control-lg rounded-3 border-secondary-subtle"
+                id="password" formControlName="password">
+              <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+                class="text-danger small mt-1">
+                Password is required
+              </div>
+            </div>
+
+            <div *ngIf="errorMessage" class="alert alert-danger rounded-3 small mb-3">
+              <i class="bi bi-exclamation-circle me-2"></i> {{ errorMessage }}
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid mb-3">
+              <button type="submit" class="btn btn-primary btn-lg fw-bold rounded-3 shadow-sm custom-btn"
+                [disabled]="loginForm.invalid">
+                LOGIN
+              </button>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center small mt-4">
+              <a href="#" class="text-muted text-decoration-none">Forgot Password?</a>
+              <span class="text-muted">Don't have an account? <a routerLink="/register"
+                  class="text-primary text-decoration-none fw-bold">Sign Up</a></span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,69 @@
+<nav class="navbar navbar-expand-lg navbar-dark glass-header mb-4">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand d-flex align-items-center" routerLink="/">
+            <i class="bi bi-heart-pulse me-2"></i>MedTrack Plus
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center gap-3">
+
+                <!-- Guest Links -->
+                <ng-container *ngIf="!isLoggedIn">
+                    <li class="nav-item">
+                        <a class="nav-link" routerLink="/login" routerLinkActive="active">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" routerLink="/signup" routerLinkActive="active">Signup</a>
+                    </li>
+                </ng-container>
+
+                <!-- Authenticated Links -->
+                <ng-container *ngIf="isLoggedIn">
+
+                    <!-- Doctor Links -->
+                    <li class="nav-item" *ngIf="userRole === 'DOCTOR'">
+                        <a class="nav-link" routerLink="/doctor-workspace" routerLinkActive="active">Dashboard</a>
+                    </li>
+                    <li class="nav-item" *ngIf="userRole === 'DOCTOR'">
+                        <a class="nav-link" routerLink="/prescription" routerLinkActive="active">Issue Prescription</a>
+                    </li>
+                    <li class="nav-item" *ngIf="isLoggedIn && userRole === 'PHARMACIST'">
+                        <a class="nav-link" routerLink="/pharmacist" routerLinkActive="active">Prescriptions</a>
+                    </li>
+                    <li class="nav-item" *ngIf="isLoggedIn && userRole === 'PHARMACIST'">
+                        <a class="nav-link" routerLink="/pharmacist/inventory" routerLinkActive="active">Inventory</a>
+                    </li>
+
+                    <!-- Patient Links -->
+                    <li class="nav-item" *ngIf="userRole === 'PATIENT'">
+                        <a class="nav-link" routerLink="/patient-dashboard" routerLinkActive="active">My Medications</a>
+                    </li>
+
+                    <li class="nav-item ms-lg-3">
+                        <span class="navbar-text text-light me-3">Hello, {{fullName}}</span>
+                    </li>
+
+                    <!-- Notification Bell -->
+                    <li class="nav-item position-relative me-3">
+                        <a routerLink="/notifications" class="nav-link text-light">
+                            <i class="bi bi-bell fs-5"></i>
+                            <span *ngIf="unreadCount > 0"
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                style="font-size: 0.6rem; transform: translate(-50%, 5px);">
+                                {{unreadCount}}
+                                <span class="visually-hidden">unread messages</span>
+                            </span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <button class="btn btn-outline-light btn-sm" (click)="logout()">Logout</button>
+                    </li>
+                </ng-container>
+
+            </ul>
+        </div>
+    </div>
+</nav>

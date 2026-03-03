@@ -1,0 +1,61 @@
+<div class="list-container">
+    <div class="header">
+        <h2>My Prescriptions</h2>
+        <a routerLink="/patient-dashboard" class="back-link">Back to Dashboard</a>
+    </div>
+
+    <div class="filters-bar">
+        <input type="text" [(ngModel)]="searchTerm" (input)="filterPrescriptions()"
+            placeholder="Search medication or doctor..." class="search-input">
+        <select [(ngModel)]="statusFilter" (change)="filterPrescriptions()" class="filter-select">
+            <option value="ALL">All Statuses</option>
+            <option value="ISSUED">Issued (Doctor)</option>
+            <option value="PROCEEDED_TO_PHARMACIST">Processing (Pharmacy)</option>
+            <option value="DISPENSED">Dispensed</option>
+            <option value="EXPIRED">Expired</option>
+        </select>
+    </div>
+
+    <div class="table-container" *ngIf="!loading; else loader">
+        <table class="prescription-table">
+            <thead>
+                <tr>
+                    <th>Ref ID</th>
+                    <th>Medication</th>
+                    <th>Doctor</th>
+                    <th>Dosage</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let p of filteredPrescriptions">
+                    <td>#{{ p.id }}</td>
+                    <td>{{ p.items[0]?.medicineName || 'N/A' }}</td>
+                    <td>{{ p.doctor?.fullName || 'N/A' }}</td>
+                    <td>{{ p.items[0]?.dosage }}</td>
+                    <td>
+                        <span class="badge rounded-pill fw-bold text-white px-2 py-1" [ngStyle]="{
+                                'background-color': p.status === 'PROCEEDED_TO_PHARMACIST' ? '#f59e0b' : 
+                                                    p.status === 'DISPENSED' ? '#10b981' : 
+                                                    p.status === 'ISSUED' ? '#1e3a8a' : '#6c757d',
+                                'font-size': '0.75rem'
+                            }">
+                            {{ p.status === 'PROCEEDED_TO_PHARMACIST' ? 'PROCESSING' : p.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <a [routerLink]="['/prescriptions', p.id]" class="details-btn">View Details</a>
+                    </td>
+                </tr>
+                <tr *ngIf="filteredPrescriptions.length === 0">
+                    <td colspan="6" class="no-data">No prescriptions found.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<ng-template #loader>
+    <div class="loading-spinner">Loading prescriptions...</div>
+</ng-template>

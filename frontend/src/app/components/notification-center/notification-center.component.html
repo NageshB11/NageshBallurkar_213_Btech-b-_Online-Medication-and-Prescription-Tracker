@@ -1,0 +1,54 @@
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">Notifications</h2>
+        <span class="badge bg-primary rounded-pill">{{notifications.length}}</span>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div *ngIf="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
+
+            <div *ngIf="!loading && notifications.length === 0" class="text-center py-5 text-muted">
+                <i class="bi bi-bell-slash fs-1 d-block mb-3"></i>
+                <p>You have no new notifications.</p>
+            </div>
+
+            <div *ngIf="notifications.length > 0" class="d-flex flex-column gap-3">
+                <div *ngFor="let notif of notifications"
+                    class="apollo-card p-3 d-flex align-items-start position-relative" [class.bg-light]="notif.read"
+                    [class.border-primary]="!notif.read">
+
+                    <div class="icon-box me-3 flex-shrink-0" [ngClass]="{
+                            'bg-primary-subtle text-primary': notif.type === 'INFO',
+                            'bg-warning-subtle text-warning': notif.type === 'WARNING',
+                            'bg-danger-subtle text-danger': notif.type === 'CRITICAL' || notif.type === 'REMINDER'
+                         }">
+                        <i class="bi" [ngClass]="{
+                                'bi-info-circle-fill': notif.type === 'INFO',
+                                'bi-exclamation-triangle-fill': notif.type === 'WARNING',
+                                'bi-clock-history': notif.type === 'REMINDER' || notif.type === 'CRITICAL'
+                           }"></i>
+                    </div>
+
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h6 class="fw-bold mb-1" [class.text-muted]="notif.read">{{notif.message}}</h6>
+                            <small class="text-muted text-nowrap ms-2">{{notif.createdAt | date:'short'}}</small>
+                        </div>
+                        <p class="small text-muted mb-0" *ngIf="!notif.read">
+                            <i class="bi bi-circle-fill text-primary" style="font-size: 8px;"></i> Unread
+                        </p>
+                    </div>
+
+                    <button *ngIf="!notif.read" (click)="markAsRead(notif.id)"
+                        class="btn btn-sm btn-link text-decoration-none stretched-link p-0 position-static"
+                        style="width: 0; height: 0; overflow: hidden; opacity: 0;">
+                        Mark as read
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

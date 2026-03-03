@@ -1,0 +1,43 @@
+/* Apollo Navbar Styles */
+:host {
+    display: block;
+    height: 70px;
+    /* Reserve space for fixed header */
+}
+
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    padding: 0.75rem 0;
+    transition: all 0.3s ease;
+}
+
+/* Glassmorphism applied via utility .glass-header in global styles, 
+   but ensuring specific overrides here if needed */
+.navbar-brand {
+    font-family: var(--font-family);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    font-size: 1.5rem;
+}
+
+.nav-link {
+    font-family: var(--font-family);
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    border-radius: 50rem;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.2);
+    color: white !important;
+}

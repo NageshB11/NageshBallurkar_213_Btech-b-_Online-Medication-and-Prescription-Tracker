@@ -1,0 +1,196 @@
+/* Global Styles & Design System - Apollo Clinic Inspired */
+:root {
+  /* Apollo Blue Palette */
+  --primary-color: #0056b3;
+  --primary-gradient: linear-gradient(135deg, #0056b3 0%, #00aaff 100%);
+  --secondary-color: #0d9488;
+  --accent-color: #f59e0b;
+
+  --background-color: #f8fafc;
+  /* Surface Ground */
+  --card-bg: #ffffff;
+
+  /* Typography Colors */
+  --text-primary: #2d3436;
+  /* Deep Charcoal - Headings */
+  --text-secondary: #636e72;
+  /* Steel Gray - Sub-labels */
+  --text-muted: #9ca3af;
+  /* Role-based Colors */
+  --doctor-primary: #0056b3;
+  /* Apollo Blue */
+  --pharmacist-success: #10b981;
+  /* Success Green */
+  /* Typography Font */
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Spacing & Radius */
+  --radius-xl: 24px;
+  --radius-lg: 20px;
+  --radius-md: 8px;
+  --gutter: 24px;
+
+  /* Shadows */
+  --shadow-floating: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 20px 40px -5px rgba(0, 0, 0, 0.1);
+
+  /* Borders */
+  --border-subtle: 1px solid #e2e8f0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--background-color);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+  padding-top: 0;
+  /* Removing top padding as per new layout */
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+  /* Body Copy Line Height */
+}
+
+/* Typography Hierarchy */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  margin-top: 0;
+}
+
+h1,
+h2 {
+  font-weight: 700;
+  /* Bold */
+}
+
+h3,
+h4 {
+  font-weight: 600;
+  /* Semi-Bold */
+}
+
+h5,
+label,
+.label,
+.text-label {
+  font-weight: 500;
+  /* Medium */
+  color: var(--text-secondary);
+}
+
+p,
+small,
+span {
+  font-weight: 400;
+  /* Regular */
+}
+
+/* Navbar Customization Override */
+.navbar {
+  background: var(--primary-gradient) !important;
+  box-shadow: 0 4px 10px rgba(0, 50, 100, 0.1);
+  padding: 1rem 0;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: -0.5px;
+}
+
+.nav-link {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9) !important;
+  transition: color 0.2s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+/* Card Utility */
+.card {
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  background: white;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+}
+
+/* Buttons */
+.btn-primary {
+  background: var(--primary-color);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-outline-light:hover {
+  color: var(--primary-color);
+}
+
+/* Form Controls */
+.form-control {
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  border: 1px solid #cbd5e1;
+}
+
+.form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+}
+
+/* Table overrides */
+.table thead th {
+  background-color: #f8fafc;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+main {
+  width: 100%;
+  padding: 0;
+  /* Removing padding here as container-fluid handles it, or keep minimal */
+  display: block;
+}
+
+/* Badge overrides */
+.badge {
+  padding: 0.5em 0.75em;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}

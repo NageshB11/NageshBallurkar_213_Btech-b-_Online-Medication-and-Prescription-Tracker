@@ -1,0 +1,145 @@
+/* Centered Layout */
+.login-container {
+    background-color: #f3f4f6;
+    /* Soft gray */
+}
+
+/* Card Styling */
+.card {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.object-fit-cover {
+    object-fit: cover;
+}
+
+/* Form Controls */
+.form-control {
+    background-color: #ffffff;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    color: #1f2937;
+    border-color: #d1d5db;
+}
+
+.form-control:focus {
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+    /* Soft blue ring */
+    border-color: #3b82f6;
+}
+
+.text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Role Cards (Logos) */
+.role-card {
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.role-card:hover {
+    background-color: #fff;
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+/* Checked State */
+input:checked+.role-card {
+    background-color: #fff;
+    border-color: #3b82f6;
+    /* Blue border */
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+    position: relative;
+    z-index: 10;
+}
+
+input:checked+.role-card .icon-circle {
+    transform: scale(1.1);
+}
+
+/* Gradient Overlay for Text Readability */
+.bg-gradient-to-t {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.opacity-90 {
+    opacity: 0.9;
+}
+
+/* Specific Role Highlight Colors when Checked */
+input[value="PATIENT"]:checked+.role-card .icon-circle {
+    background-color: #eff6ff !important;
+    /* Blue-50 */
+    color: #2563eb !important;
+    /* Blue-600 */
+}
+
+input[value="DOCTOR"]:checked+.role-card .icon-circle {
+    background-color: #f0fdf4 !important;
+    /* Green-50 */
+    color: #16a34a !important;
+    /* Green-600 */
+}
+
+input[value="PHARMACIST"]:checked+.role-card .icon-circle {
+    background-color: #fffbeb !important;
+    /* Amber-50 */
+    color: #d97706 !important;
+    /* Amber-600 */
+}
+
+input[value="ADMIN"]:checked+.role-card .icon-circle {
+    background-color: #fef2f2 !important;
+    /* Red-50 */
+    color: #dc2626 !important;
+    /* Red-600 */
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Role Toggle (Segmented) */
+.role-label {
+    transition: all 0.2s ease-in-out;
+}
+
+/* When the radio input (peer) is checked, style the sibling label */
+input:checked+.role-label {
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+    /* Dark text */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    border: 1px solid #e5e7eb;
+}
+
+
+/* Custom Submit Button */
+.custom-btn {
+    background-color: #1d4ed8;
+    /* Strong Blue */
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.custom-btn:hover {
+    background-color: #1e40af;
+}
+
+.custom-btn:active {
+    background-color: #1e3a8a;
+}

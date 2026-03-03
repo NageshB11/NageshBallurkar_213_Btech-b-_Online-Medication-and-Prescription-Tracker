@@ -1,0 +1,22 @@
+﻿mysql.exe : mysql: 
+[Warning] Using a password 
+on the command line 
+interface can be insecure.
+At line:1 char:1
++ & "C:\Program 
+Files\MySQL\MySQL Server 
+8.0\bin\mysql.exe" -u root 
+-pr ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (mys  
+  ql: [Warning...an be i   
+ nsecure.:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+rows_updated
+8

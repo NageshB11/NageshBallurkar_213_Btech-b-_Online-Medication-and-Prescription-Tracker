@@ -1,0 +1,85 @@
+<div class="inventory-container">
+    <div class="header glass-card">
+        <h1><i class="bi bi-box-seam me-2"></i>Inventory Management</h1>
+        <button class="btn btn-apollo" (click)="showAddModalFlag = true">
+            <i class="bi bi-plus-lg me-1"></i>Add Medicine
+        </button>
+    </div>
+    \n <div class="inventory-grid mt-4">
+        <div class="inventory-table glass-card">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Medicine Name</th>
+                        <th>Stock Quantity</th>
+                        <th>Batch Number</th>
+                        <th>Expiry Date</th>
+                        <th>Unit Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let medicine of inventory">
+                        <td><strong>{{medicine.name}}</strong></td>
+                        <td>
+                            <span [class.text-danger]="medicine.stockQuantity < 10">
+                                {{medicine.stockQuantity}}
+                            </span>
+                        </td>
+                        <td>{{medicine.batchNumber}}</td>
+                        <td>{{medicine.expiryDate | date}}</td>
+                        <td>${{medicine.unitPrice}}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" (click)="editMedicine(medicine)">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    \n <!-- Add/Edit Modal -->
+    <div class="modal-backdrop" *ngIf="showAddModalFlag">
+        <div class="modal-content glass-card">
+            <h2>{{editMode ? 'Edit' : 'Add'}} Medicine</h2>
+            <form (ngSubmit)="saveMedicine()">
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-control" [(ngModel)]="currentMedicine.name" name="name" required
+                        [disabled]="editMode">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Stock Quantity</label>
+                        <input type="number" class="form-control" [(ngModel)]="currentMedicine.stockQuantity"
+                            name="stock" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Unit Price ($)</label>
+                        <input type="number" class="form-control" [(ngModel)]="currentMedicine.unitPrice" name="price"
+                            required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Batch Number</label>
+                        <input type="text" class="form-control" [(ngModel)]="currentMedicine.batchNumber" name="batch">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Expiry Date</label>
+                        <input type="date" class="form-control" [(ngModel)]="currentMedicine.expiryDate" name="expiry">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" [(ngModel)]="currentMedicine.description" name="desc"></textarea>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-apollo">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

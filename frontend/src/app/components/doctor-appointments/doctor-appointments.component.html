@@ -1,0 +1,46 @@
+<div class="glass-panel p-6">
+    <h2 class="text-2xl font-bold mb-4 text-gray-800">Appointment Requests</h2>
+
+    <div *ngIf="appointments.length === 0" class="text-gray-500">
+        No pending appointment requests.
+    </div>
+
+    <div class="space-y-4">
+        <div *ngFor="let apt of appointments"
+            class="bg-white rounded-xl p-4 shadow-sm flex justify-between items-center transition hover:shadow-md">
+            <!-- Patient Info -->
+            <div class="flex flex-col">
+                <span class="font-semibold text-lg">{{ apt.patient?.fullName || 'Unknown Patient' }} <span
+                        *ngIf="apt.patient?.email" class="text-sm font-normal text-gray-500 ml-1">({{ apt.patient?.email
+                        }})</span></span>
+                <span class="text-sm text-gray-500">{{ apt.appointmentDate | date:'medium' }}</span>
+                <p class="text-gray-600 mt-1 italic" *ngIf="apt.notes">"{{ apt.notes }}"</p>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide mt-2 w-max"
+                    [ngClass]="statusBadges[apt.status]">
+                    {{ apt.status }}
+                </span>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex align-items-center gap-3">
+                <div *ngIf="apt.status === 'REQUESTED'" class="flex gap-2">
+                    <button (click)="approve(apt.id!)"
+                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                        Approve
+                    </button>
+                    <button (click)="reject(apt.id!)"
+                        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                        Reject
+                    </button>
+                </div>
+
+                <div *ngIf="apt.status === 'APPROVED' || apt.status === 'COMPLETED'">
+                    <button (click)="issuePrescription(apt.patient?.email)"
+                        class="btn btn-primary d-flex align-items-center shadow-sm py-2 px-3">
+                        <i class="bi bi-file-earmark-medical me-2"></i> Issue Prescription
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,148 @@
+<div class="split-layout">
+    <!-- Left Side: Visual -->
+    <div class="auth-visual">
+        <div class="overlay"></div>
+        <div class="brand-content">
+            <h1 class="text-white display-4 fw-bold mb-3">Join the Network</h1>
+            <p class="text-white lead">Create your secure medical profile today.</p>
+        </div>
+    </div>
+
+    <!-- Right Side: Form -->
+    <div class="auth-form-container">
+        <div class="form-content">
+            <div class="text-center mb-4">
+                <h2 class="h2-medical mb-1">Create Account</h2>
+                <p class="text-muted">Start your journey with us</p>
+            </div>
+
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+
+                <!-- Role Selection Toggle -->
+                <div class="role-toggle-container mb-4 text-center">
+                    <div class="btn-group w-100" role="group" aria-label="Role Selection">
+                        <input type="radio" class="btn-check" name="role" id="rolePatient" value="PATIENT"
+                            formControlName="role" [checked]="registerForm.get('role')?.value === 'PATIENT'">
+                        <label class="btn btn-outline-primary py-2 fw-bold" for="rolePatient">
+                            <i class="bi bi-person-fill me-1"></i> Patient
+                        </label>
+
+                        <input type="radio" class="btn-check" name="role" id="roleDoctor" value="DOCTOR"
+                            formControlName="role" [checked]="registerForm.get('role')?.value === 'DOCTOR'">
+                        <label class="btn btn-outline-primary py-2 fw-bold" for="roleDoctor">
+                            <i class="bi bi-heart-pulse-fill me-1"></i> Doctor
+                        </label>
+
+                        <input type="radio" class="btn-check" name="role" id="rolePharmacist" value="PHARMACIST"
+                            formControlName="role" [checked]="registerForm.get('role')?.value === 'PHARMACIST'">
+                        <label class="btn btn-outline-primary py-2 fw-bold" for="rolePharmacist">
+                            <i class="bi bi-capsule me-1"></i> Pharmacist
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control rounded-3" id="fullName" formControlName="fullName"
+                        placeholder="John Doe">
+                    <label for="fullName">Full Name</label>
+                    <div *ngIf="registerForm.get('fullName')?.invalid && registerForm.get('fullName')?.touched"
+                        class="text-danger small mt-1">
+                        Name is required
+                    </div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="email" class="form-control rounded-3" id="email" formControlName="email"
+                        placeholder="name@example.com">
+                    <label for="email">Email address</label>
+                    <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
+                        class="text-danger small mt-1">
+                        Valid email is required
+                    </div>
+                </div>
+
+                <div class="form-floating mb-3 position-relative">
+                    <input [type]="showPassword ? 'text' : 'password'" class="form-control rounded-3" id="password"
+                        formControlName="password" placeholder="Password">
+                    <label for="password">Password</label>
+                    <button type="button"
+                        class="btn btn-link text-decoration-none position-absolute end-0 top-50 translate-middle-y me-2"
+                        (click)="togglePassword()">
+                        <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                    </button>
+                    <div *ngIf="registerForm.get('password')?.errors?.['required'] && registerForm.get('password')?.touched"
+                        class="text-danger small mt-1">
+                        Password is required
+                    </div>
+                    <div *ngIf="registerForm.get('password')?.errors?.['minlength'] && registerForm.get('password')?.touched"
+                        class="text-danger small mt-1">
+                        Password must be at least 6 characters
+                    </div>
+                </div>
+
+                <!-- Doctor Fields -->
+                <div *ngIf="registerForm.get('role')?.value === Role.DOCTOR" class="bg-light p-3 rounded-3 mb-3 border">
+                    <h6 class="text-primary small fw-bold text-uppercase mb-3">Credentials</h6>
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" formControlName="medicalLicenseNumber"
+                            placeholder="License Number">
+                        <label>License Number</label>
+                        <div *ngIf="registerForm.get('medicalLicenseNumber')?.invalid && registerForm.get('medicalLicenseNumber')?.touched"
+                            class="text-danger small mt-1">
+                            License Number is required
+                        </div>
+                    </div>
+                    <div class="form-floating">
+                        <input type="text" class="form-control" formControlName="specialization"
+                            placeholder="Specialization">
+                        <label>Specialization</label>
+                        <div *ngIf="registerForm.get('specialization')?.invalid && registerForm.get('specialization')?.touched"
+                            class="text-danger small mt-1">
+                            Specialization is required
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pharmacist Fields -->
+                <div *ngIf="registerForm.get('role')?.value === Role.PHARMACIST"
+                    class="bg-light p-3 rounded-3 mb-3 border">
+                    <h6 class="text-primary small fw-bold text-uppercase mb-3">Pharmacy Details</h6>
+                    <div class="form-floating">
+                        <input type="text" class="form-control" formControlName="shopDetails"
+                            placeholder="Shop Name, Address">
+                        <label>Shop Name & Address</label>
+                        <div *ngIf="registerForm.get('shopDetails')?.invalid && registerForm.get('shopDetails')?.touched"
+                            class="text-danger small mt-1">
+                            Shop details are required
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Fields -->
+                <div *ngIf="registerForm.get('role')?.value === Role.PATIENT"
+                    class="bg-light p-3 rounded-3 mb-3 border">
+                    <h6 class="text-primary small fw-bold text-uppercase mb-3">Medical Profile</h6>
+                    <div class="form-floating">
+                        <textarea class="form-control" formControlName="medicalHistory" placeholder="History"
+                            style="height: 100px"></textarea>
+                        <label>Medical History (Optional)</label>
+                    </div>
+                </div>
+
+                <div *ngIf="errorMessage" class="alert alert-danger rounded-3 small mb-4">
+                    <i class="bi bi-exclamation-circle me-2"></i> {{ errorMessage }}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm"
+                    [disabled]="registerForm.invalid">
+                    Create Account
+                </button>
+
+                <div class="text-center mt-4">
+                    <p class="text-muted small">Already include? <a routerLink="/login"
+                            class="text-primary text-decoration-none fw-bold">Sign in</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

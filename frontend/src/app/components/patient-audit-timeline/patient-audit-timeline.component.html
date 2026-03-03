@@ -1,0 +1,199 @@
+<div class="page-wrapper">
+
+    <!-- ══ Page Header ══════════════════════════════════════════════════ -->
+    <div class="page-header">
+        <a routerLink="/admin" class="back-link">
+            <i class="bi bi-arrow-left-circle-fill"></i> Admin Dashboard
+        </a>
+        <h1 class="page-title">
+            <i class="bi bi-person-lines-fill me-2"></i>Patient Prescription History
+        </h1>
+        <p class="page-sub">Select a patient to view their complete, versioned prescription audit trail with delta
+            tracking.</p>
+    </div>
+
+    <!-- ══ Patient Selector ══════════════════════════════════════════════ -->
+    <div class="selector-card glass-card">
+        <div class="selector-left">
+            <div class="selector-icon"><i class="bi bi-person-circle"></i></div>
+            <div>
+                <div class="selector-label">Select Patient</div>
+                <div class="selector-hint">{{ patients.length }} verified patient{{ patients.length !== 1 ? 's' : '' }}
+                    in system</div>
+            </div>
+        </div>
+
+        <div class="selector-right">
+            <div class="select-wrap" *ngIf="!isLoadingPatients">
+                <select id="patientDropdown" class="patient-select" (change)="onPatientSelect($event)">
+                    <option value="">— Choose a patient —</option>
+                    <option *ngFor="let p of patients" [value]="p.id">
+                        {{ p.fullName }} ({{ p.email }})
+                    </option>
+                </select>
+                <i class="bi bi-chevron-down select-arrow"></i>
+            </div>
+            <div class="loading-row" *ngIf="isLoadingPatients">
+                <span class="spinner-border spinner-border-sm me-2"></span>Loading patients…
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Loading Timeline ═══════════════════════════════════════════════ -->
+    <div class="loading-state" *ngIf="isLoadingTimeline">
+        <div class="loading-spinner"></div>
+        <p>Fetching audit timeline for {{ selectedPatient?.fullName }}…</p>
+    </div>
+
+    <!-- ══ Error ══════════════════════════════════════════════════════════ -->
+    <div class="error-box" *ngIf="error && !isLoadingTimeline">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+    </div>
+
+    <!-- ══ Empty Placeholder ═══════════════════════════════════════════════ -->
+    <div class="empty-state" *ngIf="!selectedPatientId && !isLoadingTimeline">
+        <div class="empty-icon"><i class="bi bi-person-dash"></i></div>
+        <h3>No Patient Selected</h3>
+        <p>Choose a patient from the dropdown above to view their prescription history.</p>
+    </div>
+
+    <!-- ══ Timeline ═══════════════════════════════════════════════════════ -->
+    <div class="timeline-section" *ngIf="prescriptionGroups.length > 0 && !isLoadingTimeline">
+
+        <!-- Stats bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-num">{{ prescriptionGroups.length }}</span>
+                <span class="stat-label">Prescription{{ prescriptionGroups.length !== 1 ? 's' : '' }}</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-num">{{ totalVersions() }}</span>
+                <span class="stat-label">Audit Events</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item patient-name-stat">
+                <i class="bi bi-person-badge-fill me-1" style="color:#4f8ef7"></i>
+                <span class="stat-label">{{ selectedPatient?.fullName }}</span>
+            </div>
+        </div>
+
+        <!-- Prescription Groups -->
+        <div class="rx-group" *ngFor="let group of prescriptionGroups; let gi = index">
+
+            <!-- Group Header -->
+            <div class="rx-group-header" (click)="toggleGroup(group.prescriptionId)">
+                <div class="rx-group-left">
+                    <span class="rx-id-pill">Rx #{{ group.prescriptionId }}</span>
+                    <span class="rx-event-count">{{ group.versions?.length || 0 }} event{{ (group.versions?.length || 0)
+                        !== 1 ? 's' : '' }}</span>
+                </div>
+                <div class="rx-group-right">
+                    <i class="bi" [class.bi-chevron-up]="isExpanded(group.prescriptionId)"
+                        [class.bi-chevron-down]="!isExpanded(group.prescriptionId)"></i>
+                </div>
+            </div>
+
+            <!-- Version Timeline -->
+            <div class="version-timeline" *ngIf="isExpanded(group.prescriptionId)">
+                <div class="version-item" *ngFor="let v of group.versions; let i = index; let last = last">
+                    <!-- Connector -->
+                    <div class="v-connector" *ngIf="!last">
+                        <div class="v-line"></div>
+                    </div>
+
+                    <!-- Node -->
+                    <div class="v-node" [style.border-color]="getCardAccent(v.actionType)"
+                        [style.box-shadow]="'0 0 12px ' + getCardAccent(v.actionType) + '55'">
+                        <i class="bi" [class.bi-check-circle-fill]="v.actionType === 'DISPENSED'"
+                            [class.bi-arrow-repeat]="v.actionType === 'RENEWED'"
+                            [class.bi-file-medical-fill]="v.actionType !== 'DISPENSED' && v.actionType !== 'RENEWED'"
+                            [style.color]="getCardAccent(v.actionType)">
+                        </i>
+                    </div>
+
+                    <!-- Audit Card -->
+                    <div class="audit-card glass-card" [style.border-left-color]="getCardAccent(v.actionType)"
+                        [style.background]="'linear-gradient(135deg, ' + getCardGlow(v.actionType) + ' 0%, rgba(15,12,41,0.75) 100%)'">
+                        <!-- Header Row -->
+                        <div class="card-top-row">
+                            <div class="version-label-wrap">
+                                <span class="version-num" [style.color]="getCardAccent(v.actionType)">{{ v.versionLabel
+                                    }}</span>
+                                <span class="action-badge" [ngClass]="getBadgeClass(v.actionType)">{{ v.actionType
+                                    }}</span>
+                            </div>
+                            <span class="ts-pill"><i class="bi bi-clock me-1"></i>{{ v.modifiedAt || 'N/A' }}</span>
+                        </div>
+
+                        <!-- Delta Alert -->
+                        <div class="delta-alert" *ngIf="v.hasDelta">
+                            <i class="bi bi-arrow-left-right me-2"></i>
+                            <strong>Changes from previous version:</strong>
+                            <div class="delta-chips">
+                                <span class="delta-chip" *ngIf="v.prevMedicineName">
+                                    <i class="bi bi-capsule me-1"></i>
+                                    <span class="delta-old">{{ v.prevMedicineName }}</span>
+                                    <i class="bi bi-arrow-right mx-1"></i>
+                                    <span class="delta-new">{{ v.medicineName }}</span>
+                                </span>
+                                <span class="delta-chip" *ngIf="v.prevDosage">
+                                    <i class="bi bi-activity me-1"></i>
+                                    <span class="delta-old">{{ v.prevDosage }}</span>
+                                    <i class="bi bi-arrow-right mx-1"></i>
+                                    <span class="delta-new">{{ v.dosage }}</span>
+                                </span>
+                                <span class="delta-chip" *ngIf="v.prevDuration">
+                                    <i class="bi bi-calendar-range me-1"></i>
+                                    <span class="delta-old">{{ v.prevDuration }}</span>
+                                    <i class="bi bi-arrow-right mx-1"></i>
+                                    <span class="delta-new">{{ v.duration }}</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Roles Row -->
+                        <div class="roles-row">
+                            <div class="role-pill doctor">
+                                <div class="role-icon-wrap"><i class="bi bi-person-badge-fill"></i></div>
+                                <div>
+                                    <div class="role-tag">Prescribed by</div>
+                                    <div class="role-val">{{ v.prescribedByName || v.modifiedBy || 'N/A' }}</div>
+                                </div>
+                            </div>
+                            <div class="role-sep"></div>
+                            <div class="role-pill pharmacist" [class.pending]="!v.dispensedByName">
+                                <div class="role-icon-wrap"><i class="bi bi-capsule-pill"></i></div>
+                                <div>
+                                    <div class="role-tag">Dispensed by</div>
+                                    <div class="role-val" [class.pending-txt]="!v.dispensedByName">{{ v.dispensedByName
+                                        || '— Pending —' }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Clinical Data -->
+                        <div class="clinical-row">
+                            <div class="clinical-chip">
+                                <i class="bi bi-capsule" style="color:#4f8ef7"></i>
+                                <span class="chip-label">Medicine</span>
+                                <span class="chip-val">{{ v.medicineName || 'N/A' }}</span>
+                            </div>
+                            <div class="clinical-chip">
+                                <i class="bi bi-activity" style="color:#f59e0b"></i>
+                                <span class="chip-label">Dosage</span>
+                                <span class="chip-val">{{ v.dosage || 'N/A' }}</span>
+                            </div>
+                            <div class="clinical-chip">
+                                <i class="bi bi-calendar-range" style="color:#a855f7"></i>
+                                <span class="chip-label">Duration</span>
+                                <span class="chip-val">{{ v.duration || 'N/A' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

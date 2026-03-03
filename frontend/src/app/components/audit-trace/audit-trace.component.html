@@ -1,0 +1,148 @@
+<div class="audit-page">
+
+    <!-- ===== Page Header ===== -->
+    <div class="page-header">
+        <div class="header-left">
+            <a routerLink="/admin" class="back-link">
+                <i class="bi bi-arrow-left-circle-fill"></i>
+                <span>Admin Dashboard</span>
+            </a>
+            <h1 class="page-title">
+                <i class="bi bi-clock-history me-2"></i>
+                Audit Prescription Trace
+            </h1>
+            <p class="page-sub">Enter a Prescription ID to view its complete version history and lifecycle events.</p>
+        </div>
+    </div>
+
+    <!-- ===== Search Bar ===== -->
+    <div class="search-section">
+        <div class="search-card glass-card">
+            <div class="search-icon-wrap">
+                <i class="bi bi-search"></i>
+            </div>
+            <input id="auditSearchInput" type="number" class="search-input"
+                placeholder="Enter Prescription ID (e.g. 42)" [(ngModel)]="searchId" (keyup.enter)="trace()" min="1" />
+            <button class="trace-btn" (click)="trace()" [disabled]="isLoading">
+                <span *ngIf="!isLoading">
+                    <i class="bi bi-diagram-3 me-2"></i>Trace
+                </span>
+                <span *ngIf="isLoading">
+                    <span class="spinner-border spinner-border-sm me-2"></span>Tracing…
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== Error State ===== -->
+    <div class="error-box" *ngIf="error && !isLoading">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        {{ error }}
+    </div>
+
+    <!-- ===== Empty / Placeholder ===== -->
+    <div class="empty-state" *ngIf="!isLoading && !error && auditRecords.length === 0 && !tracedId">
+        <div class="empty-icon">
+            <i class="bi bi-clipboard2-pulse"></i>
+        </div>
+        <h3 class="empty-title">Ready to Trace</h3>
+        <p class="empty-sub">Enter a Prescription ID above and click <strong>Trace</strong> to inspect its full audit
+            history.</p>
+    </div>
+
+    <!-- ===== Timeline ===== -->
+    <div class="timeline-section" *ngIf="auditRecords.length > 0">
+        <div class="timeline-header">
+            <h2 class="timeline-title">
+                <i class="bi bi-journal-medical me-2"></i>
+                Prescription #{{ tracedId }} — Version Timeline
+                <span class="record-count-badge">{{ auditRecords.length }} event{{ auditRecords.length !== 1 ? 's' : ''
+                    }}</span>
+            </h2>
+        </div>
+
+        <div class="timeline">
+            <div class="timeline-item" *ngFor="let record of auditRecords; let i = index; let last = last">
+                <!-- Connector line -->
+                <div class="timeline-connector" *ngIf="!last">
+                    <div class="connector-line"></div>
+                </div>
+
+                <!-- Node -->
+                <div class="timeline-node" [style.border-color]="getCardAccent(record.actionType)">
+                    <i class="bi" [class.bi-check-circle-fill]="record.actionType === 'DISPENSED'"
+                        [class.bi-refresh]="record.actionType === 'RENEWED'"
+                        [class.bi-file-medical-fill]="record.actionType !== 'DISPENSED' && record.actionType !== 'RENEWED'"
+                        [style.color]="getCardAccent(record.actionType)">
+                    </i>
+                </div>
+
+                <!-- Card -->
+                <div class="audit-card glass-card" [style.border-left-color]="getCardAccent(record.actionType)"
+                    [style.background]="'linear-gradient(135deg, ' + getCardGlow(record.actionType) + ' 0%, rgba(255,255,255,0.85) 100%)'">
+                    <!-- Card Header -->
+                    <div class="card-header-row">
+                        <div class="version-block">
+                            <span class="version-label" [style.color]="getCardAccent(record.actionType)">
+                                {{ record.versionLabel || record.version || 'v1.0' }}
+                            </span>
+                            <span class="action-badge" [ngClass]="getBadgeClass(record.actionType)">
+                                {{ record.actionType || 'ISSUED' }}
+                            </span>
+                        </div>
+                        <div class="timestamp-block">
+                            <i class="bi bi-clock me-1"></i>
+                            {{ formatTimestamp(record.modifiedAt) }}
+                        </div>
+                    </div>
+
+                    <!-- Roles Row -->
+                    <div class="roles-row">
+                        <div class="role-item">
+                            <div class="role-icon doctor-icon">
+                                <i class="bi bi-person-badge-fill"></i>
+                            </div>
+                            <div class="role-info">
+                                <div class="role-label">Prescribed by</div>
+                                <div class="role-name">{{ record.prescribedByName || record.modifiedBy || 'N/A' }}</div>
+                            </div>
+                        </div>
+
+                        <div class="role-divider"></div>
+
+                        <div class="role-item">
+                            <div class="role-icon pharmacist-icon" [class.pending-icon]="!record.dispensedByName">
+                                <i class="bi bi-capsule-pill"></i>
+                            </div>
+                            <div class="role-info">
+                                <div class="role-label">Dispensed by</div>
+                                <div class="role-name" [class.pending-name]="!record.dispensedByName">
+                                    {{ record.dispensedByName || 'Pending' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clinical Data -->
+                    <div class="clinical-row">
+                        <div class="clinical-chip">
+                            <i class="bi bi-capsule me-1" style="color: #4f8ef7"></i>
+                            <span class="clinical-label">Medicine</span>
+                            <span class="clinical-value">{{ record.medicineName || 'N/A' }}</span>
+                        </div>
+                        <div class="clinical-chip">
+                            <i class="bi bi-activity me-1" style="color: #f59e0b"></i>
+                            <span class="clinical-label">Dosage</span>
+                            <span class="clinical-value">{{ record.dosage || 'N/A' }}</span>
+                        </div>
+                        <div class="clinical-chip">
+                            <i class="bi bi-calendar-range me-1" style="color: #a855f7"></i>
+                            <span class="clinical-label">Duration</span>
+                            <span class="clinical-value">{{ record.duration || 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

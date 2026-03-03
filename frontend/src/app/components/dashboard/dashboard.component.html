@@ -1,0 +1,162 @@
+<div class="d-flex vh-100 bg-apollo font-inter">
+    <!-- Sticky Sidebar -->
+    <nav class="sidebar d-flex flex-column p-4">
+        <div class="sidebar-brand mb-4">
+            <h4 class="fw-bold m-0 text-white">MedTrack Plus</h4>
+        </div>
+
+        <ul class="nav flex-column mb-auto">
+            <!-- Role-Specific Navigation -->
+            <li class="nav-item mb-2">
+                <a routerLink="/dashboard" class="nav-link text-white rounded-3 shadow-sm active">
+                    <i class="bi bi-grid-1x2-fill me-2"></i> Overview
+                </a>
+            </li>
+
+            <!-- Patient Links -->
+            <ng-container *ngIf="userRole === 'PATIENT'">
+                <li class="nav-item mb-2">
+                    <a routerLink="/patient/prescriptions" class="nav-link text-white rounded-3 shadow-sm">
+                        <i class="bi bi-medication me-2"></i> My Prescriptions
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a routerLink="/patient/history" class="nav-link text-white rounded-3 shadow-sm">
+                        <i class="bi bi-clock-history me-2"></i> Med History
+                    </a>
+                </li>
+            </ng-container>
+
+            <!-- Doctor Links -->
+            <ng-container *ngIf="userRole === 'DOCTOR'">
+                <li class="nav-item mb-2">
+                    <a routerLink="/doctor/prescriptions" class="nav-link text-white rounded-3 shadow-sm">
+                        <i class="bi bi-plus-circle-fill me-2"></i> Issue Rx
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a routerLink="/doctor/patients" class="nav-link text-white rounded-3 shadow-sm">
+                        <i class="bi bi-people-fill me-2"></i> My Patients
+                    </a>
+                </li>
+            </ng-container>
+
+            <!-- Pharmacist Links -->
+            <ng-container *ngIf="userRole === 'PHARMACIST'">
+                <li class="nav-item mb-2">
+                    <a routerLink="/pharmacist/inventory" class="nav-link text-white rounded-3 shadow-sm">
+                        <i class="bi bi-box-seam-fill me-2"></i> Inventory
+                    </a>
+                </li>
+            </ng-container>
+
+            <li class="nav-item mt-4">
+                <a routerLink="/notifications"
+                    class="nav-link text-white rounded-3 shadow-sm d-flex justify-content-between align-items-center"
+                    [ngClass]="{'bg-danger bg-opacity-25 border border-danger': unreadCount > 0, 'bg-dark bg-opacity-25': unreadCount === 0}">
+                    <span>
+                        <i class="bi bi-bell-fill me-2"
+                            [ngClass]="{'text-warning notification-glow': unreadCount > 0}"></i>
+                        Notifications
+                    </span>
+                    <span *ngIf="unreadCount > 0" class="badge bg-danger rounded-pill">{{ unreadCount }}</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer pt-3 mt-3 border-top border-secondary">
+            <div class="d-flex align-items-center mb-3">
+                <div class="avatar bg-primary text-white rounded-circle me-2">{{ fullName?.charAt(0) }}</div>
+                <div class="user-info">
+                    <div class="fw-bold text-white small">{{ fullName }}</div>
+                    <div class="text-white-50 x-small">{{ userRole | titlecase }}</div>
+                </div>
+            </div>
+            <button class="btn btn-outline-danger btn-sm w-100" (click)="logout()">
+                <i class="bi bi-box-arrow-right me-1"></i> Logout
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="flex-grow-1 overflow-auto p-5">
+        <div class="container-fluid">
+            <header class="mb-5">
+                <h2 class="fw-bold text-dark m-0">{{ userRole | titlecase }} Workspace</h2>
+                <p class="text-muted">Welcome back, {{ fullName }}. Here is your health management overview.</p>
+            </header>
+
+            <!-- Patient Overview Grid -->
+            <div *ngIf="userRole === 'PATIENT'" class="row g-4">
+                <div class="col-md-4">
+                    <div class="action-card clinical-blue-card p-4">
+                        <div class="card-icon mb-3">
+                            <i class="bi bi-capsule"></i>
+                        </div>
+                        <h5 class="fw-bold">My Prescriptions</h5>
+                        <p class="text-muted small">Access and download your valid digital prescriptions.</p>
+                        <button class="btn btn-primary rounded-pill w-100 mt-auto">View Rx</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="action-card p-4">
+                        <div class="card-icon secondary mb-3">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <h5 class="fw-bold">Treatment Adherence</h5>
+                        <p class="text-muted small">Log your daily doses and track recovery progress.</p>
+                        <button class="btn btn-secondary rounded-pill w-100 mt-auto">Log Doses</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doctor Overview Grid -->
+            <div *ngIf="userRole === 'DOCTOR'" class="row g-4">
+                <div class="col-md-4">
+                    <div class="action-card clinical-blue-card p-4">
+                        <div class="card-icon mb-3">
+                            <i class="bi bi-pencil-square"></i>
+                        </div>
+                        <h5 class="fw-bold">Issue New Rx</h5>
+                        <p class="text-muted small">Securely create and sign digital prescriptions for patients.</p>
+                        <button class="btn btn-primary rounded-pill w-100 mt-auto">Start Rx</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="action-card p-4">
+                        <div class="card-icon secondary mb-3">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <h5 class="fw-bold">Patient Registry</h5>
+                        <p class="text-muted small">Monitor patient lists and adherence red flags.</p>
+                        <button class="btn btn-secondary rounded-pill w-100 mt-auto">View Registry</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pharmacist Overview Grid -->
+            <div *ngIf="userRole === 'PHARMACIST'" class="row g-4">
+                <div class="col-md-4">
+                    <div class="action-card success-green-card p-4">
+                        <div class="card-icon green-icon mb-3">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                        <h5 class="fw-bold">Dispensing Handshake</h5>
+                        <p class="text-muted small">Verify Rx QR codes and notify doctors of fulfillment.</p>
+                        <button class="btn btn-success rounded-pill w-100 mt-auto">Process Order</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="action-card p-4">
+                        <div class="card-icon mb-3">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                        <h5 class="fw-bold">Inventory Control</h5>
+                        <p class="text-muted small">Manage stock levels and track medicine expirations.</p>
+                        <button class="btn btn-primary rounded-pill w-100 mt-auto">Manage Stock</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

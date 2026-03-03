@@ -1,0 +1,126 @@
+
+> frontend@0.0.0 build
+> ng build
+
+[33m❯[39m Building...
+[32m✔[39m Building...
+Application bundle generation failed. [3.985 seconds]
+
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/doctor-dashboard/doctor-dashboard.component.html:49:76:
+[37m      49 │ ...ass="small text-muted mb-3">{{draft.items?.[32mlength[37m || 0}} items</p>
+         ╵                                               [32m~~~~~~[0m
+
+  Error occurs in the template of component DoctorDashboardComponent.
+
+    src/app/components/doctor-dashboard/doctor-dashboard.component.ts:13:17:
+[37m      13 │     templateUrl: [32m'./doctor-dashboard.component.html'[37m,
+         ╵                  [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/patient-dashboard/patient-dashboard.component.html:111:72:
+[37m      111 │ ...          {{ activePrescriptions[0].items[0]?.[32mmedicineName[37m }} ({{
+          ╵                                                  [32m~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component PatientDashboardComponent.
+
+    src/app/components/patient-dashboard/patient-dashboard.component.ts:13:17:
+[37m      13 │     templateUrl: [32m'./patient-dashboard.component.html'[37m,
+         ╵                  [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/patient-dashboard/patient-dashboard.component.html:112:69:
+[37m      112 │ ...                      activePrescriptions[0].items[0]?.[32mdosage[37m }})
+          ╵                                                           [32m~~~~~~[0m
+
+  Error occurs in the template of component PatientDashboardComponent.
+
+    src/app/components/patient-dashboard/patient-dashboard.component.ts:13:17:
+[37m      13 │     templateUrl: [32m'./patient-dashboard.component.html'[37m,
+         ╵                  [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/patient-dashboard/patient-dashboard.component.html:179:99:
+[37m      179 │ ...ass="fw-bold text-dark mb-0">{{ p.items[0]?.[32mmedicineName[37m }}</div>
+          ╵                                                [32m~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component PatientDashboardComponent.
+
+    src/app/components/patient-dashboard/patient-dashboard.component.ts:13:17:
+[37m      13 │     templateUrl: [32m'./patient-dashboard.component.html'[37m,
+         ╵                  [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/patient-dashboard/patient-dashboard.component.html:181:67:
+[37m      181 │ ...             {{ p.items[0]?.[32mdosage[37m }} • {{ p.items[0]?.dosag...
+          ╵                                [32m~~~~~~[0m
+
+  Error occurs in the template of component PatientDashboardComponent.
+
+    src/app/components/patient-dashboard/patient-dashboard.component.ts:13:17:
+[37m      13 │     templateUrl: [32m'./patient-dashboard.component.html'[37m,
+         ╵                  [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/patient-dashboard/patient-dashboard.component.html:181:94:
+[37m      181 │ ...      {{ p.items[0]?.dosage }} • {{ p.items[0][32m?.dosageTimi[37mng }}
+          ╵                                                  [32m~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component PatientDashboardComponent.
+
+    src/app/components/patient-dashboard/patient-dashboard.component.ts:13:17:
+[37m      13 │     templateUrl: [32m'./patient-dashboard.component.html'[37m,
+         ╵                  [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/prescription-list/prescription-list.component.html:33:39:
+[37m      33 │                     <td>{{ p.items[0]?.[32mmedicineName[37m || 'N/A' }}</td>
+         ╵                                        [32m~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component PrescriptionListComponent.
+
+    src/app/components/prescription-list/prescription-list.component.ts:12:17:
+[37m      12 │     templateUrl: [32m'./prescription-list.component.html'[37m,
+         ╵                  [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/prescription-list/prescription-list.component.html:35:39:
+[37m      35 │                     <td>{{ p.items[0]?.[32mdosage[37m }}</td>
+         ╵                                        [32m~~~~~~[0m
+
+  Error occurs in the template of component PrescriptionListComponent.
+
+    src/app/components/prescription-list/prescription-list.component.ts:12:17:
+[37m      12 │     templateUrl: [32m'./prescription-list.component.html'[37m,
+         ╵                  [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mNG5: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/patient-dashboard/patient-dashboard.component.html:206:71:
+[37m      206 │ ...                (click)="viewHistory(p.[32mid[37m)" title="View History">
+          ╵                                           [32m~~[0m
+
+  Error occurs in the template of component PatientDashboardComponent.
+
+    src/app/components/patient-dashboard/patient-dashboard.component.ts:13:17:
+[37m      13 │     templateUrl: [32m'./patient-dashboard.component.html'[37m,
+         ╵                  [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m

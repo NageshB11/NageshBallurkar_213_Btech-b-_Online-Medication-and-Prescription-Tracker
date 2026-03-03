@@ -1,0 +1,104 @@
+.list-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header h2 {
+    color: #0056b3;
+}
+
+.back-link {
+    color: #6c757d;
+    text-decoration: none;
+}
+
+.filters-bar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.search-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.filter-select {
+    padding: 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    width: 200px;
+}
+
+.table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.prescription-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.prescription-table th,
+.prescription-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.prescription-table th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+}
+
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.approved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.expired {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.details-btn {
+    color: #0056b3;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.details-btn:hover {
+    text-decoration: underline;
+}
+
+.no-data {
+    text-align: center;
+    color: #6c757d;
+    padding: 2rem;
+}

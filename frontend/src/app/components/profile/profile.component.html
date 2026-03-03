@@ -1,0 +1,54 @@
+<div class="profile-container" *ngIf="user; else loading">
+    <h2>User Profile</h2>
+
+    <div class="profile-card">
+        <div class="field">
+            <label>Full Name:</label>
+            <span>{{ user.fullName }}</span>
+        </div>
+        <div class="field">
+            <label>Email:</label>
+            <span>{{ user.email }}</span>
+        </div>
+        <div class="field">
+            <label>Role:</label>
+            <span class="role-badge">{{ user.role }}</span>
+        </div>
+
+        <!-- Role Specific Details -->
+        <div *ngIf="user.role === 'DOCTOR'" class="role-details">
+            <h3>Doctor Details</h3>
+            <div class="field">
+                <label>License Number:</label>
+                <span>{{ user.medicalLicenseNumber }}</span>
+            </div>
+            <div class="field">
+                <label>Specialization:</label>
+                <span>{{ user.specialization }}</span>
+            </div>
+        </div>
+
+        <div *ngIf="user.role === 'PHARMACIST'" class="role-details">
+            <h3>Pharmacist Details</h3>
+            <div class="field">
+                <label>Shop Details:</label>
+                <span>{{ user.shopDetails }}</span>
+            </div>
+        </div>
+
+        <div *ngIf="user.role === 'PATIENT'" class="role-details">
+            <h3>Patient Details</h3>
+            <div class="field">
+                <label>Medical History:</label>
+                <p>{{ user.medicalHistory || 'No history recorded' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-template #loading>
+    <div class="loading">
+        <p *ngIf="!errorMessage">Loading profile...</p>
+        <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+    </div>
+</ng-template>

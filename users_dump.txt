@@ -1,0 +1,39 @@
+﻿mysql.exe : mysql: 
+[Warning] Using a password 
+on the command line 
+interface can be insecure.
+At line:1 char:1
++ & "C:\Program 
+Files\MySQL\MySQL Server 
+8.0\bin\mysql.exe" -u root 
+-pr ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (mys  
+  ql: [Warning...an be i   
+ nsecure.:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+id	email	role	is_verified
+1	admin@test.com	ADMIN	0
+2	console.test@example.com	PATIENT	0
+4	console.doctor@test.com	PATIENT	0
+6	co.doctor@test.com	PATIENT	0
+9	consoe.doctor@test.com	PATIENT	0
+10	console.ans@gmail.com	PATIENT	0
+11	console.leo@gmail.com	PATIENT	0
+12	console.admin@gmail.com	ADMIN	0
+13	console.alex@gmail.com	PATIENT	0
+14	console.doc@gmail.com	DOCTOR	1
+15	console.lara@gmail.com	PATIENT	0
+16	admin@medtrack.com	ADMIN	1
+17	testadmin2@test.com	ADMIN	0
+18	console.pharm@gmail.com	PHARMACIST	1
+19	antonyl@gmail.com	PATIENT	1
+20	xavierdoc@gmail.com	DOCTOR	1
+21	doctor@example.com	DOCTOR	1
+22	consolelara@gmail.com	PATIENT	1

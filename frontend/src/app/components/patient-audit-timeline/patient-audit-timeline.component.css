@@ -1,0 +1,608 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ─── Base ────────────────────────────────────────────────────────── */
+.page-wrapper {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f0c29 0%, #1a1a4e 50%, #0f0c29 100%);
+    padding: 2.5rem;
+    font-family: 'Inter', sans-serif;
+    color: #f1f5f9;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.45);
+    text-decoration: none;
+    font-size: 0.82rem;
+    margin-bottom: 0.75rem;
+    transition: color 0.2s;
+}
+
+.back-link:hover {
+    color: #4f8ef7;
+}
+
+.page-title {
+    font-size: 1.9rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 0.35rem;
+}
+
+.page-sub {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.88rem;
+    margin: 0 0 2rem;
+}
+
+/* ─── Glass Card ──────────────────────────────────────────────────── */
+.glass-card {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-radius: 20px;
+}
+
+/* ─── Patient Selector ────────────────────────────────────────────── */
+.selector-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.75rem;
+    margin-bottom: 2rem;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.selector-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.selector-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: rgba(79, 142, 247, 0.18);
+    border: 1px solid rgba(79, 142, 247, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: #7db8ff;
+}
+
+.selector-label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.selector-hint {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.selector-right {
+    flex: 1;
+    min-width: 260px;
+    max-width: 480px;
+}
+
+.select-wrap {
+    position: relative;
+}
+
+.patient-select {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 0.7rem 2.5rem 0.7rem 1rem;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.patient-select:focus {
+    outline: none;
+    border-color: #4f8ef7;
+}
+
+.patient-select option {
+    background: #1a1a4e;
+    color: #fff;
+}
+
+.select-arrow {
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+    font-size: 0.8rem;
+}
+
+.loading-row {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+}
+
+/* ─── Loading / Error / Empty ─────────────────────────────────────── */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4rem 0;
+    gap: 1rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.loading-spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid rgba(79, 142, 247, 0.2);
+    border-top-color: #4f8ef7;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.error-box {
+    background: rgba(239, 68, 68, 0.13);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: 14px;
+    padding: 0.9rem 1.4rem;
+    color: #fca5a5;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 5rem 0;
+    text-align: center;
+    gap: 0.75rem;
+}
+
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(79, 142, 247, 0.1);
+    border: 2px solid rgba(79, 142, 247, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #4f8ef7;
+    animation: pulse 3s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(79, 142, 247, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 0 14px rgba(79, 142, 247, 0);
+    }
+}
+
+.empty-state h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
+.empty-state p {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.38);
+    max-width: 340px;
+    margin: 0;
+}
+
+/* ─── Stats Bar ───────────────────────────────────────────────────── */
+.stats-bar {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 0.85rem 1.5rem;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stat-num {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.stat-label {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.stat-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.patient-name-stat {
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+}
+
+/* ─── Prescription Groups ─────────────────────────────────────────── */
+.rx-group {
+    margin-bottom: 1.5rem;
+}
+
+.rx-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 0.9rem 1.4rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s, border-color 0.2s;
+    margin-bottom: 0.5rem;
+}
+
+.rx-group-header:hover {
+    background: rgba(79, 142, 247, 0.1);
+    border-color: rgba(79, 142, 247, 0.3);
+}
+
+.rx-group-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.rx-id-pill {
+    background: rgba(79, 142, 247, 0.2);
+    border: 1px solid rgba(79, 142, 247, 0.35);
+    color: #7db8ff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.3rem 0.85rem;
+    border-radius: 20px;
+}
+
+.rx-event-count {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.rx-group-right {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.85rem;
+}
+
+/* ─── Version Timeline ────────────────────────────────────────────── */
+.version-timeline {
+    padding-left: 0.5rem;
+}
+
+.version-item {
+    display: flex;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.v-connector {
+    position: absolute;
+    left: 21px;
+    top: 46px;
+    bottom: -1.5rem;
+    width: 2px;
+    display: flex;
+    justify-content: center;
+}
+
+.v-line {
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(79, 142, 247, 0.5) 0%, rgba(79, 142, 247, 0.04) 100%);
+}
+
+.v-node {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    z-index: 2;
+    transition: transform 0.25s;
+}
+
+.version-item:hover .v-node {
+    transform: scale(1.1);
+}
+
+/* ─── Audit Card ──────────────────────────────────────────────────── */
+.audit-card {
+    flex: 1;
+    padding: 1.4rem;
+    border-left: 4px solid;
+    transition: transform 0.22s, box-shadow 0.22s;
+}
+
+.audit-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.4);
+}
+
+/* Card Top Row */
+.card-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.version-label-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.version-num {
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.action-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.28rem 0.8rem;
+    border-radius: 20px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.badge-apollo {
+    background: rgba(79, 142, 247, 0.2);
+    color: #7db8ff;
+    border: 1px solid rgba(79, 142, 247, 0.35);
+}
+
+.badge-success {
+    background: rgba(34, 197, 94, 0.2);
+    color: #86efac;
+    border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.badge-purple {
+    background: rgba(168, 85, 247, 0.2);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.35);
+}
+
+.ts-pill {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.38);
+    white-space: nowrap;
+}
+
+/* Delta Alert */
+.delta-alert {
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 10px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.8rem;
+    color: #fde68a;
+}
+
+.delta-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.delta-chip {
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    border-radius: 8px;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.delta-old {
+    color: rgba(255, 255, 255, 0.4);
+    text-decoration: line-through;
+}
+
+.delta-new {
+    color: #fde68a;
+    font-weight: 600;
+}
+
+/* Roles Row */
+.roles-row {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    padding: 0.85rem 1.1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.role-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex: 1;
+}
+
+.role-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+.role-pill.doctor .role-icon-wrap {
+    background: rgba(79, 142, 247, 0.18);
+    color: #7db8ff;
+    border: 1px solid rgba(79, 142, 247, 0.28);
+}
+
+.role-pill.pharmacist .role-icon-wrap {
+    background: rgba(34, 197, 94, 0.18);
+    color: #86efac;
+    border: 1px solid rgba(34, 197, 94, 0.28);
+}
+
+.role-pill.pending .role-icon-wrap {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.role-tag {
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.32);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    margin-bottom: 0.12rem;
+}
+
+.role-val {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.pending-txt {
+    color: rgba(255, 255, 255, 0.28) !important;
+    font-style: italic;
+}
+
+.role-sep {
+    width: 1px;
+    height: 34px;
+    background: rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+}
+
+/* Clinical Chips */
+.clinical-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.clinical-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 10px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.8rem;
+}
+
+.chip-label {
+    color: rgba(255, 255, 255, 0.32);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-right: 0.2rem;
+}
+
+.chip-val {
+    color: rgba(255, 255, 255, 0.88);
+    font-weight: 600;
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .page-wrapper {
+        padding: 1.2rem;
+    }
+
+    .selector-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .card-top-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .roles-row {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .role-sep {
+        width: 100%;
+        height: 1px;
+    }
+}
