@@ -1,0 +1,118 @@
+.analytics-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    padding: 2rem 1.5rem 4rem;
+    font-family: 'Inter', sans-serif;
+    color: #e2e8f0;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.page-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #818cf8, #c084fc);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.page-sub {
+    color: #64748b;
+    font-size: .95rem;
+    margin-top: .25rem;
+}
+
+.loading-state {
+    display: flex;
+    justify-content: center;
+    padding: 4rem;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(129, 140, 248, .2);
+    border-top-color: #818cf8;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.25rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.chart-card {
+    background: rgba(30, 27, 75, .65);
+    border: 1px solid rgba(129, 140, 248, .2);
+    border-radius: 18px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.chart-card.wide {
+    grid-column: 1/-1;
+}
+
+.chart-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 1.25rem;
+}
+
+.no-risk {
+    color: #22c55e;
+    text-align: center;
+    padding: 2rem;
+    font-size: .9rem;
+}
+
+.risk-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .85rem;
+}
+
+.risk-table th {
+    color: #64748b;
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding: .5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    text-align: left;
+}
+
+.risk-table td {
+    padding: .65rem .5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, .05);
+    color: #cbd5e1;
+}
+
+.pct {
+    font-weight: 700;
+    color: #22c55e;
+}
+
+.pct.low {
+    color: #ef4444;
+}
+
+.missed-count {
+    color: #f59e0b;
+    font-weight: 600;
+}

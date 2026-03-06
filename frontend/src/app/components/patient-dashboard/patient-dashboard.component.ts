@@ -14,12 +14,14 @@ import { Appointment, AppointmentStatus } from '../../models/appointment.model';
 
 import { VitalsChartComponent } from '../vitals-chart/vitals-chart.component';
 import { SosCardComponent } from '../sos-card/sos-card.component';
+import { AdherenceGaugeComponent } from '../adherence-gauge/adherence-gauge.component';
 import { RenewalService } from '../../services/renewal.service';
+import { DoseLogService } from '../../services/dose-log.service';
 
 @Component({
     selector: 'app-patient-dashboard',
     standalone: true,
-    imports: [CommonModule, RouterModule, FormsModule, VitalsChartComponent, SosCardComponent],
+    imports: [CommonModule, RouterModule, FormsModule, VitalsChartComponent, SosCardComponent, AdherenceGaugeComponent],
     templateUrl: './patient-dashboard.component.html',
     styleUrl: './patient-dashboard.component.css'
 })
@@ -33,6 +35,7 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
     loading = true;
     selectedHistory: any[] | null = null;
     adherenceLogs: any[] = []; // Store logs
+    myAdherence30Days: number = 0;
     private pollSub?: Subscription;
 
     // For Appointment Modal
@@ -52,7 +55,8 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
         private appointmentService: AppointmentService,
         private adherenceService: AdherenceService,
         private renewalService: RenewalService,
-        private doctorService: DoctorService
+        private doctorService: DoctorService,
+        private doseLogService: DoseLogService
     ) { }
 
     ngOnInit(): void {
@@ -120,6 +124,11 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
             this.appointmentService.getPatientAppointments(this.userId).subscribe({
                 next: (data) => this.appointments = data,
                 error: (err) => console.error('Error fetching appointments', err)
+            });
+
+            this.doseLogService.getMyAdherenceStats().subscribe({
+                next: (stats) => this.myAdherence30Days = stats.percent,
+                error: (err) => console.error('Error fetching 30-day adherence', err)
             });
         }
     }

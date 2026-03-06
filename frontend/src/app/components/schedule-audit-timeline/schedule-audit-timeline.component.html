@@ -1,0 +1,45 @@
+<div class="audit-page">
+    <div class="page-header">
+        <a routerLink="/schedules" class="back-btn">← Back to Schedules</a>
+        <h1 class="page-title">🕒 Schedule Version History</h1>
+        <p class="page-sub">All changes to Schedule #{{ scheduleId }}</p>
+    </div>
+
+    <div class="loading-state" *ngIf="loading">
+        <div class="spinner"></div>
+    </div>
+    <div class="error-state" *ngIf="error">{{ error }}</div>
+
+    <div class="empty-state" *ngIf="!loading && !error && auditEntries.length === 0">
+        <p>No audit history found for this schedule.</p>
+    </div>
+
+    <div class="timeline" *ngIf="!loading && auditEntries.length > 0">
+        <div class="timeline-item" *ngFor="let entry of auditEntries; let last = last">
+
+            <div class="timeline-rail">
+                <div class="timeline-dot" [style.border-color]="changeTypeColors[entry.changeType]">
+                    {{ changeTypeIcons[entry.changeType] }}
+                </div>
+                <div class="timeline-line" *ngIf="!last"></div>
+            </div>
+
+            <div class="audit-card">
+                <div class="audit-header">
+                    <span class="version-badge">v{{ entry.versionLabel }}</span>
+                    <span class="change-type" [style.color]="changeTypeColors[entry.changeType]">
+                        {{ entry.changeType }}
+                    </span>
+                    <span class="audit-time">{{ formatDate(entry.changedAt) }}</span>
+                </div>
+
+                <p class="audit-summary">{{ entry.changeSummary }}</p>
+
+                <div class="audit-by" *ngIf="entry.changedBy">
+                    Changed by: <strong>{{ entry.changedBy.name || entry.changedBy.email }}</strong>
+                    <span class="role-badge">{{ entry.changedBy.role }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

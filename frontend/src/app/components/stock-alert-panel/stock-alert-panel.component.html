@@ -1,0 +1,30 @@
+<div class="alert-panel">
+    <div class="panel-header">
+        <h3 class="panel-title">⚠️ Stock Alerts</h3>
+        <span class="alert-count" *ngIf="alerts.length > 0">{{ alerts.length }} Active</span>
+    </div>
+
+    <div class="loading-spinner" *ngIf="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="no-alerts" *ngIf="!loading && alerts.length === 0">
+        <span class="ok-icon">✅</span>
+        <p>No active stock alerts</p>
+    </div>
+
+    <div class="alert-list" *ngIf="!loading && alerts.length > 0">
+        <div class="alert-item" *ngFor="let alert of alerts">
+            <div class="alert-top">
+                <span class="medicine-name">{{ alert.medicine?.name || 'Unknown Medicine' }}</span>
+                <span class="alert-badge" [class]="alertBadgeClass(alert.alertType)">
+                    {{ alert.alertType === 'OUT_OF_STOCK' ? '🚨 Out of Stock' : '⚠️ Low Stock' }}
+                </span>
+            </div>
+            <div class="alert-meta">
+                Raised: {{ formatDate(alert.raisedAt) }}
+            </div>
+            <button class="btn-resolve" (click)="resolve(alert.id)">✓ Mark Resolved</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,47 @@
+<div class="analytics-page">
+    <div class="page-header">
+        <h1 class="page-title">📊 Schedule Analytics</h1>
+        <p class="page-sub">Patient adherence and medication trends (last 30 days)</p>
+    </div>
+
+    <div class="loading-state" *ngIf="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="charts-grid" *ngIf="!loading">
+        <div class="chart-card wide">
+            <h3 class="chart-title">Patient Adherence Rate</h3>
+            <canvas #adherenceChart></canvas>
+        </div>
+
+        <div class="chart-card">
+            <h3 class="chart-title">Top Scheduled Medicines</h3>
+            <canvas #medicineChart></canvas>
+        </div>
+
+        <div class="chart-card">
+            <h3 class="chart-title">🚨 High Miss-Rate Patients</h3>
+            <div class="no-risk" *ngIf="highRiskPatients.length === 0">
+                <span>✅ All patients have good adherence</span>
+            </div>
+            <div class="risk-table" *ngIf="highRiskPatients.length > 0">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Adherence</th>
+                            <th>Missed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let p of highRiskPatients">
+                            <td>{{ p.patientName }}</td>
+                            <td class="pct" [class.low]="p.adherencePercent < 50">{{ p.adherencePercent }}%</td>
+                            <td class="missed-count">{{ p.missedCount }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

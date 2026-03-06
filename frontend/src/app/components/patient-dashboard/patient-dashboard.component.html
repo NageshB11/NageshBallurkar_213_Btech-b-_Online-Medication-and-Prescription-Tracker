@@ -297,28 +297,9 @@
                                 Overall Adherence
                             </h6>
 
-                            <!-- Circular SVG Adherence Graph -->
+                            <!-- 30-Day Adherence Gauge -->
                             <div class="adherence-ring-wrap mb-3">
-                                <svg width="150" height="150">
-                                    <!-- Track -->
-                                    <circle cx="75" cy="75" r="62" style="fill:none; stroke:#e9ecef; stroke-width:12;">
-                                    </circle>
-                                    <!-- Progress -->
-                                    <circle cx="75" cy="75" r="62"
-                                        style="fill:none; stroke:url(#blueGrad); stroke-width:12; stroke-dasharray:390; stroke-linecap:round; transform:rotate(-90deg); transform-origin:center;"
-                                        [style.stroke-dashoffset]="getAdherenceOffset(overallAdherence)">
-                                    </circle>
-                                    <defs>
-                                        <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" style="stop-color:#0984e3" />
-                                            <stop offset="100%" style="stop-color:#74b9ff" />
-                                        </linearGradient>
-                                    </defs>
-                                </svg>
-                                <div class="ring-inner">
-                                    <div class="ring-percent">{{ overallAdherence }}%</div>
-                                    <div class="ring-label">taken</div>
-                                </div>
+                                <app-adherence-gauge [percent]="myAdherence30Days" [size]="160"></app-adherence-gauge>
                             </div>
 
                             <p class="section-sub mb-3">
@@ -535,24 +516,7 @@
                     <div class="row align-items-center g-4">
                         <div class="col-auto text-center">
                             <div class="adherence-ring-wrap">
-                                <svg width="160" height="160">
-                                    <circle cx="80" cy="80" r="68" style="fill:none;stroke:#e9ecef;stroke-width:14;">
-                                    </circle>
-                                    <circle cx="80" cy="80" r="68"
-                                        style="fill:none;stroke:url(#grad2);stroke-width:14;stroke-dasharray:427;stroke-linecap:round;transform:rotate(-90deg);transform-origin:center;"
-                                        [style.stroke-dashoffset]="getAdherenceOffset2(overallAdherence)">
-                                    </circle>
-                                    <defs>
-                                        <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" style="stop-color:#0984e3" />
-                                            <stop offset="100%" style="stop-color:#00b894" />
-                                        </linearGradient>
-                                    </defs>
-                                </svg>
-                                <div class="ring-inner">
-                                    <div class="ring-percent" style="font-size:1.7rem;">{{ overallAdherence }}%</div>
-                                    <div class="ring-label">Overall</div>
-                                </div>
+                                <app-adherence-gauge [percent]="myAdherence30Days" [size]="180"></app-adherence-gauge>
                             </div>
                         </div>
                         <div class="col">

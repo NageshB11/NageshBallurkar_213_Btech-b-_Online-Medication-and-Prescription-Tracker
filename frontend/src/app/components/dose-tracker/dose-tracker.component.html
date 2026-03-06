@@ -1,0 +1,77 @@
+<div class="tracker-page">
+    <div class="tracker-header">
+        <h1 class="tracker-title">💊 Today's Medication Journey</h1>
+        <p class="tracker-date">{{ today | date:'EEEE, MMMM d, yyyy' }}</p>
+    </div>
+
+    <div class="loading-state" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Loading your doses…</p>
+    </div>
+
+    <div class="error-state" *ngIf="error">{{ error }}</div>
+
+    <div class="empty-state" *ngIf="!loading && !error && mealGroups.length === 0">
+        <div class="empty-icon">🌿</div>
+        <h3>No doses scheduled for today</h3>
+        <p>Your medication reminders will appear here once you create a schedule.</p>
+        <a routerLink="/schedules/create" class="btn-create">+ Create Schedule</a>
+    </div>
+
+    <!-- Vertical Journey Timeline -->
+    <div class="timeline" *ngIf="!loading && mealGroups.length > 0">
+        <div class="timeline-item" *ngFor="let group of mealGroups; let last = last">
+
+            <!-- Timeline dot + connector -->
+            <div class="timeline-rail">
+                <div class="timeline-dot">{{ group.icon }}</div>
+                <div class="timeline-line" *ngIf="!last"></div>
+            </div>
+
+            <!-- Pill Card -->
+            <div class="pill-card">
+                <div class="pill-card-header">
+                    <div class="meal-label">{{ group.label }}</div>
+                    <div class="meal-time">{{ group.time }}</div>
+                </div>
+
+                <div class="dose-list">
+                    <div class="dose-row" *ngFor="let dose of group.doses">
+                        <div class="dose-info">
+                            <span class="dose-medicine">{{ dose.medicineName }}</span>
+                            <span class="dose-dosage">{{ dose.dosage }}</span>
+                        </div>
+
+                        <div class="dose-actions">
+                            <!-- Status badge (if marked) -->
+                            <span class="status-badge" [class]="statusClass(dose.status)"
+                                *ngIf="dose.status !== 'PENDING' && dose.status !== 'SNOOZED'">
+                                {{ dose.status === 'TAKEN' ? '✓ Taken' : dose.status === 'MISSED' ? '✗ Missed' : '—
+                                Skipped' }}
+                                <span class="actual-time" *ngIf="dose.actualTime">
+                                    {{ dose.actualTime | date:'HH:mm' }}
+                                </span>
+                            </span>
+
+                            <span class="status-badge status-snoozed" *ngIf="dose.status === 'SNOOZED'">
+                                ⏰ Snoozed ({{ dose.snoozeCount }})
+                                <span class="actual-time" *ngIf="dose.snoozedUntil">
+                                    Until {{ dose.snoozedUntil | date:'HH:mm' }}
+                                </span>
+                            </span>
+
+                            <!-- Action buttons (if pending/snoozed) -->
+                            <ng-container *ngIf="canMark(dose)">
+                                <span class="status-badge status-pending" *ngIf="dose.status === 'PENDING'">⏳
+                                    Pending</span>
+                                <button class="btn-taken" (click)="mark(dose, 'TAKEN')">✓ Taken</button>
+                                <button class="btn-snooze" (click)="snooze(dose)">⏰ Snooze</button>
+                                <button class="btn-skipped" (click)="mark(dose, 'SKIPPED')">✗ Skip</button>
+                            </ng-container>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

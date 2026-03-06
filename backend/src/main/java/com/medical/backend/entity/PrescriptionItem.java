@@ -18,6 +18,8 @@ public class PrescriptionItem {
     private int quantity;
 
     private String dosageTiming;
+    private String mealSlots; // e.g. "BREAKFAST,LUNCH,DINNER"
+    private String foodInstruction; // "BEFORE_FOOD" | "AFTER_FOOD" | "WITH_FOOD" | "ANY"
     private java.time.LocalDate startDate;
     private java.time.LocalDate endDate;
 

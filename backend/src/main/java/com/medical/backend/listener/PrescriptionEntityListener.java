@@ -98,13 +98,40 @@ public class PrescriptionEntityListener {
             }
             snapshot.put("items", itemSnapshots);
 
-            // ── 6. Build and save the audit record ───────────────────────────────
+            // ── 6. Detect dosage/duration changes vs previous audit ──────────
+            String changeReason = "Auto-audit: " + actionType;
+            long auditCount = repository.countByPrescriptionId(prescription.getId());
+            if (auditCount > 0) {
+                // Load latest audit entry to diff dosage and duration
+                try {
+                    List<PrescriptionAudit> history = repository
+                            .findByPrescriptionIdOrderByModifiedAtDesc(prescription.getId());
+                    if (!history.isEmpty()) {
+                        PrescriptionAudit prev = history.get(0);
+                        List<String> changes = new ArrayList<>();
+                        if (prev.getDosage() != null && !prev.getDosage().equals(dosage)) {
+                            changes.add("Dosage changed: " + prev.getDosage() + " → " + dosage);
+                        }
+                        if (prev.getDuration() != null && !prev.getDuration().equals(duration)) {
+                            changes.add("Duration changed: " + prev.getDuration() + " → " + duration);
+                        }
+                        if (!changes.isEmpty()) {
+                            changeReason = String.join("; ", changes) + " [by " + currentUser + "]";
+                            // Bump audit version to reflect clinical modification (v1.0 → v1.1)
+                            snapshot.put("changeType", "CLINICAL_MODIFICATION");
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+
+            // ── 7. Build and save the audit record ───────────────────────────
             PrescriptionAudit audit = new PrescriptionAudit();
             audit.setPrescriptionId(prescription.getId());
             audit.setVersionLabel(versionLabel);
             audit.setActionType(actionType);
             audit.setModifiedBy(currentUser);
-            audit.setChangeReason("Auto-audit: " + actionType);
+            audit.setChangeReason(changeReason);
 
             // Prescribed-by
             if (prescription.getDoctor() != null) {

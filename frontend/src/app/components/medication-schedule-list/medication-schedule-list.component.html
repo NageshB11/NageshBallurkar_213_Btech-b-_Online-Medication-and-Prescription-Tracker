@@ -1,0 +1,51 @@
+<div class="schedules-page">
+    <div class="page-header">
+        <h1 class="page-title">💊 My Medication Schedules</h1>
+        <a routerLink="/schedules/create" class="btn-create">+ New Schedule</a>
+    </div>
+
+    <div class="loading-state" *ngIf="loading">
+        <div class="spinner"></div>
+    </div>
+    <div class="error-state" *ngIf="error">{{ error }}</div>
+
+    <div class="empty-state" *ngIf="!loading && !error && schedules.length === 0">
+        <div class="empty-icon">📋</div>
+        <h3>No schedules yet</h3>
+        <p>Create your first medication schedule from a dispensed prescription.</p>
+        <a routerLink="/schedules/create" class="btn-create">+ Create Schedule</a>
+    </div>
+
+    <div class="schedules-grid" *ngIf="!loading && schedules.length > 0">
+        <div class="schedule-card" *ngFor="let s of schedules">
+            <div class="card-header">
+                <div class="schedule-name">{{ s.scheduleName || 'Medication Schedule' }}</div>
+                <span class="status-badge" [class]="statusClass(s.status)">{{ s.status }}</span>
+            </div>
+
+            <div class="card-info">
+                <div class="info-row">
+                    <span class="info-label">📅 Started</span>
+                    <span class="info-value">{{ s.startDate | date:'mediumDate' }}</span>
+                </div>
+                <div class="info-row" *ngIf="s.endDate">
+                    <span class="info-label">🏁 Ends</span>
+                    <span class="info-value">{{ s.endDate | date:'mediumDate' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">💊 Prescription</span>
+                    <span class="info-value">#{{ s.prescription?.id }}</span>
+                </div>
+            </div>
+
+            <div class="card-actions">
+                <a [routerLink]="['/doses/today']" class="btn-action btn-today">📋 Today's Doses</a>
+                <a [routerLink]="['/schedules', s.id, 'audit']" class="btn-action btn-audit">🕒 History</a>
+                <button class="btn-action btn-pause" *ngIf="s.status === 'ACTIVE'" (click)="pause(s.id)">⏸
+                    Pause</button>
+                <button class="btn-action btn-resume" *ngIf="s.status === 'PAUSED'" (click)="resume(s.id)">▶
+                    Resume</button>
+            </div>
+        </div>
+    </div>
+</div>

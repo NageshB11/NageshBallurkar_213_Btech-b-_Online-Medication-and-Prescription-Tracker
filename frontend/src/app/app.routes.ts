@@ -121,6 +121,35 @@ export const routes: Routes = [
         path: 'pending-verification',
         loadComponent: () => import('./components/pending-verification/pending-verification.component').then(m => m.PendingVerificationComponent)
     },
+    // ── Medication Schedule Module ────────────────────────────────────
+    {
+        path: 'schedules',
+        loadComponent: () => import('./components/medication-schedule-list/medication-schedule-list.component').then(m => m.MedicationScheduleListComponent),
+        canActivate: [authGuard, roleGuard],
+        data: { role: 'PATIENT' }
+    },
+    {
+        path: 'schedules/create',
+        loadComponent: () => import('./components/medication-schedule-create/medication-schedule-create.component').then(m => m.MedicationScheduleCreateComponent),
+        canActivate: [authGuard, roleGuard],
+        data: { role: 'PATIENT' }
+    },
+    {
+        path: 'schedules/:id/audit',
+        loadComponent: () => import('./components/schedule-audit-timeline/schedule-audit-timeline.component').then(m => m.ScheduleAuditTimelineComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'doses/today',
+        loadComponent: () => import('./components/dose-tracker/dose-tracker.component').then(m => m.DoseTrackerComponent),
+        canActivate: [authGuard, roleGuard],
+        data: { role: 'PATIENT' }
+    },
+    {
+        path: 'analytics/schedules',
+        loadComponent: () => import('./components/schedule-analytics-dashboard/schedule-analytics-dashboard.component').then(m => m.ScheduleAnalyticsDashboardComponent),
+        canActivate: [authGuard]
+    },
     {
         path: '',
         redirectTo: 'login',

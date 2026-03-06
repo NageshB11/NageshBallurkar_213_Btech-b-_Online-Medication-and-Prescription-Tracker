@@ -1,0 +1,146 @@
+<div class="wizard-container">
+    <div class="wizard-header">
+        <h1 class="wizard-title">💊 Create Medication Schedule</h1>
+        <p class="wizard-sub">Set your schedule from your dispensed prescription</p>
+
+        <!-- Step indicators -->
+        <div class="steps">
+            <div class="step" [class.active]="step >= 1" [class.done]="step > 1">
+                <div class="step-circle">{{ step > 1 ? '✓' : '1' }}</div>
+                <span>Meal Times</span>
+            </div>
+            <div class="step-line" [class.active]="step > 1"></div>
+            <div class="step" [class.active]="step >= 2" [class.done]="step > 2">
+                <div class="step-circle">{{ step > 2 ? '✓' : '2' }}</div>
+                <span>Doctor's Directive</span>
+            </div>
+            <div class="step-line" [class.active]="step > 2"></div>
+            <div class="step" [class.active]="step >= 3">
+                <div class="step-circle">3</div>
+                <span>Confirm</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Step 1: Meal Times ── -->
+    <div class="wizard-body" *ngIf="step === 1">
+        <div class="step-card">
+            <h2 class="step-heading">🌅 Set Your Daily Meal Times</h2>
+            <p class="step-desc">We'll use these to send you medication reminders at the right time.</p>
+
+            <div class="meal-time-grid">
+                <div class="meal-time-row">
+                    <span class="meal-icon">🌅</span>
+                    <label>Breakfast</label>
+                    <input type="time" class="time-input" [(ngModel)]="mealPrefs.breakfastTime" />
+                </div>
+                <div class="meal-time-row">
+                    <span class="meal-icon">☀️</span>
+                    <label>Lunch</label>
+                    <input type="time" class="time-input" [(ngModel)]="mealPrefs.lunchTime" />
+                </div>
+                <div class="meal-time-row">
+                    <span class="meal-icon">🌙</span>
+                    <label>Dinner</label>
+                    <input type="time" class="time-input" [(ngModel)]="mealPrefs.dinnerTime" />
+                </div>
+            </div>
+
+            <div class="offset-row">
+                <label>⏱ Before-Food Reminder Offset</label>
+                <div class="offset-input-wrap">
+                    <input type="number" class="offset-input" [(ngModel)]="mealPrefs.preMealOffsetMinutes" min="5"
+                        max="60" />
+                    <span>minutes before meal</span>
+                </div>
+                <small>E.g., if your Lunch is at 1:30 PM and offset is 15 min, reminder fires at 1:15 PM for "Before
+                    Food" medicines.</small>
+            </div>
+
+            <div class="wizard-actions">
+                <button class="btn-primary" (click)="nextStep()">Next — Review Doctor's Directive →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Step 2: Doctor's Directive (read-only) ── -->
+    <div class="wizard-body" *ngIf="step === 2">
+        <div class="step-card">
+            <h2 class="step-heading">👨‍⚕️ Doctor's Medication Directive</h2>
+            <p class="step-desc">Your doctor has defined the following schedule. These are <strong>clinically
+                    required</strong> and cannot be changed.</p>
+
+            <div class="directive-list" *ngIf="prescriptionItems.length > 0; else noItems">
+                <div class="directive-card" *ngFor="let item of prescriptionItems">
+                    <div class="directive-header">
+                        <span class="medicine-name">{{ item.medicineName }}</span>
+                        <span class="dosage-badge">{{ item.dosage }}</span>
+                    </div>
+
+                    <div class="food-instruction-badge"
+                        [class]="item.foodInstruction === 'BEFORE_FOOD' ? 'badge-before' : 'badge-after'">
+                        🔒 {{ getFoodLabel(item.foodInstruction) }}
+                    </div>
+
+                    <div class="slot-chips" *ngIf="getMealSlotList(item).length > 0">
+                        <span class="slot-chip" *ngFor="let slot of getMealSlotList(item)">
+                            {{ getMealIcon(slot) }} {{ slot | titlecase }}
+                        </span>
+                    </div>
+
+                    <div class="locked-notice">
+                        <span>🔒 Locked by your prescribing doctor for clinical safety</span>
+                    </div>
+                </div>
+            </div>
+            <ng-template #noItems>
+                <p class="empty-msg">No prescription items found. Please select a valid dispensed prescription.</p>
+            </ng-template>
+
+            <div class="wizard-actions">
+                <button class="btn-ghost" (click)="prevStep()">← Back</button>
+                <button class="btn-primary" (click)="nextStep()">Next — Confirm →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Step 3: Confirm ── -->
+    <div class="wizard-body" *ngIf="step === 3">
+        <div class="step-card">
+            <h2 class="step-heading">✅ Confirm Your Schedule</h2>
+            <p class="step-desc">Review the final schedule before creation.</p>
+
+            <div class="confirm-summary">
+                <div class="summary-row">
+                    <span class="summary-label">🌅 Breakfast</span>
+                    <span class="summary-value">{{ mealPrefs.breakfastTime }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">☀️ Lunch</span>
+                    <span class="summary-value">{{ mealPrefs.lunchTime }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">🌙 Dinner</span>
+                    <span class="summary-value">{{ mealPrefs.dinnerTime }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">💊 Medicines</span>
+                    <span class="summary-value">{{ prescriptionItems.length }} from Rx #{{ prescriptionId }}</span>
+                </div>
+            </div>
+
+            <div class="error-msg" *ngIf="error">{{ error }}</div>
+
+            <div class="success-msg" *ngIf="success">
+                ✅ Schedule created! Redirecting to your schedules…
+            </div>
+
+            <div class="wizard-actions" *ngIf="!success">
+                <button class="btn-ghost" (click)="prevStep()">← Back</button>
+                <button class="btn-primary" [disabled]="loading" (click)="submit()">
+                    {{ loading ? 'Creating…' : '🚀 Create Schedule' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

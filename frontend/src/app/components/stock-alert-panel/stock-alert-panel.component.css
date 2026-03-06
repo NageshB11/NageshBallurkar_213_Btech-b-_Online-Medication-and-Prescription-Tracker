@@ -1,0 +1,129 @@
+.alert-panel {
+    background: rgba(30, 27, 75, .65);
+    border: 1px solid rgba(245, 158, 11, .25);
+    border-radius: 16px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.panel-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0;
+}
+
+.alert-count {
+    background: rgba(239, 68, 68, .15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, .3);
+    border-radius: 20px;
+    padding: .2rem .75rem;
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(245, 158, 11, .2);
+    border-top-color: #f59e0b;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    margin: .5rem auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.no-alerts {
+    text-align: center;
+    padding: 1.5rem;
+    color: #64748b;
+    font-size: .9rem;
+}
+
+.ok-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: .5rem;
+}
+
+.alert-list {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+}
+
+.alert-item {
+    background: rgba(239, 68, 68, .06);
+    border: 1px solid rgba(239, 68, 68, .2);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.alert-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .4rem;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.medicine-name {
+    font-weight: 700;
+    color: #e2e8f0;
+    font-size: .95rem;
+}
+
+.alert-badge {
+    font-size: .75rem;
+    font-weight: 700;
+    padding: .2rem .7rem;
+    border-radius: 20px;
+}
+
+.badge-critical {
+    background: rgba(239, 68, 68, .15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, .3);
+}
+
+.badge-warning {
+    background: rgba(245, 158, 11, .15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, .3);
+}
+
+.alert-meta {
+    color: #64748b;
+    font-size: .75rem;
+    margin-bottom: .75rem;
+}
+
+.btn-resolve {
+    background: rgba(34, 197, 94, .1);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, .3);
+    border-radius: 8px;
+    padding: .35rem .9rem;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+}
+
+.btn-resolve:hover {
+    background: rgba(34, 197, 94, .25);
+}
