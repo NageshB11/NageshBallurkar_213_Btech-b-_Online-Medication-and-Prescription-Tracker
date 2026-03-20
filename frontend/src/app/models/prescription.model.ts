@@ -1,4 +1,4 @@
-export type PrescriptionStatus = 'PENDING' | 'ISSUED' | 'PROCEEDED_TO_PHARMACIST' | 'DISPENSED' | 'EXPIRED';
+export type PrescriptionStatus = 'PENDING' | 'APPROVED' | 'ISSUED' | 'PROCEEDED_TO_PHARMACIST' | 'DISPENSED' | 'EXPIRED';
 
 export interface PrescriptionItem {
     id?: number;
@@ -27,4 +27,6 @@ export interface Prescription {
     isDispensed?: boolean;
     dispensedAt?: string;
     pharmacist?: any;
+    doseSchedule?: any[]; // Temporal blocks per prescription
+    overrideInteraction?: boolean;
 }

@@ -114,7 +114,8 @@ public class ScheduleReminderJob {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime missedCutoff = now.minusMinutes(60);
 
-        List<DoseLog> candidates = doseLogRepo.findPendingBefore(missedCutoff);
+        List<DoseLog> candidates = doseLogRepo.findPendingBefore(
+                List.of(DoseLog.DoseStatus.PENDING, DoseLog.DoseStatus.SNOOZED), missedCutoff);
         for (DoseLog log : candidates) {
             // For snoozed doses: check snoozedUntil + 60 min window
             if (log.getStatus() == DoseLog.DoseStatus.SNOOZED
@@ -143,7 +144,8 @@ public class ScheduleReminderJob {
     @Transactional
     public void markMissedDoses() {
         LocalDateTime cutoff = LocalDate.now().atStartOfDay();
-        List<DoseLog> stale = doseLogRepo.findPendingBefore(cutoff);
+        List<DoseLog> stale = doseLogRepo.findPendingBefore(
+                List.of(DoseLog.DoseStatus.PENDING, DoseLog.DoseStatus.SNOOZED), cutoff);
         for (DoseLog log : stale) {
             log.setStatus(DoseLog.DoseStatus.MISSED);
             doseLogRepo.save(log);

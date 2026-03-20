@@ -31,16 +31,16 @@ public class DoseLogController {
 
     @PostMapping("/{doseId}/mark")
     public ResponseEntity<DoseLogDTO> markDose(
-            @PathVariable Long doseId,
-            @RequestParam String status,
-            @RequestParam(required = false) String notes,
+            @PathVariable("doseId") Long doseId,
+            @RequestParam("status") String status,
+            @RequestParam(value = "notes", required = false) String notes,
             @RequestHeader("Authorization") String token) {
         return ResponseEntity.ok(doseTrackingService.markDose(doseId, status, notes, emailFrom(token)));
     }
 
     @PostMapping("/{doseId}/snooze")
     public ResponseEntity<DoseLogDTO> snoozeDose(
-            @PathVariable Long doseId,
+            @PathVariable("doseId") Long doseId,
             @RequestHeader("Authorization") String token) {
         return ResponseEntity.ok(doseTrackingService.snoozeDose(doseId, emailFrom(token)));
     }

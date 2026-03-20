@@ -100,6 +100,11 @@ export class PrescriptionService {
         return this.http.get<Prescription[]>(`${this.apiUrl}/patients/${patientId}/prescriptions`, { headers });
     }
 
+    validatePrescriptionItem(drugName: string, patientEmail: string): Observable<any> {
+        const headers = this.getHeaders();
+        return this.http.post<any>(`${this.apiUrl}/validate-item?drugName=${drugName}&patientEmail=${patientEmail}`, {}, { headers });
+    }
+
     private getHeaders(): HttpHeaders {
         const token = localStorage.getItem('authToken');
         return new HttpHeaders({ 'Authorization': `Bearer ${token}` });

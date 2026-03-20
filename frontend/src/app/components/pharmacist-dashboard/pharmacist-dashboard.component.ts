@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { PharmacistService } from '../../services/pharmacist.service';
 import { PrescriptionService } from '../../services/prescription.service';
 import { Prescription } from '../../models/prescription.model';
+import { MedicationDetailModalComponent } from '../medication-detail-modal/medication-detail-modal.component';
 
 @Component({
   selector: 'app-pharmacist-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MedicationDetailModalComponent],
   template: `
     <div class="container py-5">
       <div class="row mb-4 align-items-center border-bottom pb-3">
@@ -88,7 +89,12 @@ import { Prescription } from '../../models/prescription.model';
                 </thead>
                 <tbody>
                     <tr *ngFor="let item of p.items" class="border-bottom border-light">
-                    <td class="ps-3 py-2 fw-semibold">{{ item.medicineName }}</td>
+                    <td class="ps-3 py-2 fw-semibold">
+                      {{ item.medicineName }}
+                      <button class="btn btn-sm btn-link text-info p-0 ms-2" title="Verify Drug Details" (click)="openInfoModal(item.medicineName)">
+                        <i class="bi bi-shield-check"></i> Verify
+                      </button>
+                    </td>
                     <td class="py-2">{{ item.dosage }}</td>
                     <td class="py-2">{{ item.quantity }}</td>
                     <td class="py-2"><span class="badge bg-light text-dark fw-normal border">{{ item.dosageTiming || 'As directed' }}</span></td>
@@ -124,6 +130,13 @@ import { Prescription } from '../../models/prescription.model';
         <div *ngIf="dispensedRequests.length === 0" class="text-muted small text-center py-4">No recently dispensed medications found.</div>
       </div>
 
+      <!-- Safety Information Modal -->
+      <app-medication-detail-modal
+          [isOpen]="isModalOpen"
+          [drugName]="selectedDrugName"
+          viewMode="pharmacist"
+          (closeEvent)="closeInfoModal()">
+      </app-medication-detail-modal>
     </div>
   `,
   styles: [`
@@ -149,6 +162,10 @@ export class PharmacistDashboardComponent implements OnInit {
   dispensedRequests: Prescription[] = [];
   error: string | null = null;
   loading: boolean = true;
+
+  // Modal State
+  isModalOpen = false;
+  selectedDrugName = '';
 
   constructor(
     private pharmacistService: PharmacistService,
@@ -212,5 +229,15 @@ export class PharmacistDashboardComponent implements OnInit {
       },
       error: (err) => alert('Failed to download PDF')
     });
+  }
+
+  openInfoModal(drugName: string): void {
+      this.selectedDrugName = drugName;
+      this.isModalOpen = true;
+  }
+
+  closeInfoModal(): void {
+      this.isModalOpen = false;
+      this.selectedDrugName = '';
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { AdherenceLog } from '../models/adherence-log.model';
 import { AuthService } from './auth.service';
 
@@ -10,7 +10,20 @@ import { AuthService } from './auth.service';
 export class AdherenceService {
     private apiUrl = 'http://localhost:8081/api/adherence';
 
+    // RxJS State Management for Instant 25% Increments
+    private liveAdherenceSubject = new BehaviorSubject<number>(0);
+    public liveAdherence$ = this.liveAdherenceSubject.asObservable();
+
     constructor(private http: HttpClient, private authService: AuthService) { }
+
+    setLiveAdherence(val: number): void {
+        this.liveAdherenceSubject.next(val);
+    }
+
+    triggerInstantIncrement(amount: number = 25): void {
+        const current = this.liveAdherenceSubject.getValue();
+        this.liveAdherenceSubject.next(Math.min(100, current + amount));
+    }
 
     private getHeaders(): HttpHeaders {
         const token = this.authService.getToken();

@@ -28,6 +28,9 @@ public class AdherenceService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private com.medical.backend.repository.DoseLogRepository doseLogRepository;
+
     public AdherenceLog logAdherence(Long patientId, Long prescriptionId) {
         User patient = userRepository.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
@@ -44,7 +47,40 @@ public class AdherenceService {
         log.setPrescription(prescription);
         log.setLogDate(LocalDateTime.now());
 
+        // ENFORCEMENT: Check if a log already exists for this prescription today
+        LocalDateTime startOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
+        
+        List<AdherenceLog> existingLogs = adherenceLogRepository.findByPrescriptionId(prescriptionId);
+        boolean alreadyLoggedToday = existingLogs.stream()
+            .anyMatch(l -> l.getLogDate().isAfter(startOfDay) && l.getLogDate().isBefore(endOfDay));
+            
+        if (alreadyLoggedToday) {
+            throw new RuntimeException("Medication already logged for today.");
+        }
+
         AdherenceLog savedLog = adherenceLogRepository.save(log);
+
+        // SYNC: Find a PENDING DoseLog for this prescription today and mark it TAKEN
+        LocalDateTime start = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime end = start.plusDays(1);
+        
+        List<com.medical.backend.entity.DoseLog> todaysDoses = doseLogRepository.findByPatientAndDateRange(patient, start, end);
+        for (com.medical.backend.entity.DoseLog d : todaysDoses) {
+            // Check if this dose belongs to the prescription we just logged
+            if (d.getScheduleItem() != null && d.getScheduleItem().getSchedule() != null &&
+                d.getScheduleItem().getSchedule().getPrescription() != null &&
+                d.getScheduleItem().getSchedule().getPrescription().getId().equals(prescriptionId)) {
+                
+                if (d.getStatus() == com.medical.backend.entity.DoseLog.DoseStatus.PENDING ||
+                    d.getStatus() == com.medical.backend.entity.DoseLog.DoseStatus.SNOOZED) {
+                    d.setStatus(com.medical.backend.entity.DoseLog.DoseStatus.TAKEN);
+                    d.setActualTime(LocalDateTime.now());
+                    doseLogRepository.save(d);
+                    break; // Just mark one dose per generic log
+                }
+            }
+        }
 
         // Check if 100% adherence reached
         double percentage = calculateAdherencePercentage(prescriptionId);

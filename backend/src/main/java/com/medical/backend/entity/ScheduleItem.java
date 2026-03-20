@@ -44,6 +44,11 @@ public class ScheduleItem {
 
     private String instructions;
 
+    // Safety & Audit Fields
+    private String rxcui;
+    private String batchNumber;
+    private String contraindicationFlags;
+
     public enum Frequency {
         DAILY, ALTERNATE_DAY, WEEKLY, CUSTOM
     }

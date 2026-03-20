@@ -25,13 +25,14 @@
         </ul>
         <hr>
         <div class="dropdown">
-            <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle"
-                id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
+            <a href="javascript:void(0)" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle"
+                (click)="toggleUserMenu()">
                 <div class="avatar-circle bg-primary text-white me-2 small fw-bold d-flex align-items-center justify-content-center"
                     style="width: 32px; height: 32px; border-radius: 50%;">P</div>
                 <strong>Patient</strong>
             </a>
-            <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2">
+            <ul class="dropdown-menu text-small shadow d-block" *ngIf="isUserMenuOpen" 
+                style="position: absolute; bottom: 100%; left: 0; margin-bottom: 0.5rem;">
                 <li><a class="dropdown-item" href="#">Profile</a></li>
                 <li>
                     <hr class="dropdown-divider">
@@ -172,9 +173,10 @@
 </div>
 
 <!-- History Modal (Keep existing) -->
-<div class="modal show d-block" tabindex="-1" *ngIf="selectedHistory" style="background: rgba(0,0,0,0.5)">
+<div class="modal show d-block" tabindex="-1" *ngIf="selectedHistory"
+    style="background:rgba(15,23,42,0.4); backdrop-filter:blur(12px); z-index: 2000;">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content shadow-lg border-0 rounded-4">
+        <div class="modal-content glass-card-modal border-0 shadow-2xl">
             <div class="modal-header border-bottom-0 pt-4 px-4">
                 <h5 class="modal-title h2-medical">Prescription History</h5>
                 <button type="button" class="btn-close" (click)="closeHistory()"></button>

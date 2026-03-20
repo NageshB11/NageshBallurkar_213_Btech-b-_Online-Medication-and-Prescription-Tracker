@@ -22,7 +22,7 @@ public class StockAlertController {
     }
 
     @PatchMapping("/{id}/resolve")
-    public ResponseEntity<StockAlert> resolveAlert(@PathVariable Long id) {
+    public ResponseEntity<StockAlert> resolveAlert(@PathVariable("id") Long id) {
         return ResponseEntity.ok(stockAlertService.resolveAlert(id));
     }
 }

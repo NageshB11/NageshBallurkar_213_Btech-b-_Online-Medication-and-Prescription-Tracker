@@ -10,22 +10,27 @@ import java.util.List;
 
 public interface DoseLogRepository extends JpaRepository<DoseLog, Long> {
 
-    List<DoseLog> findByPatientOrderByScheduledTimeDesc(User patient);
+        List<DoseLog> findByPatientOrderByScheduledTimeDesc(User patient);
 
-    @Query("SELECT d FROM DoseLog d WHERE d.patient = :patient " +
-            "AND d.scheduledTime >= :start AND d.scheduledTime < :end " +
-            "ORDER BY d.scheduledTime ASC")
-    List<DoseLog> findByPatientAndDateRange(@Param("patient") User patient,
-            @Param("start") LocalDateTime start,
-            @Param("end") LocalDateTime end);
+        @Query("SELECT d FROM DoseLog d WHERE d.patient = :patient " +
+                        "AND d.scheduledTime >= :start AND d.scheduledTime < :end " +
+                        "ORDER BY d.scheduledTime ASC")
+        List<DoseLog> findByPatientAndDateRange(@Param("patient") User patient,
+                        @Param("start") LocalDateTime start,
+                        @Param("end") LocalDateTime end);
 
-    @Query("SELECT d FROM DoseLog d WHERE d.status = 'PENDING' " +
-            "AND d.scheduledTime < :cutoff")
-    List<DoseLog> findPendingBefore(@Param("cutoff") LocalDateTime cutoff);
+        @Query("SELECT d FROM DoseLog d WHERE d.status = :status " +
+                        "AND d.scheduledTime < :cutoff")
+        List<DoseLog> findByStatusAndScheduledTimeBefore(@Param("status") DoseLog.DoseStatus status,
+                        @Param("cutoff") LocalDateTime cutoff);
 
-    @Query("SELECT d FROM DoseLog d WHERE d.scheduleItem.id = :itemId " +
-            "AND d.scheduledTime >= :start AND d.scheduledTime < :end")
-    List<DoseLog> findByScheduleItemAndDateRange(@Param("itemId") Long itemId,
-            @Param("start") LocalDateTime start,
-            @Param("end") LocalDateTime end);
+        @Query("SELECT d FROM DoseLog d WHERE d.status IN :statuses " +
+                        "AND d.scheduledTime < :cutoff")
+        List<DoseLog> findPendingBefore(@Param("statuses") List<DoseLog.DoseStatus> statuses, @Param("cutoff") LocalDateTime cutoff);
+
+        @Query("SELECT d FROM DoseLog d WHERE d.scheduleItem.id = :itemId " +
+                        "AND d.scheduledTime >= :start AND d.scheduledTime < :end")
+        List<DoseLog> findByScheduleItemAndDateRange(@Param("itemId") Long itemId,
+                        @Param("start") LocalDateTime start,
+                        @Param("end") LocalDateTime end);
 }

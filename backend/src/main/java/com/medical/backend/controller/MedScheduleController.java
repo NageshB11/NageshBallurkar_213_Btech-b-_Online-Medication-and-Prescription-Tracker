@@ -58,22 +58,22 @@ public class MedScheduleController {
 
     @GetMapping("/{id}")
     public ResponseEntity<MedicationSchedule> getSchedule(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestHeader("Authorization") String token) {
         return ResponseEntity.ok(scheduleService.getScheduleById(id, emailFrom(token)));
     }
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<MedicationSchedule> updateStatus(
-            @PathVariable Long id,
-            @RequestParam String status,
+            @PathVariable("id") Long id,
+            @RequestParam("status") String status,
             @RequestHeader("Authorization") String token) {
         return ResponseEntity.ok(scheduleService.updateStatus(id, status, emailFrom(token)));
     }
 
     @GetMapping("/patient/{patientId}")
     public ResponseEntity<List<MedicationSchedule>> getPatientSchedules(
-            @PathVariable Long patientId) {
+            @PathVariable("patientId") Long patientId) {
         return ResponseEntity.ok(scheduleService.getSchedulesByPatientId(patientId));
     }
 
@@ -81,7 +81,7 @@ public class MedScheduleController {
 
     @GetMapping("/{id}/audit")
     public ResponseEntity<List<ScheduleAudit>> getAudit(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestHeader("Authorization") String token) {
         return ResponseEntity.ok(scheduleService.getAuditTrail(id));
     }

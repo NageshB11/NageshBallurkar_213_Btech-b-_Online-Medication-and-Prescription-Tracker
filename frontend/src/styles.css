@@ -21,8 +21,9 @@
   /* Apollo Blue */
   --pharmacist-success: #10b981;
   /* Success Green */
-  /* Typography Font */
-  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Typography Config */
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
 
   /* Spacing & Radius */
   --radius-xl: 24px;
@@ -35,20 +36,46 @@
   --shadow-hover: 0 20px 40px -5px rgba(0, 0, 0, 0.1);
 
   /* Borders */
-  --border-subtle: 1px solid #e2e8f0;
+  --border-subtle: 1px solid rgba(255, 255, 255, 0.2);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+.skeleton {
+  background: #f6f7f8;
+  background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+  background-repeat: no-repeat;
+  background-size: 800px 104px;
+  display: inline-block;
+  position: relative;
+  animation-duration: 1.2s;
+  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+  animation-name: shimmer;
+  animation-timing-function: linear;
+  border-radius: 4px;
 }
 
 body {
-  font-family: var(--font-family);
+  font-family: var(--font-body);
   background-color: var(--background-color);
   color: var(--text-primary);
   margin: 0;
   padding: 0;
-  padding-top: 0;
-  /* Removing top padding as per new layout */
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
-  /* Body Copy Line Height */
 }
 
 /* Typography Hierarchy */
@@ -58,29 +85,34 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-family);
+  font-family: var(--font-display);
   color: var(--text-primary);
   margin-top: 0;
+  letter-spacing: -0.02em;
 }
 
 h1,
-h2 {
-  font-weight: 700;
-  /* Bold */
+h2,
+.h1,
+.h2 {
+  font-weight: 800;
+  letter-spacing: -0.04em;
 }
 
 h3,
-h4 {
-  font-weight: 600;
-  /* Semi-Bold */
+h4,
+.h3,
+.h4 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 h5,
 label,
+.h5,
 .label,
 .text-label {
-  font-weight: 500;
-  /* Medium */
+  font-weight: 600;
   color: var(--text-secondary);
 }
 
@@ -88,7 +120,7 @@ p,
 small,
 span {
   font-weight: 400;
-  /* Regular */
+  letter-spacing: -0.01em;
 }
 
 /* Navbar Customization Override */

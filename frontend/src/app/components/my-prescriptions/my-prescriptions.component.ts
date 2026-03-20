@@ -15,6 +15,11 @@ import { Prescription } from '../../models/prescription.model';
 export class MyPrescriptionsComponent implements OnInit {
     prescriptions: Prescription[] = [];
     selectedHistory: any[] | null = null;
+    isUserMenuOpen = false;
+
+    toggleUserMenu(): void {
+        this.isUserMenuOpen = !this.isUserMenuOpen;
+    }
 
     constructor(
         private prescriptionService: PrescriptionService,

@@ -23,6 +23,11 @@ public class PrescriptionItem {
     private java.time.LocalDate startDate;
     private java.time.LocalDate endDate;
 
+    // Safety & Audit Fields (External API Integration)
+    private String rxcui;
+    private String batchNumber;
+    private String contraindicationFlags;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prescription_id")
     @JsonIgnore

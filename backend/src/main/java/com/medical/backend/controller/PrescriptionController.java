@@ -36,8 +36,25 @@ public class PrescriptionController {
         String email = jwtUtil.extractUsername(jwt);
         User doctor = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Doctor not found"));
 
-        if (!doctor.isVerified()) {
-            return ResponseEntity.status(403).body("Unauthorized: Doctor account is pending verification.");
+            if (!doctor.isVerified()) {
+                System.out.println("[AUTH] Unverified doctor attempted to create prescription: " + email);
+                return ResponseEntity.status(403).body("Unauthorized: Doctor account is pending verification.");
+            }
+
+            prescription.setDoctor(doctor);
+            System.out.println("[DEBUG] Creating prescription for patient: " + prescription.getPatientEmail());
+
+            return ResponseEntity.ok(prescriptionService.createPrescription(prescription));
+        } catch (com.medical.backend.exception.ClinicalSafetyException e) {
+            throw e; // Let GlobalExceptionHandler handle it and return the full SafetyReportDTO
+        } catch (Exception e) {
+            System.err.println("[ERROR] Failed to create prescription: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of(
+                    "message",
+                    "Failed to create prescription: "
+                            + (e.getMessage() != null ? e.getMessage() : e.getClass().getName()),
+                    "error", e.getClass().getSimpleName()));
         }
 
         prescription.setDoctor(doctor);
@@ -67,8 +84,8 @@ public class PrescriptionController {
     public ResponseEntity<Prescription> updatePrescription(
             @PathVariable("id") Long id,
             @RequestBody Prescription prescription,
-            @RequestParam String changeReason,
-            @RequestParam String modifiedBy) throws IOException {
+            @RequestParam("changeReason") String changeReason,
+            @RequestParam("modifiedBy") String modifiedBy) throws IOException {
 
         return ResponseEntity.ok(prescriptionService.updatePrescription(id, prescription, changeReason, modifiedBy));
     }
@@ -80,6 +97,20 @@ public class PrescriptionController {
             return ResponseEntity.ok(prescriptionService.validatePrescription(id, pharmacistId));
         } catch (RuntimeException e) {
             return ResponseEntity.status(400).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/validate-item")
+    public ResponseEntity<?> validateItem(
+            @RequestParam("drugName") String drugName,
+            @RequestParam("patientEmail") String patientEmail) {
+        try {
+            prescriptionService.validatePrescriptionItem(drugName, patientEmail);
+            return ResponseEntity.ok(Map.of("message", "Medication is safe for this patient."));
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(Map.of(
+                    "message", e.getMessage() != null ? e.getMessage() : "Safety validation failed",
+                    "error", e.getClass().getSimpleName()));
         }
     }
 

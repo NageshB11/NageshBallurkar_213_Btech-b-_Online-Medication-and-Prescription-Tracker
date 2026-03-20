@@ -42,7 +42,7 @@ export class PrescriptionListComponent implements OnInit {
 
     filterPrescriptions(): void {
         this.filteredPrescriptions = this.prescriptions.filter(p => {
-            const medicineName = p.items?.[0]?.medicineName?.toLowerCase() || '';
+            const medicineName = p.items[0]?.medicineName?.toLowerCase() || '';
             const doctorName = p.doctor?.fullName?.toLowerCase() || '';
             const search = this.searchTerm.toLowerCase();
 

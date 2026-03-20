@@ -33,6 +33,9 @@ public class User {
     @Column(columnDefinition = "TEXT")
     private String medicalHistory;
 
+    @Column(columnDefinition = "TEXT")
+    private String allergies;
+
     @Column(columnDefinition = "boolean default false")
     private boolean isVerified = false;
 

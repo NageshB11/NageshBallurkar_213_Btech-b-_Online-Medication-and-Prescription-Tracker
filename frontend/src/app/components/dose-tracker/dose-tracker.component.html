@@ -38,7 +38,12 @@
                 <div class="dose-list">
                     <div class="dose-row" *ngFor="let dose of group.doses">
                         <div class="dose-info">
-                            <span class="dose-medicine">{{ dose.medicineName }}</span>
+                            <div class="d-flex align-items-center mb-1">
+                               <span class="dose-medicine">{{ dose.medicineName }}</span>
+                               <button class="btn btn-sm btn-link text-primary p-0 ms-2" title="View Safety Information" (click)="openInfoModal(dose.medicineName)">
+                                  <i class="bi bi-info-circle-fill"></i> Safety Info
+                               </button>
+                            </div>
                             <span class="dose-dosage">{{ dose.dosage }}</span>
                         </div>
 
@@ -74,4 +79,12 @@
             </div>
         </div>
     </div>
+
+    <!-- Safety Information Modal -->
+    <app-medication-detail-modal
+        [isOpen]="isModalOpen"
+        [drugName]="selectedDrugName"
+        viewMode="patient"
+        (closeEvent)="closeInfoModal()">
+    </app-medication-detail-modal>
 </div>

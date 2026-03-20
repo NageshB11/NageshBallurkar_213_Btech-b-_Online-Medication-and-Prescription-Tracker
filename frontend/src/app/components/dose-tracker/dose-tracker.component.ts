@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DoseLogService, DoseLog } from '../../services/dose-log.service';
+import { MedicationDetailModalComponent } from '../medication-detail-modal/medication-detail-modal.component';
 
 interface MealGroup {
     slot: string;
@@ -14,7 +15,7 @@ interface MealGroup {
 @Component({
     selector: 'app-dose-tracker',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, MedicationDetailModalComponent],
     templateUrl: './dose-tracker.component.html',
     styleUrls: ['./dose-tracker.component.css']
 })
@@ -24,6 +25,10 @@ export class DoseTrackerComponent implements OnInit {
     error = '';
     noteInput: Record<number, string> = {};
     today = new Date();
+
+    // Modal State
+    isModalOpen = false;
+    selectedDrugName = '';
 
     constructor(private doseLogService: DoseLogService) { }
 
@@ -107,5 +112,15 @@ export class DoseTrackerComponent implements OnInit {
 
     canMark(dose: DoseLog): boolean {
         return dose.status === 'PENDING' || dose.status === 'SNOOZED';
+    }
+
+    openInfoModal(drugName: string): void {
+        this.selectedDrugName = drugName;
+        this.isModalOpen = true;
+    }
+
+    closeInfoModal(): void {
+        this.isModalOpen = false;
+        this.selectedDrugName = '';
     }
 }

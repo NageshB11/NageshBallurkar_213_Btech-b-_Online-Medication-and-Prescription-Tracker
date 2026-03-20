@@ -17,7 +17,7 @@
                     <h2 class="h2-medical mb-0">Upload PDF Prescription</h2>
                 </div>
                 <div class="card-body p-4 border-bottom mb-4">
-                    <p class="text-muted small mb-3">Instead of using the manual form below, you can upload an existing
+                    <p class="text-secondary small mb-3">Instead of using the manual form below, you can upload an existing
                         prescription document in PDF format.</p>
                     <div class="input-group mb-3">
                         <input type="file" class="form-control" id="prescriptionFile" (change)="onFileSelected($event)"
@@ -39,6 +39,104 @@
                     <h2 class="h2-medical mb-0">Or Create Manually</h2>
                 </div>
                 <div class="card-body p-4">
+                    <!-- Critical Safety Alert Overlay (Glassmorphic Red for Severe & Biological Blocks) -->
+                    <div *ngIf="showSafetyConflict && (activeSafetyReport?.allergyConflicts?.length || activeSafetyReport?.conditionConflicts?.length || activeSafetyReport?.severeInteractions?.length)" class="safety-conflict-overlay mb-4">
+                        <div class="safety-alert-glass border-danger border border-2">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="bi bi-x-octagon-fill text-danger fs-1 me-3 animate-pulse"></i>
+                                <div>
+                                    <h3 class="text-danger fw-bold mb-0">SEVERE CLINICAL CONFLICT: HARD BLOCK</h3>
+                                    <p class="text-danger-emphasis mb-0">Critical medical risks detected. This prescription cannot be issued.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="safety-reason-block p-3 rounded-3 mb-3 bg-white bg-opacity-75">
+                                <h6 class="fw-bold text-uppercase small text-danger mb-2"><i class="bi bi-shield-x me-2"></i>Severe Risk Summary</h6>
+                                <p class="mb-0 fw-bold">{{ activeSafetyReport?.summary }}</p>
+                            </div>
+
+                            <div class="row g-3">
+                                <!-- Allergy Conflicts -->
+                                <div class="col-md-4" *ngIf="activeSafetyReport?.allergyConflicts?.length">
+                                    <div class="conflict-category allergy-list">
+                                        <h6 class="small fw-bold text-danger mb-2">Patient Allergies</h6>
+                                        <ul class="ps-3 mb-0">
+                                            <li *ngFor="let conflict of activeSafetyReport?.allergyConflicts">{{ conflict }}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <!-- Condition Conflicts -->
+                                <div class="col-md-4" *ngIf="activeSafetyReport?.conditionConflicts?.length">
+                                    <div class="conflict-category condition-list">
+                                        <h6 class="small fw-bold text-danger mb-2">Clinical Contraindications</h6>
+                                        <ul class="ps-3 mb-0">
+                                            <li *ngFor="let conflict of activeSafetyReport?.conditionConflicts">{{ conflict }}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <!-- Severe Drug Interactions -->
+                                <div class="col-md-4" *ngIf="activeSafetyReport?.severeInteractions?.length">
+                                    <div class="conflict-category interaction-list border-danger bg-danger bg-opacity-10">
+                                        <h6 class="small fw-bold text-danger mb-2">Severe Drug Interactions (RxNav)</h6>
+                                        <ul class="ps-3 mb-0">
+                                            <li *ngFor="let conflict of activeSafetyReport?.severeInteractions" class="text-danger mb-3 d-flex align-items-start">
+                                                <span class="badge bg-danger text-white rounded-pill me-2 mt-1 px-2" style="font-size: 0.65rem; letter-spacing: 1px;">VS</span>
+                                                <span class="fw-bold" style="line-height: 1.4;">{{ conflict }}</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-top border-danger-subtle d-flex justify-content-end">
+                                <button type="button" class="btn btn-danger btn-sm rounded-pill fw-bold px-4 shadow-sm" (click)="showSafetyConflict = false">
+                                    Acknowledge Risk & Amend Form
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Moderate Safety Warning Overlay (Glassmorphic Amber for Moderate DDI) -->
+                    <div *ngIf="showSafetyConflict && !(activeSafetyReport?.allergyConflicts?.length || activeSafetyReport?.conditionConflicts?.length || activeSafetyReport?.severeInteractions?.length) && activeSafetyReport?.moderateInteractions?.length" class="safety-conflict-overlay mb-4">
+                        <div class="safety-alert-glass" style="background: rgba(253, 203, 110, 0.15); border: 2px solid #fdcb6e;">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="bi bi-exclamation-triangle-fill text-warning fs-1 me-3 animate-pulse"></i>
+                                <div>
+                                    <h3 class="text-warning-emphasis fw-bold mb-0">MODERATE CLINICAL WARNING: NEEDS REVIEW</h3>
+                                    <p class="text-dark mb-0">Moderate drug interactions detected. A doctor's digital signature override is required to proceed.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3">
+                                <!-- Moderate Drug Interactions -->
+                                <div class="col-12" *ngIf="activeSafetyReport?.moderateInteractions?.length">
+                                    <div class="conflict-category interaction-list border-warning bg-warning bg-opacity-10">
+                                        <h6 class="small fw-bold text-warning-emphasis mb-2">Moderate Drug Interactions (RxNav)</h6>
+                                        <ul class="ps-3 mb-0">
+                                            <li *ngFor="let conflict of activeSafetyReport?.moderateInteractions" class="text-dark mb-3 d-flex align-items-start">
+                                                <span class="badge bg-warning text-dark rounded-pill me-2 mt-1 px-2" style="font-size: 0.65rem; letter-spacing: 1px;">VS</span>
+                                                <span class="fw-bold" style="line-height: 1.4;">{{ conflict }}</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-top border-warning-subtle d-flex justify-content-between align-items-center">
+                                <p class="mb-0 text-muted small"><i class="bi bi-info-circle me-1"></i> By overriding, you confirm clinical oversight of the reported interactions.</p>
+                                
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill fw-bold px-4" (click)="showSafetyConflict = false">
+                                        Cancel
+                                    </button>
+                                    <button type="button" class="btn btn-warning btn-sm rounded-pill fw-bold px-4 shadow-sm text-dark hover-pulse" (click)="overrideAndSubmit()">
+                                        <i class="bi bi-pen-fill me-1"></i> Apply Digital Signature & Override
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <form [formGroup]="prescriptionForm" (ngSubmit)="onSubmit()">
 
                         <!-- Patient Info Section -->
@@ -78,33 +176,82 @@
                                 <div class="card-body p-3">
                                     <div class="row align-items-end">
                                         <div class="col-md-5 mb-3 mb-md-0">
-                                            <label class="form-label small text-muted mb-1">Medicine Name</label>
-                                            <input type="text" formControlName="medicineName"
-                                                class="form-control font-mono" placeholder="e.g. Amoxicillin">
+                                            <label class="form-label small text-secondary fw-bold mb-1">Medicine Name</label>
+                                            <div class="input-group">
+                                                <input type="text" formControlName="medicineName"
+                                                    class="form-control font-mono" placeholder="e.g. Amoxicillin">
+                                                <button type="button" class="btn btn-outline-info btn-sm" (click)="validateMedication(i)">
+                                                    <i class="bi bi-shield-check"></i>
+                                                </button>
+                                            </div>
+                                            <!-- Safety Message Display -->
+                                            <div *ngIf="validationMessages[i]" class="mt-2">
+                                                <div class="badge w-100 p-2 text-start text-wrap d-flex align-items-center" [ngClass]="{
+                                                    'bg-success-subtle text-success border border-success': validationMessages[i].type === 'success',
+                                                    'bg-danger-subtle text-danger border border-danger': validationMessages[i].type === 'danger',
+                                                    'bg-warning-subtle text-warning-emphasis border border-warning': validationMessages[i].type === 'warning'
+                                                }">
+                                                    <i class="bi" [ngClass]="{
+                                                        'bi-check-circle-fill': validationMessages[i].type === 'success',
+                                                        'bi-exclamation-triangle-fill': validationMessages[i].type === 'danger' || validationMessages[i].type === 'warning'
+                                                    }"></i>
+                                                    <span class="ms-2 small">{{ validationMessages[i].message }}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div class="col-md-3 mb-3 mb-md-0">
-                                            <label class="form-label small text-muted mb-1">Dosage</label>
+                                            <label class="form-label small text-secondary mb-1">Dosage</label>
                                             <input type="text" formControlName="dosage" class="form-control font-mono"
                                                 placeholder="e.g. 500mg">
                                         </div>
+                                        <div class="col-md-6 mb-3 mb-md-0">
+                                            <label class="form-label small text-secondary mb-1">Clinical Directive (Timing &
+                                                Food)</label>
+                                            <div class="input-group">
+                                                <select formControlName="foodInstruction"
+                                                    class="form-select font-mono small">
+                                                    <option value="BEFORE_FOOD">Before Food</option>
+                                                    <option value="AFTER_FOOD">After Food</option>
+                                                    <option value="WITH_FOOD">With Food</option>
+                                                    <option value="ANY">Any Time</option>
+                                                </select>
+                                                <input type="text" formControlName="mealSlots"
+                                                    class="form-control font-mono small"
+                                                    placeholder="BREAKFAST,LUNCH,DINNER">
+                                            </div>
+                                            <small class="text-muted" style="font-size: 0.65rem;">Slots: comma separated
+                                                (LUNCH, DINNER)</small>
+                                        </div>
+                                    </div>
+                                    <div class="row align-items-end mt-2">
                                         <div class="col-md-2 mb-3 mb-md-0">
-                                            <label class="form-label small text-muted mb-1">Qty</label>
+                                            <label class="form-label small text-secondary mb-1">Qty</label>
                                             <input type="number" formControlName="quantity"
                                                 class="form-control font-mono">
                                         </div>
                                     </div>
                                     <div class="row align-items-end mt-2">
                                         <div class="col-md-4 mb-3 mb-md-0">
-                                            <label class="form-label small text-muted mb-1">Timing</label>
-                                            <input type="text" formControlName="dosageTiming"
-                                                class="form-control font-mono" placeholder="e.g. Before food">
+                                            <label class="form-label small text-secondary mb-1">Frequency</label>
+                                            <select formControlName="frequency" class="form-select font-mono small">
+                                                <option value="DAILY">Daily</option>
+                                                <option value="ALTERNATE_DAY">Alternate Days</option>
+                                                <option value="WEEKLY">Weekly</option>
+                                                <option value="CUSTOM">Custom Days (Mon,Wed...)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 mb-3 mb-md-0"
+                                            *ngIf="items.at(i).get('frequency')?.value === 'CUSTOM'">
+                                            <label class="form-label small text-muted mb-1">Days (MON,WED...)</label>
+                                            <input type="text" formControlName="daysOfWeek"
+                                                class="form-control font-mono small" placeholder="MON,WED,FRI">
                                         </div>
                                         <div class="col-md-4 mb-3 mb-md-0">
-                                            <label class="form-label small text-muted mb-1">Start Date</label>
+                                            <label class="form-label small text-secondary mb-1">Start Date</label>
                                             <input type="date" formControlName="startDate" class="form-control">
                                         </div>
                                         <div class="col-md-4 mb-3 mb-md-0">
-                                            <label class="form-label small text-muted mb-1">End Date</label>
+                                            <label class="form-label small text-secondary mb-1">End Date</label>
                                             <input type="date" formControlName="endDate" class="form-control">
                                         </div>
                                         <div class="col-md-2 text-end">

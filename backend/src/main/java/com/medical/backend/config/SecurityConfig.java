@@ -63,6 +63,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/", "/error").permitAll()
                         // Doctor specific endpoints
+                        .requestMatchers(HttpMethod.POST, "/api/prescriptions/validate-item").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/prescriptions/**").hasRole("DOCTOR")
                         .requestMatchers(HttpMethod.PUT, "/api/prescriptions/**").hasRole("DOCTOR")
                         .requestMatchers("/api/prescriptions/issued").hasRole("DOCTOR")
@@ -74,6 +75,8 @@ public class SecurityConfig {
                         // Admin specific endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // Common or other
+                        .requestMatchers("/api/drugs/**").permitAll()
+                        .requestMatchers("/api/drug-info/**").permitAll()
                         .anyRequest().authenticated());
 
         // 3. Add the JWT Filter BEFORE the standard login filter

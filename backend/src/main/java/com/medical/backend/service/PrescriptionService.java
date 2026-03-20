@@ -38,6 +38,11 @@ public class PrescriptionService {
     @Autowired
     private SystemAlertRepository systemAlertRepository;
 
+    @Autowired
+    private InventoryService inventoryService;
+
+
+
     @org.springframework.beans.factory.annotation.Value("${spring.servlet.multipart.location}")
     private String uploadDir;
 
@@ -87,6 +92,9 @@ public class PrescriptionService {
     @Autowired
     private PdfService pdfService;
 
+    @Autowired
+    private SafetyGateValidator safetyGateValidator;
+
     @Transactional
     public Prescription createPrescription(Prescription prescription) throws IOException {
         if (!prescription.isDraft()) {
@@ -102,15 +110,39 @@ public class PrescriptionService {
                     .ifPresent(prescription::setPatient);
         }
 
+        // Clinical Intelligence Safety Gate (V4 - Master Validator)
+        if (prescription.getPatient() != null && prescription.getItems() != null) {
+            safetyGateValidator.validateSafety(prescription.getItems(), prescription.getPatient(), prescription.isOverrideInteraction());
+        }
+
+        // 2. Link items to this prescription
         if (prescription.getItems() != null) {
             for (PrescriptionItem item : prescription.getItems()) {
                 item.setPrescription(prescription);
             }
         }
 
-        // Anomaly Detection
-        if (prescription.getDoctor() != null) {
-            if (anomalyDetectionService.checkAnomaly(prescription.getDoctor().getId())) {
+        // 3. Save first so the prescription gets an ID
+        System.out.println("[SERVICE] Saving initial prescription...");
+        Prescription saved = prescriptionRepository
+                .save(prescription);
+        System.out.println("[SERVICE] Initial save successful. ID: " + saved.getId());
+
+        // 4. Generate PDF AFTER patient and ID are set
+        if (!saved.isDraft()) {
+            System.out.println("[SERVICE] Generating PDF...");
+            String fileName = pdfService.generatePrescriptionPdf(saved);
+            saved.setFilePath(fileName);
+            System.out.println("[SERVICE] PDF generated: " + fileName);
+            saved = prescriptionRepository.save(saved);
+        }
+
+        // 5. Anomaly Detection
+        if (saved.getDoctor() != null) {
+            System.out
+                    .println("[SERVICE] Running anomaly detection for Doctor ID: " + saved.getDoctor().getId());
+            if (anomalyDetectionService.checkAnomaly(saved.getDoctor().getId())) {
+                System.out.println("[SERVICE] ANOMALY DETECTED!");
                 com.medical.backend.entity.SystemAlert alert = new com.medical.backend.entity.SystemAlert();
                 alert.setType("FRAUD_DETECTION");
                 alert.setSeverity("CRITICAL");
@@ -180,6 +212,12 @@ public class PrescriptionService {
             throws IOException {
         Prescription existing = prescriptionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Prescription not found with id " + id));
+
+        if (existing.getStatus() == Prescription.PrescriptionStatus.ISSUED || 
+            existing.getStatus() == Prescription.PrescriptionStatus.PROCEEDED_TO_PHARMACIST || 
+            existing.getStatus() == Prescription.PrescriptionStatus.DISPENSED) {
+            throw new RuntimeException("Prescription is immutable and cannot be updated once issued.");
+        }
 
         existing.setDraft(newDetails.isDraft());
         if (newDetails.getPatientEmail() != null)
@@ -256,16 +294,10 @@ public class PrescriptionService {
             System.err.println(
                     "[WARN] Notification dispatch failed after status change to " + newStatus + ": " + e.getMessage());
         }
-
         return saved;
     }
 
-    @Transactional
     public Prescription validatePrescription(Long id, Long pharmacistId) {
-        if (pharmacistId == null) {
-            throw new RuntimeException("Pharmacist must be selected to issue the prescription.");
-        }
-
         Prescription existing = prescriptionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Prescription not found with id " + id));
 
@@ -347,6 +379,13 @@ public class PrescriptionService {
             throw new RuntimeException("Only PROCEEDED_TO_PHARMACIST prescriptions can be dispensed.");
         }
 
+        if (existing.getItems() != null) {
+            for (PrescriptionItem item : existing.getItems()) {
+                inventoryService.decrementStock(item.getMedicineName(), 1); // Assuming 1 unit per prescription item for
+                                                                            // now, or use item quantity if available
+            }
+        }
+
         return broadcastStatusChange(existing, Prescription.PrescriptionStatus.DISPENSED, "Prescription Dispensed",
                 pharmacistEmail);
     }
@@ -382,5 +421,33 @@ public class PrescriptionService {
 
     public List<com.medical.backend.entity.User> getMyPatients(Long doctorId) {
         return prescriptionRepository.findDistinctPatientsByDoctorId(doctorId);
+    }
+
+    public void logSafetyView(Long prescriptionId, String userEmail) {
+        Prescription p = getPrescription(prescriptionId);
+        com.medical.backend.entity.PrescriptionAudit audit = new com.medical.backend.entity.PrescriptionAudit();
+        audit.setPrescriptionId(prescriptionId);
+        audit.setActionType("VIEWED_SAFETY_GUIDE");
+        audit.setModifiedBy(userEmail);
+        audit.setChangeReason("Clinical Intelligence Guide Viewed");
+        audit.setAuditData("User viewed clinical intelligence guide and contraindication alerts for " +
+                (p.getItems() != null && !p.getItems().isEmpty() ? p.getItems().get(0).getMedicineName()
+                        : "medication"));
+        auditRepository.save(audit);
+        System.out.println(
+                "[AUDIT] Safety information view logged for Prescription #" + prescriptionId + " by " + userEmail);
+    }
+
+    public void validatePrescriptionItem(String drugName, String patientEmail) {
+        User patient = userRepository.findByEmail(patientEmail)
+                .orElseThrow(() -> new RuntimeException("Patient with email " + patientEmail + " not found."));
+
+        PrescriptionItem tempItem = new PrescriptionItem();
+        tempItem.setMedicineName(drugName);
+        List<PrescriptionItem> items = new ArrayList<>();
+        items.add(tempItem);
+
+        // Comprehensive Safety Gate check
+        safetyGateValidator.validateSafety(items, patient);
     }
 }

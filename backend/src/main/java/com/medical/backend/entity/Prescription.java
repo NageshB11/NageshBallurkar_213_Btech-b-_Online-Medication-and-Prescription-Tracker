@@ -33,6 +33,17 @@ public class Prescription {
     @Transient
     private String patientEmail;
 
+    @Transient
+    private boolean overrideInteraction;
+
+    /**
+     * When true, the PrescriptionEntityListener will skip audit logging for this
+     * save.
+     * Use this to prevent @PostUpdate conflicts inside active JPA transactions.
+     */
+    @Transient
+    private boolean skipAuditListener = false;
+
     private String digitalSignature;
 
     private String pdfUrl;

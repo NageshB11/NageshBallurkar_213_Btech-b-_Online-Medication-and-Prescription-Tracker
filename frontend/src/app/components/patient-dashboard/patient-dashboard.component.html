@@ -24,6 +24,12 @@
                 </a>
             </li>
             <li>
+                <a class="nav-link-item" [class.active]="activeSection==='clinical'"
+                    (click)="activeSection='clinical'; $event.preventDefault()" href="#">
+                    <i class="bi bi-shield-check nav-icon"></i> Clinical Intelligence
+                </a>
+            </li>
+            <li>
                 <a class="nav-link-item" [class.active]="activeSection==='appointments'"
                     (click)="activeSection='appointments'; $event.preventDefault()" href="#">
                     <i class="bi bi-calendar-check nav-icon"></i> Appointments
@@ -56,14 +62,14 @@
         <!-- User Footer -->
         <div class="sidebar-footer">
             <div class="dropdown">
-                <a href="#" class="user-pill text-decoration-none" id="userMenu" data-bs-toggle="dropdown"
-                    aria-expanded="false">
+                <a href="javascript:void(0)" class="user-pill text-decoration-none" (click)="toggleUserMenu()">
                     <div class="user-avatar">{{ userName.charAt(0).toUpperCase() }}</div>
                     <span class="user-name">{{ userName }}</span>
                     <i class="bi bi-chevron-down ms-auto text-muted" style="font-size:0.7rem;"></i>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" aria-labelledby="userMenu">
-                    <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2 text-muted"></i>Profile</a></li>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 d-block" *ngIf="isUserMenuOpen" 
+                    style="position: absolute; bottom: 100%; left: 0; margin-bottom: 0.5rem;">
+                    <li><a class="dropdown-item" href="javascript:void(0)" (click)="openProfileModal()"><i class="bi bi-person me-2 text-muted"></i>Profile</a></li>
                     <li>
                         <hr class="dropdown-divider">
                     </li>
@@ -101,8 +107,19 @@
             ══════════════════════════════════════════════════ -->
             <ng-container *ngIf="activeSection === 'overview'">
 
+                <!-- Skeleton Loading State -->
+                <div *ngIf="loading" class="row g-3 mb-4">
+                    <div class="col-6 col-md-3" *ngFor="let i of [1,2,3,4]">
+                        <div class="glass-card stat-card h-100">
+                            <div class="skeleton mb-2" style="width: 50px; height: 50px; border-radius: 16px;"></div>
+                            <div class="skeleton mb-1" style="width: 40px; height: 30px;"></div>
+                            <div class="skeleton" style="width: 60px; height: 15px;"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Section heading -->
-                <div class="d-flex align-items-center justify-content-between mb-4">
+                <div *ngIf="!loading" class="d-flex align-items-center justify-content-between mb-4">
                     <div>
                         <h2 class="section-heading">Overview</h2>
                         <p class="section-sub">Your health snapshot at a glance</p>
@@ -113,7 +130,7 @@
                 </div>
 
                 <!-- Stat Cards Row -->
-                <div class="row g-3 mb-4">
+                <div *ngIf="!loading" class="row g-3 mb-4">
                     <div class="col-6 col-md-3" (click)="activeSection='medications'">
                         <div class="glass-card stat-card h-100">
                             <div class="stat-icon-wrap blue"><i class="bi bi-capsule-pill"></i></div>
@@ -154,7 +171,7 @@
                                 <h6 class="fw-700 text-dark m-0" style="font-weight:700;">Journey Timeline</h6>
                             </div>
 
-                            <div class="v-timeline">
+                            <div *ngIf="!loading" class="v-timeline">
                                 <!-- Empty state -->
                                 <div *ngIf="appointments.length === 0 && activePrescriptions.length === 0 && dispensedPrescriptions.length === 0"
                                     class="text-center py-4 text-muted">
@@ -193,6 +210,17 @@
                                                 class="bi bi-chat-square-text me-1"></i>{{ appt.notes }}</p>
                                     </div>
                                     <span class="v-timestamp">{{ appt.appointmentDate | date:'MMM d, hh:mm a' }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Skeleton Timeline -->
+                            <div *ngIf="loading" class="v-timeline">
+                                <div class="v-event" *ngFor="let i of [1,2,3]">
+                                    <div class="skeleton v-dot" style="background: #f6f7f8; border: none;"></div>
+                                    <div class="v-body">
+                                        <div class="skeleton mb-2" style="width: 120px; height: 18px;"></div>
+                                        <div class="skeleton" style="width: 80px; height: 12px;"></div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -287,7 +315,7 @@
                         </div>
                     </div>
 
-                    <!-- Adherence Ring Card -->
+                <!-- Adherence Ring Card -->
                     <div class="col-md-5">
                         <div
                             class="glass-card h-100 p-4 d-flex flex-column align-items-center justify-content-center text-center">
@@ -309,6 +337,30 @@
                             <button class="btn-primary-glass" (click)="activeSection='adherence'">
                                 <i class="bi bi-bar-chart-fill me-1"></i> View Details
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medication Safety & Clinical Insights (Integrated Preview) -->
+                <div class="row g-3 mt-4" *ngIf="activePrescriptions.length > 0">
+                    <div class="col-12">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h5 class="fw-700 text-dark m-0" style="font-weight:700;">
+                                <i class="bi bi-shield-shaded text-primary me-2"></i>Medication Safety & Clinical Insights
+                            </h5>
+                            <button class="btn btn-link text-primary fw-bold text-decoration-none p-0" (click)="activeSection='clinical'">
+                                View All Guides <i class="bi bi-arrow-right ms-1"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="clinical-preview-grid">
+                            <div class="clinical-row-item mb-3" *ngFor="let p of activePrescriptions.slice(0, 2)">
+                                <app-patient-guide-card 
+                                    class="d-block"
+                                    [medicineName]="p.items?.[0]?.medicineName || 'Medication'" 
+                                    [batchId]="p.id?.toString() || 'DOC-' + p.id">
+                                </app-patient-guide-card>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -339,21 +391,65 @@
                                     <th class="pe-4 text-end">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody *ngIf="loading">
+                                <tr *ngFor="let i of [1,2,3,4]">
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="skeleton"
+                                                style="width: 40px; height: 40px; border-radius: 12px;"></div>
+                                            <div>
+                                                <div class="skeleton mb-1" style="width: 100px; height: 16px;"></div>
+                                                <div class="skeleton" style="width: 60px; height: 12px;"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="skeleton" style="width: 80px; height: 14px;"></div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <div class="skeleton"
+                                                style="width: 30px; height: 30px; border-radius: 50%;"></div>
+                                        </div>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <div class="skeleton" style="width: 100px; height: 32px; border-radius: 20px;">
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tbody *ngIf="!loading">
                                 <tr *ngFor="let p of activePrescriptions">
                                     <td class="ps-4">
                                         <div class="d-flex align-items-center gap-3">
-                                            <div class="med-icon-cell"><i class="bi bi-capsule-pill"></i></div>
+                                            <div class="med-icon-cell">
+                                                <i class="bi bi-capsule-pill"></i>
+                                            </div>
                                             <div>
-                                                <div style="font-weight:600; color:#2d3436; font-size:0.9rem;">
+                                                <div style="font-weight:700; color:#2d3436; font-size:0.95rem;">
                                                     {{ p.items[0]?.medicineName }}
                                                 </div>
-                                                <div style="font-size:0.78rem; color:#636e72;">{{ p.items[0]?.dosage }}
+                                                <div style="font-size:0.75rem; color:#636e72;">
+                                                    {{ p.items[0]?.dosage }}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td style="color:#636e72; font-size:0.85rem;">{{ getNextDoseTime(p) }}</td>
+                                    <td style="color:#636e72; font-size:0.85rem;">
+                                        <div class="mb-1">{{ getNextDoseTime(p) }}</div>
+                                        <div class="d-flex temporal-grid gap-2 overflow-auto py-2" style="max-width: 320px;">
+                                            <div class="temporal-block" *ngFor="let day of p.doseSchedule"
+                                                 [class.adherence-high]="day.taken"
+                                                 [class.adherence-mid]="isLoggable(day, p.id)"
+                                                 [class.adherence-low]="!day.taken && !isLoggable(day, p.id)"
+                                                 (click)="isLoggable(day, p.id) ? logAdherence(p) : null"
+                                                 [title]="day.date | date:'MMM d'">
+                                                <div class="block-fill"></div>
+                                                <span class="block-label">{{ day.date | date:'d' }}</span>
+                                                <i class="bi bi-check-lg block-icon text-white" *ngIf="day.taken"></i>
+                                            </div>
+                                        </div>
+                                    </td>
                                     <td>
                                         <div class="d-flex align-items-center justify-content-center gap-2">
                                             <!-- Mini circular ring per med -->
@@ -371,9 +467,17 @@
                                         </div>
                                     </td>
                                     <td class="pe-4">
-                                        <div class="d-flex gap-1 justify-content-end">
-                                            <button class="btn-icon" title="Log dose" (click)="logAdherence(p)">
-                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                        <div class="d-flex align-items-center justify-content-end" style="gap: 1.5rem;">
+                                            <button *ngIf="p.status === 'DISPENSED' && !hasActiveSchedule(p.id)"
+                                                class="btn btn-sm btn-outline-primary"
+                                                style="border-radius:20px; font-weight:600;"
+                                                (click)="openScheduleModal(p)" title="Setup Live Timers">
+                                                <i class="bi bi-alarm"></i> Setup Timers
+                                            </button>
+                                            <button class="btn-icon" title="Log dose" 
+                                                    [disabled]="isAlreadyLoggedToday(p.id)" 
+                                                    (click)="logAdherence(p)">
+                                                <i class="bi bi-check-circle-fill text-success" [class.opacity-50]="isAlreadyLoggedToday(p.id)"></i>
                                             </button>
                                             <button class="btn-icon" title="Download PDF" (click)="downloadPdf(p.id)">
                                                 <i class="bi bi-download"></i>
@@ -388,7 +492,7 @@
                                     </td>
                                 </tr>
                                 <tr *ngIf="activePrescriptions.length === 0">
-                                    <td colspan="4" class="text-center py-5">
+                                    <td colspan="4" class="text-center py-3">
                                         <i class="bi bi-inbox display-5 d-block mb-2 text-muted opacity-25"></i>
                                         <span class="text-muted">No active medications.</span>
                                     </td>
@@ -396,10 +500,10 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
+            </div>
 
-                <!-- Dispensed History -->
-                <div class="d-flex align-items-center mb-3">
+            <!-- Dispensed History -->
+            <div class="d-flex align-items-center mb-3">
                     <i class="bi bi-bag-check-fill me-2" style="color:#00b894; font-size:1.1rem;"></i>
                     <h5 class="section-heading" style="font-size:1rem;">Dispensed History</h5>
                 </div>
@@ -436,6 +540,37 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </ng-container>
+
+            <!-- ══════════════════════════════════════════════════
+                 SECTION: CLINICAL INTELLIGENCE LIBRARY
+            ══════════════════════════════════════════════════ -->
+            <ng-container *ngIf="activeSection === 'clinical'">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <h2 class="section-heading">Clinical Intelligence Library</h2>
+                        <p class="section-sub">FDA-sourced data for your current medications</p>
+                    </div>
+                    <div class="safety-badge-glass" *ngIf="activePrescriptions.length > 0">
+                        <i class="bi bi-shield-check-fill me-1 text-primary"></i> {{ activePrescriptions.length }} Medications Verified
+                    </div>
+                </div>
+
+                <div class="clinical-rows-stack d-flex flex-column gap-3">
+                    <div class="clinical-row-item" *ngFor="let p of activePrescriptions">
+                        <app-patient-guide-card 
+                            class="d-block"
+                            [medicineName]="p.items?.[0]?.medicineName || 'Medication'" 
+                            [batchId]="p.id?.toString() || 'DOC-' + p.id">
+                        </app-patient-guide-card>
+                    </div>
+                </div>
+                
+                <div class="col-12 text-center py-3 opacity-50" *ngIf="activePrescriptions.length === 0">
+                    <i class="bi bi-journal-x display-1 mb-2"></i>
+                    <h4>No Clinical Data Available</h4>
+                    <p>Detailed guides will appear here once you have active prescriptions.</p>
                 </div>
             </ng-container>
 
@@ -615,6 +750,286 @@
                 </div>
             </ng-container>
 
+            <!-- ══════════════════════════════════════════════════
+                 SECTION: REMINDERS & SCHEDULES
+            ══════════════════════════════════════════════════ -->
+            <ng-container *ngIf="activeSection === 'schedules'">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <h2 class="section-heading">Reminders & Schedules</h2>
+                        <p class="section-sub">Your active medication schedules and upcoming reminders</p>
+                    </div>
+                    <a routerLink="/schedules/create" class="btn-primary-glass">
+                        <i class="bi bi-plus-lg me-1"></i> New Schedule
+                    </a>
+                </div>
+
+                <!-- Today's Upcoming Doses -->
+                <div class="glass-card p-4 mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-clock-fill text-warning me-2 fs-5"></i>
+                        <h6 class="m-0" style="font-weight:700; color:#2d3436;">Today's Doses</h6>
+                        <span class="badge bg-warning text-dark ms-auto rounded-pill">{{dueDoses.length}} due</span>
+                    </div>
+
+                    <div *ngIf="dueDoses.length > 0">
+                        <div *ngFor="let dose of dueDoses"
+                            class="d-flex align-items-center justify-content-between p-3 mb-2 rounded-3"
+                            style="background:rgba(253,203,110,0.08); border:1px solid rgba(253,203,110,0.25);">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width:40px;height:40px;background:rgba(253,203,110,0.2);color:#e17055;">
+                                    <i class="bi bi-capsule-pill"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight:700;font-size:0.9rem;color:#2d3436;">{{dose.medicineName}}
+                                    </div>
+                                    <div style="font-size:0.78rem;color:#636e72;">{{dose.dosage}} · Scheduled:
+                                        {{formatDate(dose.scheduledTime)}}</div>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-success rounded-pill px-3 fw-bold"
+                                    (click)="takeDoseAlert(dose)">
+                                    <i class="bi bi-check2 me-1"></i>Take
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                                    (click)="snoozeDoseAlert(dose)">
+                                    <i class="bi bi-alarm me-1"></i>Snooze
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div *ngIf="dueDoses.length === 0" class="text-center py-4 text-muted">
+                        <i class="bi bi-check-circle display-5 d-block mb-2 opacity-25" style="color:#00b894;"></i>
+                        <p class="mb-0">All caught up! No doses due right now.</p>
+                    </div>
+                </div>
+
+                <!-- ═══ TEMPORAL ADHERENCE BLOCKS ═══ -->
+                <div class="glass-card p-4 mb-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-grid-3x3-gap-fill me-2 fs-5" style="color:#6c5ce7;"></i>
+                            <h6 class="m-0" style="font-weight:700; color:#2d3436;">Adherence Blocks</h6>
+                        </div>
+                        <span class="badge rounded-pill"
+                            style="background:rgba(108,92,231,0.1);color:#6c5ce7;font-size:0.75rem;">
+                            {{adherenceBlocks.length}} days tracked
+                        </span>
+                    </div>
+                    <p class="small text-muted mb-3" style="line-height:1.4;">
+                        Each block = 1 day. Each dose = <strong>{{adherenceBlocks.length > 0 &&
+                            adherenceBlocks[0]?.weightPerDose ? adherenceBlocks[0].weightPerDose : 25}}%</strong> of
+                        daily adherence.
+                        <span style="color:#00b894;">■</span> Taken &nbsp;
+                        <span style="color:#0984e3;">■</span> Pending &nbsp;
+                        <span style="color:#d63031;">■</span> Missed
+                    </p>
+
+                    <div *ngIf="adherenceBlocks.length > 0" class="d-flex flex-wrap gap-3">
+                        <div *ngFor="let block of adherenceBlocks; let i = index" 
+                            class="adherence-block"
+                            [class.adherence-block-today]="isToday(block.date)" 
+                            [class.adherence-low]="block.dailyAdherence === 0"
+                            [class.adherence-mid]="block.dailyAdherence > 0 && block.dailyAdherence < 100"
+                            [class.adherence-high]="block.dailyAdherence === 100"
+                            (click)="selectAdherenceBlock(block)">
+
+                             <!-- Day Label -->
+                             <div
+                                 style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#636e72; margin-bottom:6px;">
+                                 {{block.dayLabel}}
+                             </div>
+
+                             <!-- Circular Gauge -->
+                             <div class="position-relative d-inline-block mb-1" style="width:60px; height:60px;">
+                                 <svg width="60" height="60" viewBox="0 0 60 60">
+                                     <circle cx="30" cy="30" r="24" fill="none" stroke="#e2e8f0" stroke-width="5" />
+                                     <circle cx="30" cy="30" r="24" fill="none"
+                                         [attr.stroke]="block.dailyAdherence >= 100 ? '#00b894' : block.dailyAdherence > 0 ? '#fdcb6e' : '#dae1e7'"
+                                         stroke-width="5" [attr.stroke-dasharray]="150.796"
+                                         [attr.stroke-dashoffset]="150.796 - (150.796 * block.dailyAdherence / 100)"
+                                         stroke-linecap="round" transform="rotate(-90 30 30)"
+                                         style="transition: stroke-dashoffset 0.6s ease-in-out;" />
+                                 </svg>
+                                <div class="position-absolute top-50 start-50 translate-middle"
+                                    style="font-size:0.72rem; font-weight:800; color:#2d3436;">
+                                    {{block.dailyAdherence}}%
+                                </div>
+                            </div>
+
+                            <!-- Date -->
+                            <div style="font-size:0.78rem; font-weight:700; color:#2d3436;">
+                                {{formatBlockDate(block.date)}}
+                            </div>
+
+                            <!-- Dose Pills -->
+                            <div class="d-flex justify-content-center gap-1 mt-1 flex-wrap">
+                                <span *ngFor="let dose of block.doses" class="d-inline-block rounded-circle"
+                                    style="width:8px; height:8px;"
+                                    [style.background]="dose.status === 'TAKEN' ? '#00b894' : dose.status === 'MISSED' ? '#d63031' : '#0984e3'"
+                                    [title]="dose.medicineName + ' (' + dose.mealSlot + ') — ' + dose.status">
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div *ngIf="adherenceBlocks.length === 0" class="text-center py-4 text-muted">
+                        <i class="bi bi-grid-3x3 display-5 d-block mb-2 opacity-25"></i>
+                        <p class="mb-0">No adherence blocks yet. Create a schedule to start tracking.</p>
+                    </div>
+                </div>
+
+                <!-- ═══ DOSE DETAIL PANEL (shown when a block is clicked) ═══ -->
+                <div *ngIf="selectedBlock" class="glass-card p-4 mb-4" style="border-left:4px solid #6c5ce7;">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div>
+                            <h6 class="fw-bold mb-0" style="color:#2d3436;">
+                                <i class="bi bi-calendar-day me-2" style="color:#6c5ce7;"></i>
+                                {{formatBlockDateFull(selectedBlock.date)}}
+                            </h6>
+                            <p class="small text-muted mb-0 mt-1">
+                                {{selectedBlock.takenCount}}/{{selectedBlock.totalDoses}} doses taken ·
+                                Each dose = {{selectedBlock.weightPerDose}}% daily adherence
+                            </p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" (click)="selectedBlock = null">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+
+                    <div *ngFor="let dose of selectedBlock.doses"
+                        class="d-flex align-items-center gap-3 p-3 mb-2 rounded-3"
+                        [style.background]="dose.status === 'TAKEN' ? 'rgba(0,184,148,0.06)' : dose.status === 'MISSED' ? 'rgba(214,48,49,0.06)' : 'rgba(9,132,227,0.06)'"
+                        [style.border]="'1px solid ' + (dose.status === 'TAKEN' ? 'rgba(0,184,148,0.2)' : dose.status === 'MISSED' ? 'rgba(214,48,49,0.2)' : 'rgba(9,132,227,0.2)')">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                            style="width:36px;height:36px;"
+                            [style.background]="dose.status === 'TAKEN' ? 'rgba(0,184,148,0.15)' : dose.status === 'MISSED' ? 'rgba(214,48,49,0.15)' : 'rgba(9,132,227,0.15)'"
+                            [style.color]="dose.status === 'TAKEN' ? '#00b894' : dose.status === 'MISSED' ? '#d63031' : '#0984e3'">
+                            <i class="bi" [ngClass]="{
+                                'bi-check-circle-fill': dose.status === 'TAKEN',
+                                'bi-x-circle-fill': dose.status === 'MISSED',
+                                'bi-clock': dose.status === 'PENDING' || dose.status === 'SNOOZED'
+                            }"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div style="font-weight:700; font-size:0.88rem; color:#2d3436;">{{dose.medicineName}}</div>
+                            <div class="small text-muted">{{dose.mealSlot}} · {{dose.dosage}} · +{{dose.weight}}%
+                                adherence</div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge rounded-pill" [ngClass]="{
+                                    'bg-success': dose.status === 'TAKEN',
+                                    'bg-danger': dose.status === 'MISSED',
+                                    'bg-primary': dose.status === 'PENDING',
+                                    'bg-warning text-dark': dose.status === 'SNOOZED'
+                                }">{{dose.status}}</span>
+                            <button *ngIf="dose.status === 'PENDING' || dose.status === 'SNOOZED'"
+                                class="btn btn-sm btn-success rounded-pill px-3 fw-bold"
+                                (click)="markBlockDose(dose, 'TAKEN')">
+                                <i class="bi bi-check2 me-1"></i>Take
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Schedules -->
+                <div class="glass-card p-4 mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-calendar2-week text-primary me-2 fs-5"></i>
+                        <h6 class="m-0" style="font-weight:700; color:#2d3436;">Active Schedules</h6>
+                    </div>
+
+                    <div *ngIf="mySchedules.length > 0" class="row g-3">
+                        <div class="col-md-6" *ngFor="let s of mySchedules">
+                            <div class="p-3 rounded-3 h-100"
+                                style="background:rgba(9,132,227,0.04); border:1px solid rgba(9,132,227,0.12);">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="fw-bold mb-0 text-dark" style="font-size:0.9rem;">{{ s.scheduleName ||
+                                        'Medication Schedule' }}</h6>
+                                    <span class="badge rounded-pill" [ngClass]="{
+                                        'bg-success': s.status === 'ACTIVE',
+                                        'bg-warning text-dark': s.status === 'PAUSED',
+                                        'bg-secondary': s.status === 'COMPLETED' || s.status === 'CANCELLED'
+                                    }">{{ s.status }}</span>
+                                </div>
+                                <div class="small text-muted mb-2">
+                                    <i class="bi bi-calendar3 me-1"></i>Started: {{ s.startDate | date:'mediumDate' }}
+                                    <span *ngIf="s.endDate"> · Ends: {{ s.endDate | date:'mediumDate' }}</span>
+                                </div>
+                                <div class="small text-muted mb-3">
+                                    <i class="bi bi-prescription2 me-1"></i>Prescription #{{ s.prescription?.id }}
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a [routerLink]="['/doses/today']"
+                                        class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        <i class="bi bi-list-check me-1"></i>Doses
+                                    </a>
+                                    <a [routerLink]="['/schedules', s.id, 'audit']"
+                                        class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                        <i class="bi bi-clock-history me-1"></i>History
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div *ngIf="mySchedules.length === 0" class="text-center py-5 text-muted">
+                        <i class="bi bi-calendar-x display-4 d-block mb-2 opacity-25"></i>
+                        <p class="mb-1">No medication schedules yet.</p>
+                        <a routerLink="/schedules/create" style="color:#0984e3; font-weight:600;">Create your first
+                            schedule →</a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <a routerLink="/schedules"
+                            class="glass-card p-3 d-flex align-items-center gap-3 text-decoration-none"
+                            style="cursor:pointer;">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                style="width:42px;height:42px;background:rgba(9,132,227,0.1);color:#0984e3;flex-shrink:0;">
+                                <i class="bi bi-list-ul"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:700;font-size:0.85rem;color:#2d3436;">All Schedules</div>
+                                <div style="font-size:0.75rem;color:#636e72;">View & manage all schedules</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a routerLink="/doses/today"
+                            class="glass-card p-3 d-flex align-items-center gap-3 text-decoration-none"
+                            style="cursor:pointer;">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                style="width:42px;height:42px;background:rgba(0,184,148,0.1);color:#00b894;flex-shrink:0;">
+                                <i class="bi bi-capsule"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:700;font-size:0.85rem;color:#2d3436;">Dose Tracker</div>
+                                <div style="font-size:0.75rem;color:#636e72;">Track today's medication doses</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a routerLink="/notifications"
+                            class="glass-card p-3 d-flex align-items-center gap-3 text-decoration-none"
+                            style="cursor:pointer;">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                style="width:42px;height:42px;background:rgba(253,203,110,0.15);color:#e17055;flex-shrink:0;">
+                                <i class="bi bi-bell"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:700;font-size:0.85rem;color:#2d3436;">All Reminders</div>
+                                <div style="font-size:0.75rem;color:#636e72;">View notification history</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </ng-container>
+
         </div><!-- /page-content -->
     </div><!-- /main-panel -->
 </div><!-- /portal-root -->
@@ -622,10 +1037,9 @@
 
 <!-- ══ Appointment Modal ══════════════════════════════════════════ -->
 <div class="modal show d-block" tabindex="-1" *ngIf="showAppointmentModal"
-    style="background:rgba(0,0,0,0.45); backdrop-filter:blur(4px);">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:660px;">
-        <div class="modal-content border-0 rounded-4 shadow-lg"
-            style="background:rgba(255,255,255,0.96);backdrop-filter:blur(20px);">
+    style="background:rgba(15,23,42,0.4); backdrop-filter:blur(12px); z-index: 2000;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:680px;">
+        <div class="modal-content glass-card-modal border-0 shadow-2xl">
 
             <!-- Header -->
             <div class="modal-header border-0 px-4 pt-4 pb-2">
@@ -783,6 +1197,87 @@
                 <ng-template #noHistory>
                     <p class="text-center text-muted py-4">No history records found.</p>
                 </ng-template>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Schedule Timers Modal ═════════════════════════════════════════════ -->
+<div class="modal show d-block" tabindex="-1" *ngIf="showScheduleModal"
+    style="background:rgba(15,23,42,0.4); backdrop-filter:blur(12px); z-index: 2000;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card-modal border-0 shadow-2xl">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <h5 class="fw-bold m-0" style="color:#2d3436;">
+                    <i class="bi bi-alarm text-primary me-2"></i>Setup Live Timers
+                </h5>
+                <button type="button" class="btn-close ms-auto" (click)="closeScheduleModal()"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-4 text-center">Customize your daily meal times. We will automatically schedule
+                    your doses around these times based on your doctor's instructions.</p>
+
+                <form (ngSubmit)="submitSchedule()" #scheduleForm="ngForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Breakfast Time</label>
+                        <input type="time" class="form-control glass-input" [(ngModel)]="schedulePrefs.breakfastTime"
+                            name="breakfast" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Lunch Time</label>
+                        <input type="time" class="form-control glass-input" [(ngModel)]="schedulePrefs.lunchTime"
+                            name="lunch" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dinner Time</label>
+                        <input type="time" class="form-control glass-input" [(ngModel)]="schedulePrefs.dinnerTime"
+                            name="dinner" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Before-Meal Offset (Minutes)</label>
+                        <input type="number" class="form-control glass-input"
+                            [(ngModel)]="schedulePrefs.preMealOffsetMinutes" name="offset" min="0" max="60" required>
+                        <div class="form-text">How many minutes before a meal should "Before Food" doses trigger?</div>
+                    </div>                    <button type="submit" class="btn btn-primary w-100 py-2 rounded-pill fw-bold"
+                        style="box-shadow: 0 4px 12px rgba(9,132,227,0.3);" [disabled]="scheduleForm.invalid">
+                        <i class="bi bi-play-circle-fill me-2"></i> Activate Schedule
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Patient Profile Modal ═════════════════════════════════════════════ -->
+<div class="modal show d-block" tabindex="-1" *ngIf="showProfileModal"
+    style="background:rgba(15,23,42,0.4); backdrop-filter:blur(12px); z-index: 2000;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card-modal border-0 shadow-2xl">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <h5 class="fw-bold m-0" style="color:#2d3436;">
+                    <i class="bi bi-person-badge text-primary me-2"></i>Patient Profile
+                </h5>
+                <button type="button" class="btn-close ms-auto" (click)="showProfileModal = false"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="user-avatar fs-2 mx-auto mb-3" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background: rgba(9,132,227,0.1); color: #0984e3; border-radius: 50%;">
+                    {{ userName.charAt(0).toUpperCase() }}
+                </div>
+                <h4 class="fw-bold text-dark mb-1">{{ currentUser?.fullName || userName }}</h4>
+                <p class="text-muted small mb-4">{{ currentUser?.email }}</p>
+
+                <div class="glass-card p-4 text-start" style="background: rgba(255,255,255,0.7); box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-clipboard2-pulse text-danger me-2"></i>
+                        <h6 class="text-uppercase fw-bold text-muted mb-0" style="font-size: 0.8rem; letter-spacing: 1px;">Medical History</h6>
+                    </div>
+                    <p class="mb-0 text-dark fw-bold" style="font-size: 1rem; color: #2d3436 !important;">
+                        {{ currentUser?.medicalHistory || 'No verified medical history on record.' }}
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 pt-0 justify-content-center">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-5 fw-bold" (click)="showProfileModal = false">Close</button>
             </div>
         </div>
     </div>

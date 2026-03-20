@@ -89,7 +89,7 @@ export const routes: Routes = [
     },
     {
         path: 'pharmacist/inventory',
-        loadComponent: () => import('./components/inventory-dashboard/inventory-dashboard.component').then(m => m.InventoryDashboardComponent),
+        loadComponent: () => import('./components/inventory-dashboard-v2/inventory-dashboard-v2.component').then(m => m.InventoryDashboardV2Component),
         canActivate: [authGuard, roleGuard],
         data: { role: 'PHARMACIST' }
     },

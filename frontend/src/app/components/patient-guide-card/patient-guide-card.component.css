@@ -1,0 +1,99 @@
+.glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+    transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.glass-card.expanded {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+}
+
+.main-info-block {
+    z-index: 10;
+    background: inherit;
+    transition: all 0.3s;
+}
+
+.detail-panel-horizontal {
+    overflow: hidden;
+    background: #fff;
+}
+
+.panel-container {
+    height: 100%;
+}
+
+.detail-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.column-header i {
+    font-size: 1rem;
+}
+
+.label-tiny {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.bullet-point {
+    line-height: 1.4;
+}
+
+.small-text {
+    font-size: 0.8rem;
+    color: #4a5568;
+}
+
+.btn-expand {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-expand.rotated {
+    transform: rotate(180deg);
+    background: #006aff !important;
+    color: white !important;
+}
+
+/* Sideways alignment */
+.main-info-block {
+    border-right: 1px solid rgba(0,0,0,0.03);
+}
+
+/* Risk Backgrounds */
+.card-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background: #0984e3;
+    z-index: 15;
+}
+
+.card-glow.danger {
+    background: #ff6b6b;
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+

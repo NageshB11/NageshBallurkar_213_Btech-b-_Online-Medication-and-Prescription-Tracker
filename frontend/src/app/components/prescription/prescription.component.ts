@@ -5,6 +5,7 @@ import { PharmacistService } from '../../services/pharmacist.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { SafetyReport } from '../../models/safety-report.model';
 
 @Component({
     selector: 'app-prescription',
@@ -19,6 +20,8 @@ export class PrescriptionComponent implements OnInit {
     fileError: string | null = null;
     message: string | null = null;
     isSubmitting: boolean = false;
+    overrideInteraction = false;
+    validationMessages: { [key: number]: { message: string, type: 'success' | 'danger' | 'warning' } } = {};
 
     // For demonstration, we might load an existing prescription
     currentPrescriptionId: number | null = null;
@@ -26,6 +29,10 @@ export class PrescriptionComponent implements OnInit {
 
     availablePharmacists: any[] = [];
     selectedPharmacistId: number | null = null;
+    
+    // Safety Gate State
+    activeSafetyReport: SafetyReport | null = null;
+    showSafetyConflict: boolean = false;
 
     constructor(
         private fb: FormBuilder,
@@ -156,14 +163,22 @@ export class PrescriptionComponent implements OnInit {
             this.prescriptionForm.markAllAsTouched();
             return;
         }
-        this.isSubmitting = true;
 
+        // Check if any unsafe drugs are presence
+        const hasUnsafe = Object.values(this.validationMessages).some(v => v.type === 'danger');
+        if (!isDraft && hasUnsafe) {
+            this.message = '⚠️ Cannot issue prescription: One or more medications have CRITICAL safety conflicts.';
+            return;
+        }
+
+        this.isSubmitting = true;
         const formValue = this.prescriptionForm.value;
         const prescriptionData: any = {
             patientEmail: formValue.patientEmail,
             expiryDate: formValue.expiryDate,
             items: formValue.items,
-            isDraft: isDraft
+            isDraft: isDraft,
+            overrideInteraction: this.overrideInteraction
         };
 
         const request$ = this.currentPrescriptionId
@@ -176,6 +191,7 @@ export class PrescriptionComponent implements OnInit {
                 this.currentPrescriptionId = res.id!;
                 this.currentPrescriptionStatus = res.status!;
                 this.isSubmitting = false;
+                this.validationMessages = {}; // Clear on success
 
                 if (!isDraft) {
                     if (!this.route.snapshot.queryParams['id']) {
@@ -186,10 +202,54 @@ export class PrescriptionComponent implements OnInit {
                 }
             },
             error: (err: any) => {
-                this.message = 'Error: ' + (err.error?.message || err.message);
+                if (err.status === 409 && err.error && !err.error.safe) {
+                    this.activeSafetyReport = err.error;
+                    this.showSafetyConflict = true;
+                    this.message = '⚠️ CRITICAL CLINICAL CONFLICT DETECTED. PREVIEW BLOCKED.';
+                } else {
+                    this.message = 'Error: ' + (err.error?.message || err.message);
+                }
                 this.isSubmitting = false;
             }
         });
+    }
+
+    overrideAndSubmit(): void {
+        this.overrideInteraction = true;
+        this.showSafetyConflict = false;
+        this.createPrescription(false);
+    }
+
+    validateMedication(index: number): void {
+        const item = this.items.at(index);
+        const drugName = item.get('medicineName')?.value;
+        const patientEmail = this.prescriptionForm.get('patientEmail')?.value;
+
+        if (!drugName || !patientEmail) {
+            return;
+        }
+
+        this.validationMessages[index] = { message: 'Checking safety...', type: 'warning' };
+
+        this.prescriptionService.validatePrescriptionItem(drugName, patientEmail).subscribe({
+            next: (res) => {
+                this.validationMessages[index] = { message: '✅ Safety Cleared', type: 'success' };
+            },
+            error: (err) => {
+                if (err.status === 409 && err.error && !err.error.safe) {
+                    this.activeSafetyReport = err.error;
+                    this.showSafetyConflict = true;
+                    this.validationMessages[index] = { message: '❌ Critical Clinical Conflict', type: 'danger' };
+                } else {
+                    const errMsg = err.error?.message || err.message || 'Safety conflict detected';
+                    this.validationMessages[index] = { message: '❌ ' + errMsg, type: 'danger' };
+                }
+            }
+        });
+    }
+
+    dismissSafetyAlert(): void {
+        this.showSafetyConflict = false;
     }
 
     onFileSelected(event: any): void {
