@@ -31,7 +31,7 @@ import { HttpHeaders } from '@angular/common/http';
     providedIn: 'root'
 })
 export class ExternalDrugService {
-    private apiUrl = 'http://localhost:8081/api/drug-info';
+    private apiUrl = '/api/drug-info';
 
     constructor(private http: HttpClient, private authService: AuthService) { }
 

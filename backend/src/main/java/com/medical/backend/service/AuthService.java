@@ -21,6 +21,13 @@ public class AuthService {
     private NotificationService notificationService;
 
     public User registerUser(User user) {
+        System.out.println("DEBUG: Registering user: " + user.getEmail());
+        if (user.getEmail() == null || user.getEmail().isEmpty()) {
+            throw new RuntimeException("Email is required");
+        }
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            throw new RuntimeException("Password is required and cannot be null");
+        }
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new RuntimeException("Email already in use");
         }

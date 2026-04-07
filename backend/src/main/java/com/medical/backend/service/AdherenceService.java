@@ -134,7 +134,7 @@ public class AdherenceService {
         if (prescription.getItems() == null)
             return 0;
         for (com.medical.backend.entity.PrescriptionItem item : prescription.getItems()) {
-            if (item.getStartDate() != null && item.getEndDate() != null) {
+            if (item.getItemStartDate() != null && item.getEndDate() != null) {
                 LocalDateTime start = item.getStartDate().atStartOfDay();
                 LocalDateTime end = item.getEndDate().atTime(23, 59);
 
@@ -199,7 +199,7 @@ public class AdherenceService {
         if (p.getItems() == null)
             return 0;
         for (com.medical.backend.entity.PrescriptionItem item : p.getItems()) {
-            if (item.getStartDate() != null && item.getEndDate() != null) {
+            if (item.getItemStartDate() != null && item.getEndDate() != null) {
                 LocalDateTime itemStart = item.getStartDate().atStartOfDay();
                 LocalDateTime itemEnd = item.getEndDate().atTime(23, 59);
                 // Overlap of [itemStart, itemEnd] and [start, end]

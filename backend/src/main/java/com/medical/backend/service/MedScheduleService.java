@@ -191,9 +191,14 @@ public class MedScheduleService {
         item.setDosage(pi.getDosage());
         item.setMealSlots(pi.getMealSlots());
         item.setFoodInstruction(pi.getFoodInstruction());
-        item.setFrequency(ScheduleItem.Frequency.DAILY);
-        if (pi.getEndDate() != null && pi.getStartDate() != null) {
-            long days = java.time.temporal.ChronoUnit.DAYS.between(pi.getStartDate(), pi.getEndDate());
+        if (pi.getFrequency() != null) {
+            item.setFrequency(ScheduleItem.Frequency.valueOf(pi.getFrequency()));
+        }
+        if (pi.getDaysOfWeek() != null) {
+            item.setDaysOfWeek(pi.getDaysOfWeek());
+        }
+        if (pi.getEndDate() != null && pi.getItemStartDate() != null) {
+            long days = java.time.temporal.ChronoUnit.DAYS.between(pi.getItemStartDate(), pi.getEndDate());
             item.setDurationDays((int) days);
         }
         if (override != null) {

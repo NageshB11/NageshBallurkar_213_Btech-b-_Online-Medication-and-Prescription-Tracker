@@ -17,6 +17,7 @@ public class Medicine {
     private String name;
 
     private int stockQuantity;
+    private int lowStockThreshold = 10;
     private String batchNumber;
     private LocalDate expiryDate;
     private double unitPrice;

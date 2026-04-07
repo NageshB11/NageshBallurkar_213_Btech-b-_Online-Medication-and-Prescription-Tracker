@@ -14,11 +14,11 @@ import { Router } from '@angular/router';
 export class DoctorAppointmentsComponent implements OnInit {
     appointments: Appointment[] = [];
     statusBadges: { [key in AppointmentStatus]: string } = {
-        [AppointmentStatus.REQUESTED]: 'bg-yellow-100 text-yellow-800',
-        [AppointmentStatus.APPROVED]: 'bg-green-100 text-green-800',
-        [AppointmentStatus.REJECTED]: 'bg-red-100 text-red-800',
-        [AppointmentStatus.COMPLETED]: 'bg-blue-100 text-blue-800',
-        [AppointmentStatus.CANCELLED]: 'bg-gray-100 text-gray-800'
+        [AppointmentStatus.REQUESTED]: 'status-pill status-requested',
+        [AppointmentStatus.APPROVED]: 'status-pill status-approved',
+        [AppointmentStatus.REJECTED]: 'status-pill status-rejected',
+        [AppointmentStatus.COMPLETED]: 'status-pill status-completed',
+        [AppointmentStatus.CANCELLED]: 'status-pill status-muted'
     };
 
     constructor(private appointmentService: AppointmentService, private router: Router) { }

@@ -16,8 +16,8 @@ export interface RenewalRequest {
     providedIn: 'root'
 })
 export class RenewalService {
-    private apiUrl = 'http://localhost:8081/api/renewals';
-    private doctorUrl = 'http://localhost:8081/api/doctor/renewals';
+    private apiUrl = '/api/renewals';
+    private doctorUrl = '/api/doctor/renewals';
 
     constructor(private http: HttpClient, private authService: AuthService) { }
 

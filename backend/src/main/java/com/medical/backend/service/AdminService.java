@@ -2,19 +2,22 @@ package com.medical.backend.service;
 
 import com.medical.backend.dto.SystemStatsDTO;
 import com.medical.backend.dto.PatientAuditDTO;
+import com.medical.backend.entity.AlertLog;
 import com.medical.backend.entity.Role;
 import com.medical.backend.entity.User;
 import com.medical.backend.entity.Prescription;
-import com.medical.backend.entity.PrescriptionAudit;
+import com.medical.backend.repository.AlertLogRepository;
 import com.medical.backend.repository.PrescriptionRepository;
 import com.medical.backend.repository.UserRepository;
 import com.medical.backend.repository.SystemAuditRepository;
 import com.medical.backend.repository.AdherenceLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
 import java.time.Duration;
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,6 +38,50 @@ public class AdminService {
 
     @Autowired
     private AdherenceLogRepository adherenceLogRepository;
+
+    @Autowired
+    private AlertLogRepository alertLogRepository;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    private com.medical.backend.repository.DoseLogRepository doseLogRepository;
+
+    @Autowired
+    private AdherenceService adherenceService;
+
+    @PostConstruct
+    public void seedAlertLogs() {
+        if (alertLogRepository.count() == 0) {
+            List<AlertLog> seeds = List.of(
+                createAlert("New Doctor registration pending approval: Dr. Sarah Patel", "INFO", 2),
+                createAlert("Patient #102 dropped below 30% adherence — critical risk", "ERROR", 5),
+                createAlert("Stock level for Amoxicillin hit critical low (12 units remaining)", "WARNING", 8),
+                createAlert("Database backup completed successfully", "INFO", 12),
+                createAlert("System latency spike detected on /api/prescriptions endpoint", "WARNING", 18),
+                createAlert("New Pharmacist registration: Velraj K. — awaiting verification", "INFO", 24),
+                createAlert("Failed login attempt from unknown IP: 192.168.1.55", "ERROR", 30),
+                createAlert("Prescription #45 dispensed after 48-hour SLA breach", "WARNING", 36),
+                createAlert("Monthly compliance report generated for March 2026", "INFO", 48),
+                createAlert("Patient #87 achieved 100% adherence this month — milestone", "INFO", 60),
+                createAlert("SSL certificate renewal completed", "INFO", 72),
+                createAlert("Stock level for Metformin approaching reorder threshold", "WARNING", 80),
+                createAlert("System health check: All nodes operational", "INFO", 96),
+                createAlert("Unauthorized access attempt blocked on /api/admin/users", "ERROR", 110),
+                createAlert("Scheduled maintenance window completed — zero downtime", "INFO", 130)
+            );
+            alertLogRepository.saveAll(seeds);
+        }
+    }
+
+    private AlertLog createAlert(String message, String severity, int hoursAgo) {
+        AlertLog alert = new AlertLog();
+        alert.setMessage(message);
+        alert.setSeverity(severity);
+        alert.setTimestamp(LocalDateTime.now().minusHours(hoursAgo));
+        return alert;
+    }
 
     public SystemStatsDTO getSystemStats() {
         long totalPatients = userRepository.countByRole(Role.PATIENT);
@@ -83,8 +130,18 @@ public class AdminService {
         globalAdherence.put("Success", totalLogged);
         globalAdherence.put("Missed", Math.max(0, totalExpected - totalLogged));
 
-        return new SystemStatsDTO(totalPatients, totalDoctors, totalPharmacists, totalPrescriptions,
-                dispensedPrescriptions, activeUsers, dispensingRate, pharmacistPerformance, globalAdherence);
+        // Pending Verifications Count
+        long pendingVerificationsCount = userRepository.findAll().stream()
+                .filter(u -> !u.isVerified() && (u.getRole() == Role.DOCTOR || u.getRole() == Role.PHARMACIST))
+                .count();
+
+        SystemStatsDTO dto = new SystemStatsDTO(totalPatients, totalDoctors, totalPharmacists, totalPrescriptions,
+                dispensedPrescriptions, activeUsers, dispensingRate, pharmacistPerformance, globalAdherence, pendingVerificationsCount);
+
+        // Attach the Alert Heartbeat Feed
+        dto.setRecentAlerts(alertLogRepository.findTop20ByOrderByTimestampDesc());
+
+        return dto;
     }
 
     private long calculateExpectedSoFar(Prescription p) {
@@ -118,7 +175,13 @@ public class AdminService {
     }
 
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        List<User> users = userRepository.findAll();
+        for (User u : users) {
+          if (com.medical.backend.entity.Role.PATIENT.equals(u.getRole())) {
+            u.setAdherenceScore(adherenceService.calculatePatientAdherence(u.getId()));
+          }
+        }
+        return users;
     }
 
     public List<User> getAllPatients() {
@@ -141,83 +204,11 @@ public class AdminService {
         return prescriptionAuditRepository.findByPrescriptionIdOrderByModifiedAtAsc(prescriptionId);
     }
 
-    /**
-     * Returns a complete, grouped, delta-enriched audit timeline for a patient.
-     * Groups by prescriptionId and sorts prescription groups by newest event desc.
-     * Within each group, versions are sorted descending (newest first).
-     * Delta is detected by comparing each version's clinical fields to the previous
-     * one.
-     */
+    @Autowired
+    private PrescriptionService prescriptionService;
+
     public List<PatientAuditDTO> getPatientAuditTimeline(Long patientId) {
-        // 1. Fetch all prescriptions for this patient
-        List<Prescription> patientPrescriptions = prescriptionRepository.findByPatient_Id(patientId);
-
-        List<PatientAuditDTO> result = new ArrayList<>();
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-        for (Prescription rx : patientPrescriptions) {
-            // 2. Fetch all audit records for this prescription, sorted ASC (oldest first
-            // for delta logic)
-            List<PrescriptionAudit> audits = prescriptionAuditRepository
-                    .findByPrescriptionIdOrderByModifiedAtAsc(rx.getId());
-
-            if (audits.isEmpty())
-                continue;
-
-            PatientAuditDTO dto = new PatientAuditDTO();
-            dto.setPrescriptionId(rx.getId());
-            dto.setPatientName(rx.getPatient() != null ? rx.getPatient().getFullName() : "Unknown");
-
-            // 3. Build version DTOs with delta detection (compare to previous)
-            List<PatientAuditDTO.AuditVersionDTO> versions = new ArrayList<>();
-            PatientAuditDTO.AuditVersionDTO prev = null;
-
-            for (PrescriptionAudit audit : audits) {
-                PatientAuditDTO.AuditVersionDTO v = new PatientAuditDTO.AuditVersionDTO();
-                v.setAuditId(audit.getId());
-                v.setVersionLabel(audit.getVersionLabel() != null ? audit.getVersionLabel() : "v1.0");
-                v.setActionType(audit.getActionType());
-                v.setPrescribedByName(audit.getPrescribedByName());
-                v.setDispensedByName(audit.getDispensedByName());
-                v.setMedicineName(audit.getMedicineName());
-                v.setDosage(audit.getDosage());
-                v.setDuration(audit.getDuration());
-                v.setModifiedAt(audit.getModifiedAt() != null ? audit.getModifiedAt().format(fmt) : null);
-                v.setModifiedBy(audit.getModifiedBy());
-                v.setSnapshotJson(audit.getSnapshotJson());
-
-                // Delta detection: compare clinical fields to previous version
-                if (prev != null) {
-                    boolean medChange = !Objects.equals(prev.getMedicineName(), audit.getMedicineName());
-                    boolean dosChange = !Objects.equals(prev.getDosage(), audit.getDosage());
-                    boolean durChange = !Objects.equals(prev.getDuration(), audit.getDuration());
-
-                    if (medChange || dosChange || durChange) {
-                        v.setHasDelta(true);
-                        v.setPrevMedicineName(medChange ? prev.getMedicineName() : null);
-                        v.setPrevDosage(dosChange ? prev.getDosage() : null);
-                        v.setPrevDuration(durChange ? prev.getDuration() : null);
-                    }
-                }
-
-                versions.add(v);
-                prev = v;
-            }
-
-            // 4. Reverse to newest-first for the frontend
-            Collections.reverse(versions);
-            dto.setVersions(versions);
-            result.add(dto);
-        }
-
-        // 5. Sort prescription groups: prescription with the most recent event first
-        result.sort((a, b) -> {
-            String aTime = a.getVersions().isEmpty() ? "" : a.getVersions().get(0).getModifiedAt();
-            String bTime = b.getVersions().isEmpty() ? "" : b.getVersions().get(0).getModifiedAt();
-            return bTime != null ? bTime.compareTo(aTime != null ? aTime : "") : -1;
-        });
-
-        return result;
+        return prescriptionService.getPatientAuditTimeline(patientId);
     }
 
     public User verifyUser(Long userId) {
@@ -232,5 +223,185 @@ public class AdminService {
         systemAuditRepository.save(audit);
 
         return saved;
+    }
+
+    public void rejectUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Log a Warning alert for compliance before deletion
+        AlertLog alert = new AlertLog();
+        alert.setMessage("SECURITY ALERT: Admin rejected and PERMANENTLY DELETED " + user.getRole() + ": " + user.getFullName() + " (" + user.getEmail() + ")");
+        alert.setSeverity("WARNING");
+        alert.setTimestamp(LocalDateTime.now());
+        alertLogRepository.save(alert);
+
+        com.medical.backend.entity.SystemAudit audit = new com.medical.backend.entity.SystemAudit();
+        audit.setAction("USER_REJECTED");
+        audit.setDetails("Admin rejected and removed " + user.getRole() + ": " + user.getFullName() + " (" + user.getEmail() + ")");
+        systemAuditRepository.save(audit);
+
+        userRepository.delete(user);
+    }
+
+    public User toggleUserStatus(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setActive(!user.isActive());
+        User saved = userRepository.save(user);
+
+        // System Audit Log
+        com.medical.backend.entity.SystemAudit audit = new com.medical.backend.entity.SystemAudit();
+        audit.setAction(saved.isActive() ? "USER_ACTIVATED" : "USER_SUSPENDED");
+        audit.setDetails("Admin " + (saved.isActive() ? "activated " : "suspended ") + user.getRole() + ": " + user.getFullName() + " (" + user.getEmail() + ")");
+        systemAuditRepository.save(audit);
+
+        // Security Alert Log
+        AlertLog alert = new AlertLog();
+        alert.setMessage("SECURITY: User " + user.getFullName() + " (" + user.getEmail() + ") was " + (saved.isActive() ? "ACTIVATED" : "SUSPENDED") + " by Admin.");
+        alert.setSeverity(saved.isActive() ? "INFO" : "WARNING");
+        alert.setTimestamp(LocalDateTime.now());
+        alertLogRepository.save(alert);
+
+        return saved;
+    }
+
+    public User updatePatientDetails(Long userId, Map<String, String> details) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        boolean historyChanged = false;
+        if (details.containsKey("medicalHistory")) {
+            String oldHistory = user.getMedicalHistory();
+            String newHistory = details.get("medicalHistory");
+            if (!Objects.equals(oldHistory, newHistory)) {
+                user.setMedicalHistory(newHistory);
+                historyChanged = true;
+            }
+        }
+        
+        if (details.containsKey("phone")) user.setPhone(details.get("phone"));
+        if (details.containsKey("address")) user.setAddress(details.get("address"));
+        if (details.containsKey("fullName")) user.setFullName(details.get("fullName"));
+
+        User saved = userRepository.save(user);
+
+        if (historyChanged) {
+            AlertLog alert = new AlertLog();
+            alert.setMessage("CLINICAL: Medical history updated for Patient " + user.getFullName() + " (" + user.getEmail() + ") by Admin.");
+            alert.setSeverity("INFO");
+            alert.setTimestamp(LocalDateTime.now());
+            alertLogRepository.save(alert);
+        }
+
+        return saved;
+    }
+
+    public User resetPassword(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        String tempPassword = "Reset123!";
+        user.setPassword(passwordEncoder.encode(tempPassword));
+        User saved = userRepository.save(user);
+
+        // Security Alert Log
+        AlertLog alert = new AlertLog();
+        alert.setMessage("SECURITY: Admin reset password for " + user.getRole() + ": " + user.getFullName() + " (" + user.getEmail() + "). Default set to 'Reset123!'.");
+        alert.setSeverity("WARNING");
+        alert.setTimestamp(LocalDateTime.now());
+        alertLogRepository.save(alert);
+
+        return saved;
+    }
+
+    public Map<String, Object> getUserAuditTrace(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Ensure adherence is calculated for patients
+        if (com.medical.backend.entity.Role.PATIENT.equals(user.getRole())) {
+            user.setAdherenceScore(adherenceService.calculatePatientAdherence(user.getId()));
+        }
+
+        Map<String, Object> trace = new HashMap<>();
+        trace.put("user", user);
+
+        // Standardized history timeline
+        List<Map<String, Object>> timeline = new ArrayList<>();
+
+        // 1. System events from SystemAudit
+        List<com.medical.backend.entity.SystemAudit> systemAudits = systemAuditRepository.findAll().stream()
+                .filter(a -> a.getDetails().contains(user.getFullName()) || (user.getEmail() != null && a.getDetails().contains(user.getEmail())))
+                .toList();
+        
+        for (com.medical.backend.entity.SystemAudit a : systemAudits) {
+            Map<String, Object> event = new HashMap<>();
+            event.put("timestamp", a.getTimestamp());
+            event.put("action", a.getAction());
+            event.put("details", a.getDetails());
+            event.put("type", "SECURITY");
+            timeline.add(event);
+        }
+
+        // 2. Business events from PrescriptionAudit
+        if (user.getRole() == Role.PATIENT) {
+            // Find all prescriptions for this patient
+            List<Long> rxIds = prescriptionRepository.findAll().stream()
+                .filter(p -> p.getPatient() != null && p.getPatient().getId().equals(user.getId()))
+                .map(com.medical.backend.entity.Prescription::getId)
+                .toList();
+            
+            if (!rxIds.isEmpty()) {
+                List<com.medical.backend.entity.PrescriptionAudit> rxAudits = prescriptionAuditRepository.findAll().stream()
+                    .filter(a -> rxIds.contains(a.getPrescriptionId()))
+                    .toList();
+                
+                for (com.medical.backend.entity.PrescriptionAudit a : rxAudits) {
+                    Map<String, Object> event = new HashMap<>();
+                    event.put("timestamp", a.getModifiedAt());
+                    event.put("action", a.getActionType());
+                    event.put("details", "Prescription #" + a.getPrescriptionId() + " " + a.getActionType().toLowerCase() + " by " + a.getPrescribedByName());
+                    event.put("type", "CLINICAL");
+                    timeline.add(event);
+                }
+            }
+        } else if (user.getRole() == Role.DOCTOR || user.getRole() == Role.PHARMACIST) {
+            // For Doctors/Pharmacists, find audits where they were the actors
+            List<com.medical.backend.entity.PrescriptionAudit> rxAudits = prescriptionAuditRepository.findAll().stream()
+                .filter(a -> (a.getPrescribedById() != null && a.getPrescribedById().equals(user.getId())) || 
+                            (a.getDispensedById() != null && a.getDispensedById().equals(user.getId())))
+                .toList();
+            
+            for (com.medical.backend.entity.PrescriptionAudit a : rxAudits) {
+                Map<String, Object> event = new HashMap<>();
+                event.put("timestamp", a.getModifiedAt());
+                event.put("action", a.getActionType());
+                event.put("details", (user.getRole() == Role.DOCTOR ? "Issued/Modified" : "Dispensed") + " Prescription #" + a.getPrescriptionId());
+                event.put("type", "CLINICAL");
+                timeline.add(event);
+            }
+        }
+
+        // Sort timeline by timestamp desc
+        timeline.sort((a, b) -> ((java.time.LocalDateTime)b.get("timestamp")).compareTo((java.time.LocalDateTime)a.get("timestamp")));
+        trace.put("timeline", timeline);
+
+        return trace;
+    }
+
+    public void clearAllMedtrackData() {
+        doseLogRepository.deleteAll();
+        adherenceLogRepository.deleteAll();
+        alertLogRepository.deleteAll();
+        prescriptionAuditRepository.deleteAll();
+        
+        // Deleting prescriptions will delete items due to cascade usually, but let's be safe
+        prescriptionRepository.deleteAll();
+        
+        com.medical.backend.entity.SystemAudit audit = new com.medical.backend.entity.SystemAudit();
+        audit.setAction("SYSTEM_DATA_WIPE");
+        audit.setDetails("Admin invoked full data wipe of prescriptions and logs.");
+        systemAuditRepository.save(audit);
     }
 }

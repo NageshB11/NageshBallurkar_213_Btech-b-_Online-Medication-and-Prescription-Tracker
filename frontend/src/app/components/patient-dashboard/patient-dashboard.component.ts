@@ -8,25 +8,44 @@ import { Subscription, interval } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { AppointmentService } from '../../services/appointment.service';
 import { AdherenceService } from '../../services/adherence.service';
+import { AnalyticsService } from '../../services/analytics.service';
 import { DoctorService, DoctorUser } from '../../services/doctor.service';
 import { Prescription } from '../../models/prescription.model';
 import { Appointment, AppointmentStatus } from '../../models/appointment.model';
 import { User } from '../../models/user.model';
 
-import { VitalsChartComponent } from '../vitals-chart/vitals-chart.component';
-import { SosCardComponent } from '../sos-card/sos-card.component';
 import { AdherenceGaugeComponent } from '../adherence-gauge/adherence-gauge.component';
 import { RenewalService } from '../../services/renewal.service';
 import { DoseLogService, DoseLog } from '../../services/dose-log.service';
 import { MedScheduleService, MedicationSchedule, PatientMealPrefs, MedScheduleRequest } from '../../services/med-schedule.service';
 import { PatientGuideCardComponent } from '../patient-guide-card/patient-guide-card.component';
+import { AdherenceTrendChartComponent } from '../adherence-trend-chart/adherence-trend-chart.component';
+import { PatientAdherenceComponent } from '../patient-adherence/patient-adherence.component';
+
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 @Component({
     selector: 'app-patient-dashboard',
     standalone: true,
-    imports: [CommonModule, RouterModule, FormsModule, VitalsChartComponent, SosCardComponent, AdherenceGaugeComponent, PatientGuideCardComponent],
+    imports: [CommonModule, RouterModule, FormsModule, AdherenceGaugeComponent, PatientGuideCardComponent, AdherenceTrendChartComponent, PatientAdherenceComponent],
     templateUrl: './patient-dashboard.component.html',
-    styleUrls: ['./patient-dashboard.component.css']
+    styleUrls: ['./patient-dashboard.component.css'],
+    animations: [
+        trigger('fadeSlide', [
+            transition(':enter', [
+                style({ opacity: 0, transform: 'translateY(15px)' }),
+                animate('400ms cubic-bezier(0.165, 0.84, 0.44, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+            ])
+        ]),
+        trigger('listAnimation', [
+            transition('* <=> *', [
+                query(':enter', [
+                    style({ opacity: 0, transform: 'translateY(10px)' }),
+                    stagger('60ms', animate('350ms ease-out', style({ opacity: 1, transform: 'translateY(0)' })))
+                ], { optional: true })
+            ])
+        ])
+    ]
 })
 export class PatientDashboardComponent implements OnInit, OnDestroy {
     activePrescriptions: Prescription[] = [];
@@ -37,6 +56,8 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
     userId: number | null = null;
     loading = true;
     selectedHistory: any[] | null = null;
+    auditTimelines: any[] = []; 
+    currentPrescriptionAudit: any | null = null;
     adherenceLogs: any[] = []; // Store logs
     myAdherence30Days: number = 0;
 
@@ -45,11 +66,16 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
 
     // Temporal Adherence Blocks
     adherenceBlocks: any[] = [];
+    doseSlotBlocks: any[] = []; // NEW: Flattened list of individual dose slots
     selectedBlock: any = null;
 
     isUserMenuOpen = false;
     currentUser: User | null = null;
     showProfileModal = false;
+    isEditingProfile = false;
+    profileSaving = false;
+    profileSuccess = false;
+    profileForm: any = {};
 
     private pollSub?: Subscription;
 
@@ -71,10 +97,13 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
         private adherenceService: AdherenceService,
         private renewalService: RenewalService,
         private doctorService: DoctorService,
-        private doseLogService: DoseLogService
+        private doseLogService: DoseLogService,
+        private medScheduleService: MedScheduleService,
+        private analyticsService: AnalyticsService
     ) { }
 
     ngOnInit(): void {
+        this.killOverlays();
         const profile = this.authService.getProfile();
         this.currentUser = profile;
         this.userName = profile?.fullName || 'Patient';
@@ -94,7 +123,17 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
         // Connect to Live RxJS Adherence Stream for instant Gauges
         this.adherenceService.liveAdherence$.subscribe(val => {
             if (val > 0) this.myAdherence30Days = val;
+            else this.refreshOverallScore(); // If 0, fallback to API
         });
+    }
+
+    refreshOverallScore(): void {
+        if (this.userId) {
+            this.analyticsService.getOverallAdherenceScore(this.userId).subscribe({
+                next: (score: number) => this.myAdherence30Days = score,
+                error: (err: any) => console.error('Error fetching overall score', err)
+            });
+        }
     }
 
     ngOnDestroy(): void {
@@ -113,13 +152,12 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
             next: (doses) => {
                 const now = new Date();
                 this.dueDoses = doses.filter(d => {
-                    if (d.status !== 'PENDING') return false;
-                    const schedTime = this.parseDate(d.scheduledTime);
-                    if (!schedTime) return false;
-                    // Trigger alert if it's currently at or past the scheduled time 
-                    // AND less than 4 hours past (we don't alert for yesterday's missed doses continuously)
-                    const diffMs = now.getTime() - schedTime.getTime();
-                    return diffMs >= 0 && diffMs < (4 * 60 * 60 * 1000);
+                    const status = d.status;
+                    if (status !== 'PENDING' && status !== 'SNOOZED') return false;
+                    
+                    // Show all pending doses for today, regardless of the exact current hour
+                    // This serves as a "Today's Reminder" list
+                    return true;
                 });
             },
             error: (err) => console.error('Error fetching due doses:', err)
@@ -156,12 +194,7 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
     overallAdherence: number = 0;
 
     calculateOverallAdherence(): void {
-        if (this.activePrescriptions.length === 0) {
-            this.overallAdherence = 0;
-            return;
-        }
-        const total = this.activePrescriptions.reduce((sum, p) => sum + this.getDosageProgress(p), 0);
-        this.overallAdherence = Math.round(total / this.activePrescriptions.length);
+        this.refreshOverallScore();
     }
 
     loadData(): void {
@@ -176,11 +209,20 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
                 this.dispensedPrescriptions = data.filter(p => p.status === 'DISPENSED');
                 this.enrichPrescriptions();
                 this.loading = false;
+                this.refreshOverallScore();
             },
             error: (err: any) => {
                 console.error('Error fetching prescriptions', err);
                 this.loading = false;
             }
+        });
+
+        this.prescriptionService.getMyAuditTimeline().subscribe({
+            next: (data) => {
+                console.log('Audit Timelines:', data);
+                this.auditTimelines = data;
+            },
+            error: (err) => console.error('Error fetching audit timelines', err)
         });
 
         this.fetchNotifications();
@@ -206,6 +248,22 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
                     this.adherenceService.setLiveAdherence(stats.percent); // Sync stream with server
                 },
                 error: (err) => console.error('Error fetching 30-day adherence', err)
+            });
+
+            this.adherenceService.getMyAdherenceTrend(14).subscribe({
+                next: (trendData) => {
+                    setTimeout(() => this.renderTrendChart(trendData), 100);
+                },
+                error: (err) => console.error('Error fetching adherence trend', err)
+            });
+
+            // Load temporal adherence blocks
+            this.doseLogService.getAdherenceBlocks().subscribe({
+                next: (blocks) => {
+                    this.adherenceBlocks = blocks;
+                    this.unrollAdherenceBlocks();
+                },
+                error: (err) => console.error('Error fetching adherence blocks', err)
             });
         }
     }
@@ -313,18 +371,11 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
     }
 
     logAdherence(prescription: Prescription): void {
-        if (!this.userId || !prescription.id) return;
-
-        if (confirm('Did you take your medication for today?')) {
-            this.adherenceService.logAdherence(this.userId, prescription.id).subscribe({
-                next: (res) => {
-                    this.adherenceService.triggerInstantIncrement(25); // RxJS Instant 25% Increment
-                    alert('Medication logged successfully!');
-                    this.loadData();
-                },
-                error: (err) => console.error('Error logging adherence', err)
-            });
-        }
+        // Redirect to the granular Adherence Matrix as date-based logging is deprecated
+        this.activeSection = 'adherence';
+        setTimeout(() => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }, 150);
     }
 
     requestRenewal(prescriptionId: number | undefined): void {
@@ -451,8 +502,7 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
     }
 
     getDosageProgress(prescription: Prescription): number {
-        if (!prescription.items || prescription.items.length === 0) return 0;
-        if (!prescription.id) return 0;
+        if (!prescription.items || prescription.items.length === 0 || !prescription.id) return 0;
 
         const item = prescription.items[0];
         if (!item.startDate) return 0;
@@ -460,28 +510,61 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
         const today = new Date();
         const start = new Date(item.startDate);
         start.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
 
-        // Use endDate if available, otherwise assume 30-day course
-        const end = item.endDate ? new Date(item.endDate) : new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000);
-        end.setHours(23, 59, 59, 999);
+        const endDateRaw = item.endDate ? this.parseDate(item.endDate) : null;
+        const end = endDateRaw || new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000);
+        
+        // Effective end for adherence calculation is today (clamped to course end)
+        const effectiveEnd = today < end ? today : end;
 
-        const effectiveToday = today < end ? today : end;
-
-        let daysElapsed = Math.floor((effectiveToday.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-
-        if (today > end) {
-            daysElapsed = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-        }
-
-        if (daysElapsed < 0) daysElapsed = 0;
+        // Days elapsed so far in the course
+        let elapsedDays = Math.floor((effectiveEnd.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        if (elapsedDays < 1) elapsedDays = 1;
 
         const timings = item.dosageTiming ? item.dosageTiming.split(',') : ['Daily'];
-        const totalExpected = daysElapsed * timings.length;
+        const totalExpectedSoFar = elapsedDays * timings.length;
 
         const logsCount = this.adherenceLogs.filter(l => l.prescription?.id === prescription.id).length;
 
-        if (totalExpected === 0) return 100;
-        return Math.min(100, Math.round((logsCount / totalExpected) * 100));
+        if (totalExpectedSoFar === 0) return 100; // Perfect if nothing expected yet
+        return Math.min(100, Math.round((logsCount / totalExpectedSoFar) * 100));
+    }
+
+    getAdherenceBlocks(prescription: Prescription): { date: Date, taken: boolean }[] {
+        if (!prescription.items || prescription.items.length === 0 || !prescription.id) return [];
+        const item = prescription.items[0];
+
+        const startDateRaw = item.startDate || prescription.createdAt;
+        const start = this.parseDate(startDateRaw);
+        if (!start) return [];
+
+        start.setHours(0, 0, 0, 0);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Show up to the last 7 days or since start date
+        const blocks = [];
+        const displayStart = new Date(today);
+        displayStart.setDate(today.getDate() - 6);
+
+        const effectiveStart = start > displayStart ? start : displayStart;
+
+        for (let d = new Date(effectiveStart); d <= today; d.setDate(d.getDate() + 1)) {
+            const dateStr = d.toISOString().split('T')[0];
+            const taken = this.adherenceLogs.some(log => {
+                const logDateRaw = log.takenAt || log.createdAt;
+                const logDate = this.parseDate(logDateRaw);
+                return log.prescription?.id === prescription.id && logDate && logDate.toISOString().split('T')[0] === dateStr;
+            });
+            blocks.push({
+                date: new Date(d),
+                taken: taken
+            });
+        }
+        return blocks;
     }
 
     getDashOffset(progress: number): number {
@@ -526,14 +609,28 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
 
     viewHistory(id: number | undefined): void {
         if (!id) return;
+        
+        // Try to find the enriched timeline first
+        const enriched = this.auditTimelines.find(t => t.prescriptionId === id);
+        if (enriched) {
+            this.currentPrescriptionAudit = enriched;
+            this.selectedHistory = enriched.versions; // For compatibility with existing logic if needed
+            return;
+        }
+
+        // Fallback to basic history if not found in pre-loaded timelines
         this.prescriptionService.getAuditHistory(id).subscribe({
-            next: (data) => this.selectedHistory = data,
+            next: (data) => {
+                this.selectedHistory = data;
+                this.currentPrescriptionAudit = null;
+            },
             error: (err) => console.error('Failed to load history', err)
         });
     }
 
     closeHistory(): void {
         this.selectedHistory = null;
+        this.currentPrescriptionAudit = null;
     }
 
     toggleUserMenu(): void {
@@ -542,11 +639,241 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
 
     openProfileModal(): void {
         this.isUserMenuOpen = false;
+        this.isEditingProfile = false;
+        this.profileSuccess = false;
+        // Refresh from localStorage each time we open
+        this.currentUser = this.authService.getProfile();
+        this.profileForm = {
+            fullName: this.currentUser?.fullName || '',
+            phone: (this.currentUser as any)?.phone || '',
+            address: (this.currentUser as any)?.address || '',
+            medicalHistory: this.currentUser?.medicalHistory || '',
+            allergies: (this.currentUser as any)?.allergies || ''
+        };
         this.showProfileModal = true;
+    }
+
+    toggleEditProfile(): void {
+        this.isEditingProfile = !this.isEditingProfile;
+        this.profileSuccess = false;
+    }
+
+    saveProfile(): void {
+        this.profileSaving = true;
+        this.profileSuccess = false;
+        this.authService.updateProfile(this.profileForm).subscribe({
+            next: (res: any) => {
+                this.profileSaving = false;
+                this.profileSuccess = true;
+                this.isEditingProfile = false;
+                // Refresh component state with updated user
+                this.currentUser = this.authService.getProfile();
+                this.userName = this.currentUser?.fullName || 'Patient';
+            },
+            error: (err: any) => {
+                this.profileSaving = false;
+                console.error('Profile update failed', err);
+                alert('Failed to update profile. Please try again.');
+            }
+        });
     }
 
     logout(): void {
         this.authService.logout();
+    }
+
+    // ── Temporal Adherence Block Helpers ─────────────────────────────
+
+    isToday(dateStr: string): boolean {
+        const d = new Date(dateStr);
+        const today = new Date();
+        return d.getFullYear() === today.getFullYear() &&
+            d.getMonth() === today.getMonth() &&
+            d.getDate() === today.getDate();
+    }
+
+    formatBlockDate(dateStr: string): string {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    }
+
+    formatBlockDateFull(dateStr: string): string {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    selectAdherenceBlock(block: any): void {
+        this.selectedBlock = this.selectedBlock?.date === block.date ? null : block;
+    }
+
+    private unrollAdherenceBlocks(): void {
+        const unrolled: any[] = [];
+        const mealPriority: { [key: string]: number } = {
+            'BREAKFAST': 1,
+            'LUNCH': 2,
+            'DINNER': 3
+        };
+
+        this.adherenceBlocks.forEach(day => {
+            if (day.doses && day.doses.length > 0) {
+                day.doses.forEach((dose: any) => {
+                    unrolled.push({
+                        ...dose,
+                        dayLabel: day.dayLabel,
+                        date: day.date,
+                        uniqueId: `${day.date}_${dose.doseId}`
+                    });
+                });
+            } else {
+                unrolled.push({
+                    date: day.date,
+                    dayLabel: day.dayLabel,
+                    status: day.dailyAdherence === 100 ? 'TAKEN' : (day.dailyAdherence > 0 ? 'PARTIAL' : 'PENDING'),
+                    medicineName: 'Medication',
+                    mealSlot: 'Daily',
+                    dosage: 'Scheduled',
+                    weight: day.weightPerDose,
+                    isPlaceholder: true
+                });
+            }
+        });
+
+        // Sort: Date DESC (latest first), then Meal Slot ASC (Breakfast -> Lunch -> Dinner)
+        unrolled.sort((a, b) => {
+            const dateA = new Date(a.scheduledTime || a.date).getTime();
+            const dateB = new Date(b.scheduledTime || b.date).getTime();
+            
+            if (dateA !== dateB) {
+                return dateB - dateA; // Date Descending
+            }
+            
+            const pA = mealPriority[(a.mealSlot || '').toUpperCase()] || 99;
+            const pB = mealPriority[(b.mealSlot || '').toUpperCase()] || 99;
+            return pA - pB; // Meal Slot Ascending
+        });
+
+        this.doseSlotBlocks = unrolled;
+    }
+
+    isBlockLoggable(block: any): boolean {
+        if (!block || block.status === 'TAKEN') return false;
+        
+        // Block future doses
+        const now = new Date();
+        const schedTime = new Date(block.scheduledTime || block.date);
+        
+        // If scheduledTime is in the future, don't allow logging
+        return schedTime <= now;
+    }
+
+    markBlockDose(dose: any, status: string): void {
+        this.doseLogService.markDose(dose.doseId, status).subscribe({
+            next: (updated) => {
+                dose.status = updated.status;
+                // Recalculate block adherence
+                if (this.selectedBlock) {
+                    const takenNow = this.selectedBlock.doses.filter((d: any) => d.status === 'TAKEN').length;
+                    const total = this.selectedBlock.totalDoses;
+                    this.selectedBlock.takenCount = takenNow;
+                    this.selectedBlock.dailyAdherence = total > 0
+                        ? Math.round((takenNow * 100 / total) * 10) / 10 : 0;
+
+                    // Update in the main list
+                    const blockInList = this.adherenceBlocks.find((b: any) => b.date === this.selectedBlock.date);
+                    if (blockInList) {
+                        blockInList.takenCount = takenNow;
+                        blockInList.dailyAdherence = this.selectedBlock.dailyAdherence;
+                    }
+
+                    // Sync the unrolled list as well
+                    const slotInUnrolled = this.doseSlotBlocks.find(d => d.doseId === dose.doseId);
+                    if (slotInUnrolled) {
+                        slotInUnrolled.status = updated.status;
+                    }
+                } else {
+                    // If no selectedBlock (clicked from the unrolled view directly)
+                    const slotInUnrolled = this.doseSlotBlocks.find(d => d.doseId === dose.doseId);
+                    if (slotInUnrolled) {
+                        slotInUnrolled.status = updated.status;
+                    }
+                    
+                    // Update the corresponding day in adherenceBlocks to reflect the new adherence %
+                    const dayDate = dose.scheduledTime?.split('T')[0] || dose.date;
+                    const dayBlock = this.adherenceBlocks.find(b => b.date === dayDate);
+                    if (dayBlock) {
+                        const dInDay = dayBlock.doses.find((sd: any) => sd.doseId === dose.doseId);
+                        if (dInDay) dInDay.status = updated.status;
+                        
+                        const tCount = dayBlock.doses.filter((sd: any) => sd.status === 'TAKEN').length;
+                        dayBlock.takenCount = tCount;
+                        dayBlock.dailyAdherence = dayBlock.totalDoses > 0 
+                            ? Math.round((tCount * 100 / dayBlock.totalDoses) * 10) / 10 : 0;
+                    }
+                }
+                
+                // Refresh overall adherence from server truth
+                this.doseLogService.getMyAdherenceStats().subscribe(stats => {
+                    this.myAdherence30Days = stats.percent;
+                    this.adherenceService.setLiveAdherence(stats.percent);
+                });
+
+                // Locally recalculate or re-fetch detailed logs if needed for medication breakdown
+                this.adherenceService.getPatientLogs(this.userId!).subscribe(logs => {
+                    this.adherenceLogs = logs;
+                    this.calculateOverallAdherence();
+                });
+
+                this.adherenceService.triggerInstantIncrement(15);
+            },
+            error: () => alert('Failed to mark dose.')
+        });
+    }
+
+    getCardAccent(actionType: string): string {
+        if (!actionType) return '#4f8ef7';
+        switch (actionType.toUpperCase()) {
+            case 'DISPENSED': return '#22c55e';
+            case 'RENEWED': return '#a855f7';
+            default: return '#4f8ef7';
+        }
+    }
+
+    getCardGlow(actionType: string): string {
+        switch ((actionType || '').toUpperCase()) {
+            case 'DISPENSED': return 'rgba(34, 197, 94, 0.12)';
+            case 'RENEWED': return 'rgba(168, 85, 247, 0.12)';
+            default: return 'rgba(79, 142, 247, 0.12)';
+        }
+    }
+
+    getBadgeClass(actionType: string): string {
+        switch ((actionType || '').toUpperCase()) {
+            case 'DISPENSED': return 'badge-success';
+            case 'RENEWED': return 'badge-purple';
+            default: return 'badge-apollo';
+        }
+    }
+
+    killOverlays(): void {
+        console.log('Patient UI Emergency Reset Triggered');
+        this.selectedHistory = null;
+        this.currentPrescriptionAudit = null;
+        this.showAppointmentModal = false;
+        this.showScheduleModal = false;
+        this.showProfileModal = false;
+        this.selectedBlock = null;
+        this.isUserMenuOpen = false;
+
+        // Force clean global DOM
+        document.body.style.filter = 'none';
+        document.body.style.overflow = 'auto';
+        document.body.classList.remove('modal-open');
+
+        // Hide any orphaned backdrops
+        const overlays = ['.modal-backdrop', '.drawer-overlay', '.m-360-overlay', '.backdrop', '.glass-overlay'];
+        overlays.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => (el as HTMLElement).style.display = 'none');
+        });
     }
 }
 

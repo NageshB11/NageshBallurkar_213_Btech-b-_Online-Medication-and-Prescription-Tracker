@@ -52,7 +52,11 @@ export class LoginComponent {
         },
         error: (err: any) => {
           console.error('Login failed', err);
-          this.errorMessage = 'Invalid email or password';
+          if (err.error && err.error.message) {
+            this.errorMessage = err.error.message;
+          } else {
+            this.errorMessage = 'Invalid email or password';
+          }
         }
       });
     }

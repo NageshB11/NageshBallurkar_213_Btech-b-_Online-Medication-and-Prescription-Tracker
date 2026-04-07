@@ -23,7 +23,7 @@ public class PharmacistController {
 
     @GetMapping("/all")
     public ResponseEntity<java.util.List<User>> getAllPharmacists() {
-        return ResponseEntity.ok(userRepository.findByRole(Role.PHARMACIST));
+        return ResponseEntity.ok(userRepository.findByRoleAndIsVerifiedTrue(Role.PHARMACIST));
     }
 
     @GetMapping("/prescriptions/{id}")

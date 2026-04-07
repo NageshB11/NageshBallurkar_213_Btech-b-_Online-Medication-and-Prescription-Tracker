@@ -31,10 +31,14 @@ export class RegisterComponent {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       fullName: ['', Validators.required],
+      phone: ['', Validators.required],
+      address: ['', Validators.required],
       role: [Role.PATIENT, Validators.required],
       medicalLicenseNumber: [''],
       specialization: [''],
+      pharmacyName: [''],
       shopDetails: [''],
+      pharmacyLicenseNumber: [''],
       medicalHistory: ['']
     });
 
@@ -51,19 +55,25 @@ export class RegisterComponent {
   updateValidators(role: Role) {
     const medicalLicenseControl = this.registerForm.get('medicalLicenseNumber');
     const specializationControl = this.registerForm.get('specialization');
+    const pharmacyNameControl = this.registerForm.get('pharmacyName');
     const shopDetailsControl = this.registerForm.get('shopDetails');
+    const pharmacyLicenseControl = this.registerForm.get('pharmacyLicenseNumber');
     const medicalHistoryControl = this.registerForm.get('medicalHistory');
 
     // Reset all validators first
     medicalLicenseControl?.clearValidators();
     specializationControl?.clearValidators();
+    pharmacyNameControl?.clearValidators();
     shopDetailsControl?.clearValidators();
+    pharmacyLicenseControl?.clearValidators();
     medicalHistoryControl?.clearValidators();
 
     if (role === Role.DOCTOR) {
       medicalLicenseControl?.setValidators([Validators.required]);
       specializationControl?.setValidators([Validators.required]);
     } else if (role === Role.PHARMACIST) {
+      pharmacyNameControl?.setValidators([Validators.required]);
+      pharmacyLicenseControl?.setValidators([Validators.required]);
       shopDetailsControl?.setValidators([Validators.required]);
     } else if (role === Role.PATIENT) {
       // Medical history is optional in the user request ("A 'Medical History' textarea appears"), 
@@ -74,7 +84,9 @@ export class RegisterComponent {
 
     medicalLicenseControl?.updateValueAndValidity();
     specializationControl?.updateValueAndValidity();
+    pharmacyNameControl?.updateValueAndValidity();
     shopDetailsControl?.updateValueAndValidity();
+    pharmacyLicenseControl?.updateValueAndValidity();
     medicalHistoryControl?.updateValueAndValidity();
   }
 
@@ -100,14 +112,14 @@ export class RegisterComponent {
         },
         error: (err: any) => {
           console.error('Registration failed RESPONSE:', err);
-          // Extract error message from backend response
-          if (typeof err.error === 'string') {
-            this.errorMessage = err.error;
+          if (err.status === 0) {
+            this.errorMessage = 'Connection error: Backend server might be down.';
           } else if (err.error && err.error.message) {
             this.errorMessage = err.error.message;
+          } else if (typeof err.error === 'string') {
+            this.errorMessage = err.error;
           } else {
-            // Fallback: Show the full error object for debugging
-            this.errorMessage = 'Registration failed: ' + JSON.stringify(err.error);
+            this.errorMessage = 'Registration failed: ' + (err.message || 'Unknown error');
           }
         }
       });

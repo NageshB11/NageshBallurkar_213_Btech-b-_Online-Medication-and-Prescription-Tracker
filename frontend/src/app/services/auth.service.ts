@@ -10,7 +10,7 @@ import { Role } from '../models/role.enum';
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8081/api/auth';
+  private apiUrl = '/api/auth';
   private tokenKey = 'authToken';
   private roleKey = 'userRole';
   private nameKey = 'fullName';
@@ -78,5 +78,19 @@ export class AuthService {
 
   isVerified(): boolean {
     return localStorage.getItem('isVerified') === 'true';
+  }
+
+  updateProfile(updates: Partial<User>): Observable<any> {
+    return this.http.put(`${this.apiUrl}/profile`, updates).pipe(
+      tap((response: any) => {
+        if (response.user) {
+          // Refresh localStorage with updated user data
+          localStorage.setItem('userProfile', JSON.stringify(response.user));
+          if (response.user.fullName) {
+            localStorage.setItem(this.nameKey, response.user.fullName);
+          }
+        }
+      })
+    );
   }
 }

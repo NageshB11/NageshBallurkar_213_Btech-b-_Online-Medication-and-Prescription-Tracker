@@ -8,6 +8,10 @@ import com.medical.backend.entity.User;
 import com.medical.backend.repository.PrescriptionRepository;
 import com.medical.backend.repository.UserRepository;
 import com.medical.backend.repository.SystemAlertRepository;
+import com.medical.backend.dto.PatientAuditDTO;
+import java.time.format.DateTimeFormatter;
+import java.util.Objects;
+import java.util.Collections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +44,9 @@ public class PrescriptionService {
 
     @Autowired
     private InventoryService inventoryService;
+
+    @Autowired
+    private com.medical.backend.repository.DoseLogRepository doseLogRepository;
 
 
 
@@ -97,17 +104,25 @@ public class PrescriptionService {
 
     @Transactional
     public Prescription createPrescription(Prescription prescription) throws IOException {
-        if (!prescription.isDraft()) {
-            String fileName = pdfService.generatePrescriptionPdf(prescription);
-            prescription.setFilePath(fileName);
-            prescription.setStatus(Prescription.PrescriptionStatus.PENDING);
-        } else {
-            prescription.setStatus(Prescription.PrescriptionStatus.PENDING);
-        }
+        System.out.println("[SERVICE] createPrescription started. Status: ISSUED");
+        prescription.setStatus(Prescription.PrescriptionStatus.ISSUED);
 
         if (prescription.getPatientEmail() != null && !prescription.getPatientEmail().isEmpty()) {
             userRepository.findByEmail(prescription.getPatientEmail())
                     .ifPresent(prescription::setPatient);
+        }
+
+        // 1b. Resolve the pharmacist if pre-assigned
+        if (prescription.getPharmacist() != null && prescription.getPharmacist().getId() != null) {
+            userRepository.findById(prescription.getPharmacist().getId())
+                    .ifPresent(ph -> {
+                        if (ph.getRole() == com.medical.backend.entity.Role.PHARMACIST && ph.isVerified()) {
+                            prescription.setPharmacist(ph);
+                        } else {
+                            System.out.println("[WARN] Pre-assigned pharmacist invalid or unverified: " + ph.getId());
+                            prescription.setPharmacist(null);
+                        }
+                    });
         }
 
         // Clinical Intelligence Safety Gate (V4 - Master Validator)
@@ -252,6 +267,9 @@ public class PrescriptionService {
                 if (saved.getPatient() != null) {
                     notificationService.createNotification(saved.getPatient(),
                             "Your doctor has issued a new prescription.", "NEW_PRESCRIPTION");
+                    
+                    // NEW: Generate Adherence Matrix DoseLogs (3/day)
+                    generateDoseMatrix(saved);
                 }
 
                 if (saved.getPharmacist() != null) {
@@ -343,13 +361,11 @@ public class PrescriptionService {
     }
 
     public List<Prescription> getPrescriptionsByPatientId(Long patientId) {
-        return prescriptionRepository.findByPatient_Id(patientId);
+        return prescriptionRepository.findByPatientIdSorted(patientId);
     }
-
+    
     public List<Prescription> getPrescriptionsByDoctorId(Long doctorId) {
-        return prescriptionRepository.findAll().stream()
-                .filter(p -> p.getDoctor() != null && p.getDoctor().getId().equals(doctorId))
-                .collect(Collectors.toList());
+        return prescriptionRepository.findByDoctorIdSorted(doctorId);
     }
 
     public List<PrescriptionAudit> getAuditHistory(Long prescriptionId, String userEmail) {
@@ -394,10 +410,12 @@ public class PrescriptionService {
         User pharmacist = userRepository.findByEmail(pharmacistEmail)
                 .orElseThrow(() -> new RuntimeException("Pharmacist not found"));
 
-        return prescriptionRepository.findAll().stream()
-                .filter(p -> (p.getStatus() == Prescription.PrescriptionStatus.ISSUED
-                        || p.getStatus() == Prescription.PrescriptionStatus.PROCEEDED_TO_PHARMACIST
-                        || p.getStatus() == Prescription.PrescriptionStatus.DISPENSED))
+        return prescriptionRepository.findByStatusInOrderByIdDesc(
+                java.util.List.of(
+                    Prescription.PrescriptionStatus.ISSUED,
+                    Prescription.PrescriptionStatus.PROCEEDED_TO_PHARMACIST,
+                    Prescription.PrescriptionStatus.DISPENSED))
+                .stream()
                 .filter(p -> p.getPharmacist() == null || p.getPharmacist().getId().equals(pharmacist.getId()))
                 .collect(Collectors.toList());
     }
@@ -449,5 +467,148 @@ public class PrescriptionService {
 
         // Comprehensive Safety Gate check
         safetyGateValidator.validateSafety(items, patient);
+    }
+
+    /**
+     * Returns a complete, grouped, delta-enriched audit timeline for a patient.
+     * Ported from AdminService to allow patient-facing access.
+     */
+    public List<PatientAuditDTO> getPatientAuditTimeline(Long patientId) {
+        List<Prescription> patientPrescriptions = prescriptionRepository.findByPatient_Id(patientId);
+        List<PatientAuditDTO> result = new ArrayList<>();
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        for (Prescription rx : patientPrescriptions) {
+            List<PrescriptionAudit> audits = auditRepository.findByPrescriptionIdOrderByModifiedAtAsc(rx.getId());
+            if (audits.isEmpty()) continue;
+
+            PatientAuditDTO dto = new PatientAuditDTO();
+            dto.setPrescriptionId(rx.getId());
+            dto.setPatientName(rx.getPatient() != null ? rx.getPatient().getFullName() : "Unknown");
+
+            List<PatientAuditDTO.AuditVersionDTO> versions = new ArrayList<>();
+            PatientAuditDTO.AuditVersionDTO prev = null;
+
+            for (PrescriptionAudit audit : audits) {
+                PatientAuditDTO.AuditVersionDTO v = new PatientAuditDTO.AuditVersionDTO();
+                v.setAuditId(audit.getId());
+                v.setVersionLabel(audit.getVersionLabel() != null ? audit.getVersionLabel() : "v1.0");
+                v.setActionType(audit.getActionType());
+                v.setPrescribedByName(audit.getPrescribedByName());
+                v.setDispensedByName(audit.getDispensedByName());
+                v.setMedicineName(audit.getMedicineName());
+                v.setDosage(audit.getDosage());
+                v.setDuration(audit.getDuration());
+                v.setModifiedAt(audit.getModifiedAt() != null ? audit.getModifiedAt().format(fmt) : null);
+                v.setModifiedBy(audit.getModifiedBy());
+                v.setSnapshotJson(audit.getSnapshotJson());
+
+                if (prev != null) {
+                    boolean medChange = !Objects.equals(prev.getMedicineName(), audit.getMedicineName());
+                    boolean dosChange = !Objects.equals(prev.getDosage(), audit.getDosage());
+                    boolean durChange = !Objects.equals(prev.getDuration(), audit.getDuration());
+
+                    if (medChange || dosChange || durChange) {
+                        v.setHasDelta(true);
+                        v.setPrevMedicineName(medChange ? prev.getMedicineName() : null);
+                        v.setPrevDosage(dosChange ? prev.getDosage() : null);
+                        v.setPrevDuration(durChange ? prev.getDuration() : null);
+                    }
+                }
+                versions.add(v);
+                prev = v;
+            }
+
+            Collections.reverse(versions);
+            dto.setVersions(versions);
+            result.add(dto);
+        }
+
+        result.sort((a, b) -> {
+            String aTime = a.getVersions().isEmpty() ? "" : a.getVersions().get(0).getModifiedAt();
+            String bTime = b.getVersions().isEmpty() ? "" : b.getVersions().get(0).getModifiedAt();
+            if (aTime == null) aTime = "";
+            if (bTime == null) bTime = "";
+            return bTime.compareTo(aTime);
+        });
+
+        return result;
+    }
+
+    public void generateDoseMatrix(Prescription prescription) {
+        if (prescription.getItems() == null || prescription.getItems().isEmpty())
+            return;
+
+        // Use the first item's duration for simplicity, or find the longest duration
+        PrescriptionItem representative = prescription.getItems().get(0);
+        java.time.LocalDate start = representative.getItemStartDate();
+        java.time.LocalDate end = representative.getEndDate();
+
+        if (start == null) start = java.time.LocalDate.now();
+        if (end == null) end = start.plusDays(7); // Default to 7 days if not specified
+
+        java.time.LocalDate current = start;
+        
+        // Collect all prescribed slots across all items for this matrix
+        java.util.Set<String> activeSlots = new java.util.HashSet<>();
+        for (PrescriptionItem item : prescription.getItems()) {
+            if (item.getMealSlots() != null && !item.getMealSlots().trim().isEmpty()) {
+                for (String s : item.getMealSlots().split(",")) {
+                    String trimmed = s.trim().toUpperCase();
+                    if (!trimmed.isEmpty()) {
+                        activeSlots.add(trimmed);
+                    }
+                }
+            }
+        }
+        
+        String frequency = representative.getFrequency() != null ? representative.getFrequency().toUpperCase() : "DAILY";
+        String customDays = representative.getDaysOfWeek() != null ? representative.getDaysOfWeek().toUpperCase() : "";
+
+        int dayIndex = 0;
+        while (!current.isAfter(end)) {
+            boolean shouldGenerate = false;
+
+            if (frequency.equals("DAILY")) {
+                shouldGenerate = true;
+            } else if (frequency.equals("ALTERNATE_DAY") || frequency.equals("ALTERNATE")) {
+                shouldGenerate = (dayIndex % 2 == 0);
+            } else if (frequency.equals("CUSTOM")) {
+                String dayName = current.getDayOfWeek().name().substring(0, 3); // "MON", "TUE"
+                shouldGenerate = customDays.contains(dayName);
+            } else {
+                shouldGenerate = true; // Fallback
+            }
+
+            if (shouldGenerate) {
+                for (com.medical.backend.entity.MealType mealType : com.medical.backend.entity.MealType.values()) {
+                    // If specific slots are prescribed, only generate those.
+                    if (!activeSlots.isEmpty() && !activeSlots.contains(mealType.name())) {
+                        continue; 
+                    }
+                    
+                    com.medical.backend.entity.DoseLog log = new com.medical.backend.entity.DoseLog();
+                    log.setPrescription(prescription);
+                    log.setPrescriptionId(prescription.getId());
+                    log.setPatient(prescription.getPatient());
+                    log.setDate(current);
+                    log.setMeal(mealType);
+                    log.setTaken(false);
+                    
+                    // Map to legacy mealSlot for backward compatibility UI
+                    log.setMealSlot(mealType.name());
+                    
+                    // Set a mock scheduled time for the legacy scheduler
+                    int hour = (mealType == com.medical.backend.entity.MealType.BREAKFAST) ? 8 :
+                               (mealType == com.medical.backend.entity.MealType.LUNCH) ? 13 : 20;
+                    log.setScheduledTime(current.atTime(hour, 0));
+                    
+                    doseLogRepository.save(log);
+                }
+            }
+            current = current.plusDays(1);
+            dayIndex++;
+        }
+        System.out.println("[ADHERENCE] Generated dose matrix for Prescription #" + prescription.getId() + " from " + start + " to " + end);
     }
 }

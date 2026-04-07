@@ -8,7 +8,8 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
-    long countByRole(com.medical.backend.entity.Role role);
-
     List<User> findByRole(com.medical.backend.entity.Role role);
+    List<User> findByRoleAndIsVerifiedTrue(com.medical.backend.entity.Role role);
+    long countByRoleAndIsVerifiedFalse(com.medical.backend.entity.Role role);
+    long countByRole(com.medical.backend.entity.Role role);
 }

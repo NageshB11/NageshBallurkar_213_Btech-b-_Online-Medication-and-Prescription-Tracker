@@ -6,6 +6,7 @@ import com.medical.backend.entity.PrescriptionAudit;
 import com.medical.backend.entity.User;
 import com.medical.backend.repository.UserRepository;
 import com.medical.backend.service.PrescriptionService;
+import com.medical.backend.dto.PatientAuditDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,10 +23,16 @@ public class PrescriptionController {
     private PrescriptionService prescriptionService;
 
     @Autowired
+    private com.medical.backend.repository.DoseLogRepository doseLogRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private com.medical.backend.service.AdherenceAlertService adherenceAlertService;
 
     @PostMapping
     public ResponseEntity<?> createPrescription(
@@ -142,6 +149,16 @@ public class PrescriptionController {
         return ResponseEntity.ok(prescriptionService.getPrescriptionsByDoctorId(doctor.getId()));
     }
 
+    @GetMapping("/my-audit-timeline")
+    public ResponseEntity<List<PatientAuditDTO>> getMyAuditTimeline(@RequestHeader("Authorization") String token) {
+        String jwt = token.substring(7);
+        String email = jwtUtil.extractUsername(jwt);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return ResponseEntity.ok(prescriptionService.getPatientAuditTimeline(user.getId()));
+    }
+
     @GetMapping("/{id}/audit")
     public ResponseEntity<List<PrescriptionAudit>> getAuditHistory(@PathVariable("id") Long id,
             @RequestHeader("Authorization") String token) {
@@ -210,5 +227,71 @@ public class PrescriptionController {
             @RequestHeader("Authorization") String token) {
         // ideally check if doctor has access to this patient, for now allowed
         return ResponseEntity.ok(prescriptionService.getPrescriptionsByPatientId(patientId));
+    }
+
+    @GetMapping("/admin/doctors")
+    public ResponseEntity<List<User>> getAllDoctors() {
+        return ResponseEntity.ok(userRepository.findByRole(com.medical.backend.entity.Role.DOCTOR));
+    }
+
+    @GetMapping("/admin/doctors/{id}/prescriptions")
+    public ResponseEntity<List<Prescription>> getDoctorPrescriptions(@PathVariable Long id) {
+        return ResponseEntity.ok(prescriptionService.getPrescriptionsByDoctorId(id));
+    }
+
+    @GetMapping("/{id}/adherence")
+    public ResponseEntity<Map<String, Object>> getAdherence(@PathVariable Long id) {
+        long total = doseLogRepository.countByPrescriptionId(id);
+        
+        // Self-healing: if no logs exist, generate them for active/dispensed prescriptions
+        if (total == 0) {
+            Prescription p = prescriptionService.getPrescription(id);
+            if (p != null && (p.getStatus() != com.medical.backend.entity.Prescription.PrescriptionStatus.EXPIRED)) {
+                prescriptionService.generateDoseMatrix(p);
+                total = doseLogRepository.countByPrescriptionId(id);
+            }
+        }
+
+        long taken = doseLogRepository.countByPrescriptionIdAndIsTakenTrue(id);
+        double percentage = (total == 0) ? 0 : (double) taken / total * 100;
+
+        List<com.medical.backend.entity.DoseLog> logs = doseLogRepository.findByPrescriptionIdOrderByDateAscMealAsc(id);
+
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("prescriptionId", id);
+        response.put("adherencePercentage", Math.round(percentage * 10) / 10.0);
+        response.put("totalDoses", total);
+        response.put("takenDoses", taken);
+        response.put("logs", logs);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/doselog/{logId}/take")
+    public ResponseEntity<com.medical.backend.entity.DoseLog> takeDose(
+            @PathVariable Long logId,
+            @RequestParam(value = "status", defaultValue = "true") boolean status) {
+        com.medical.backend.entity.DoseLog log = doseLogRepository.findById(logId)
+                .orElseThrow(() -> new RuntimeException("Dose log not found"));
+        
+        // Quota Guard: Strict one-time click enforcement
+        if (log.isTaken() && status) {
+            throw new IllegalStateException("Slot already logged");
+        }
+
+        log.setTaken(status);
+        if (status) {
+            log.setTakenAt(java.time.LocalDateTime.now());
+            log.setActualTime(java.time.LocalDateTime.now());
+        }
+        
+        com.medical.backend.entity.DoseLog saved = doseLogRepository.save(log);
+        
+        // Asynchronous (Fire-and-forget) check for doctor alert
+        if (status && saved.getPrescriptionId() != null) {
+            adherenceAlertService.checkAndNotifyDoctor(saved.getPrescriptionId());
+        }
+        
+        return ResponseEntity.ok(saved);
     }
 }

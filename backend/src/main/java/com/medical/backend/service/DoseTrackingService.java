@@ -5,6 +5,7 @@ import com.medical.backend.entity.DoseLog;
 import com.medical.backend.entity.User;
 import com.medical.backend.repository.DoseLogRepository;
 import com.medical.backend.repository.UserRepository;
+import com.medical.backend.repository.AdherenceLogRepository; // Added import
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,14 +21,25 @@ public class DoseTrackingService {
     @Autowired
     private DoseLogRepository doseLogRepo;
     @Autowired
+    private DoseReminderService doseReminderService;
+    @Autowired
     private UserRepository userRepo;
+    @Autowired
+    private SystemAuditRepository auditRepo;
+    @Autowired
+    private AdherenceLogRepository adherenceLogRepo;
 
     public List<DoseLogDTO> getTodaysDoses(String email) {
         User patient = getUser(email);
         LocalDateTime start = LocalDate.now().atStartOfDay();
         LocalDateTime end = start.plusDays(1);
         List<DoseLog> logs = doseLogRepo.findByPatientAndDateRange(patient, start, end);
-        return logs.stream().map(this::toDTO).collect(Collectors.toList());
+        List<DoseLogDTO> dtos = logs.stream().map(this::toDTO).collect(Collectors.toList());
+        
+        // Trigger background reminder if pending doses exist
+        doseReminderService.checkAndNotifyPatient(patient, dtos);
+        
+        return dtos;
     }
 
     @Transactional
@@ -40,7 +52,24 @@ public class DoseTrackingService {
         }
         log.setStatus(DoseLog.DoseStatus.valueOf(status.toUpperCase()));
         if (status.equalsIgnoreCase("TAKEN")) {
+            if (log.getScheduledTime().isAfter(LocalDateTime.now())) {
+                throw new RuntimeException("Cannot log a future dose as TAKEN.");
+            }
             log.setActualTime(LocalDateTime.now());
+            
+            // Sync with AdherenceLog (Legacy system for overall adherence gauge)
+            if (log.getScheduleItem() != null && log.getScheduleItem().getSchedule() != null && 
+                log.getScheduleItem().getSchedule().getPrescription() != null) {
+                
+                com.medical.backend.entity.Prescription prescription = log.getScheduleItem().getSchedule().getPrescription();
+                
+                // Create life-cycle log
+                com.medical.backend.entity.AdherenceLog legacyLog = new com.medical.backend.entity.AdherenceLog();
+                legacyLog.setPatient(patient);
+                legacyLog.setPrescription(prescription);
+                legacyLog.setLogDate(LocalDateTime.now());
+                adherenceLogRepo.save(legacyLog);
+            }
         }
         if (notes != null)
             log.setNotes(notes);
@@ -112,6 +141,71 @@ public class DoseTrackingService {
             case "DINNER" -> "🌙";
             default -> "💊";
         };
+    }
+
+    /**
+     * Returns dose logs grouped by date with daily adherence %.
+     * Each "block" represents one dose slot on a specific date.
+     * Weight per dose = 1/N where N = total doses for that day.
+     */
+    public List<java.util.Map<String, Object>> getAdherenceBlocks(String email) {
+        User patient = getUser(email);
+        List<DoseLog> allLogs = doseLogRepo.findByPatientOrderByScheduledTimeDesc(patient);
+
+        // Group by date (TreeMap keeps dates in ascending order)
+        java.util.Map<LocalDate, List<DoseLog>> byDate = allLogs.stream()
+                .collect(Collectors.groupingBy(
+                        log -> log.getScheduledTime().toLocalDate(),
+                        java.util.TreeMap::new,
+                        Collectors.toList()));
+
+        // Within each day, sort by scheduled time ASC
+        byDate.forEach((date, dayLogs) -> {
+            dayLogs.sort(java.util.Comparator.comparing(DoseLog::getScheduledTime));
+        });
+
+        List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+        for (var entry : byDate.entrySet()) {
+            LocalDate date = entry.getKey();
+            List<DoseLog> dayLogs = entry.getValue();
+
+            int totalDoses = dayLogs.size();
+            long takenCount = dayLogs.stream()
+                    .filter(l -> l.getStatus() == DoseLog.DoseStatus.TAKEN).count();
+            long missedCount = dayLogs.stream()
+                    .filter(l -> l.getStatus() == DoseLog.DoseStatus.MISSED).count();
+            double weight = totalDoses > 0 ? Math.round((100.0 / totalDoses) * 100.0) / 100.0 : 0;
+            double dailyAdherence = totalDoses > 0
+                    ? Math.round((takenCount * 100.0 / totalDoses) * 10.0) / 10.0
+                    : 0;
+
+            java.util.Map<String, Object> dayBlock = new java.util.LinkedHashMap<>();
+            dayBlock.put("date", date.toString());
+            dayBlock.put("dayLabel", date.getDayOfWeek().name().substring(0, 3));
+            dayBlock.put("totalDoses", totalDoses);
+            dayBlock.put("takenCount", takenCount);
+            dayBlock.put("missedCount", missedCount);
+            dayBlock.put("pendingCount", totalDoses - takenCount - missedCount);
+            dayBlock.put("weightPerDose", weight);
+            dayBlock.put("dailyAdherence", dailyAdherence);
+
+            // Individual doses within this day
+            List<java.util.Map<String, Object>> doses = dayLogs.stream().map(log -> {
+                java.util.Map<String, Object> d = new java.util.LinkedHashMap<>();
+                d.put("doseId", log.getId());
+                d.put("medicineName", log.getScheduleItem().getMedicineName());
+                d.put("dosage", log.getScheduleItem().getDosage());
+                d.put("mealSlot", log.getMealSlot());
+                d.put("scheduledTime", log.getScheduledTime().toString());
+                d.put("status", log.getStatus().name());
+                d.put("weight", weight);
+                return d;
+            }).collect(Collectors.toList());
+            dayBlock.put("doses", doses);
+
+            result.add(dayBlock);
+        }
+        return result;
     }
 
     private User getUser(String email) {

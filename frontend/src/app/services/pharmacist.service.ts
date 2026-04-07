@@ -7,7 +7,7 @@ import { Prescription } from '../models/prescription.model';
     providedIn: 'root'
 })
 export class PharmacistService {
-    private apiUrl = 'http://localhost:8081/api/pharmacist';
+    private apiUrl = '/api/pharmacist';
 
     constructor(private http: HttpClient) { }
 
@@ -33,7 +33,7 @@ export class PharmacistService {
     }
 
     downloadPrescription(id: number): Observable<Blob> {
-        return this.http.get(`http://localhost:8081/api/prescriptions/download/${id}`, {
+        return this.http.get(`/api/prescriptions/download/${id}`, {
             headers: this.getHeaders(),
             responseType: 'blob'
         });

@@ -53,11 +53,22 @@ import { AdminService } from '../../services/admin.service';
                     <span class="status-pill verified" *ngIf="verifiedIds.has(user.id)"><i class="bi bi-check-circle-fill me-1"></i>Verified</span>
                   </td>
                   <td class="text-end pe-4">
-                    <button class="btn btn-verify btn-sm" (click)="verifyUser(user.id)" *ngIf="!verifiedIds.has(user.id)">
-                      Verify User
+                    <button class="btn btn-verify btn-sm d-inline-flex align-items-center gap-2 me-2" 
+                            (click)="verifyUser(user.id)" 
+                            [disabled]="processingId === user.id"
+                            *ngIf="!verifiedIds.has(user.id)">
+                      <i class="bi bi-shield-check"></i>
+                      {{ processingId === user.id ? 'Verifying...' : 'Approve' }}
+                    </button>
+                    <button class="btn btn-reject btn-sm d-inline-flex align-items-center gap-2" 
+                            (click)="rejectUser(user.id)" 
+                            [disabled]="processingId === user.id"
+                            *ngIf="!verifiedIds.has(user.id)">
+                      <i class="bi bi-x-circle"></i>
+                      Reject
                     </button>
                     <button class="btn btn-success btn-sm" disabled *ngIf="verifiedIds.has(user.id)">
-                      <i class="bi bi-check-lg"></i>
+                      <i class="bi bi-check-lg"></i> Verified
                     </button>
                   </td>
                 </tr>
@@ -112,11 +123,26 @@ import { AdminService } from '../../services/admin.service';
       padding: 0.5rem 1.25rem;
       border-radius: 12px;
       font-weight: 600;
-      transition: transform 0.2s;
+      transition: all 0.2s;
     }
     .btn-verify:hover {
       background: #059669;
       transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    }
+    .btn-reject {
+      background: #ef4444; /* Alert Red */
+      color: white;
+      border: none;
+      padding: 0.5rem 1.25rem;
+      border-radius: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-reject:hover {
+      background: #dc2626;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
     }
   `]
 })
@@ -124,6 +150,8 @@ export class VerificationQueueComponent implements OnInit {
   pendingUsers: any[] = [];
   successMessage: string = '';
   verifiedIds: Set<number> = new Set();
+  rejectedIds: Set<number> = new Set();
+  processingId: number | null = null;
 
   constructor(private adminService: AdminService) { }
 
@@ -143,20 +171,54 @@ export class VerificationQueueComponent implements OnInit {
 
   verifyUser(userId: number): void {
     if (confirm('Verify this professional?')) {
-      this.adminService.verifyUser(userId).subscribe(() => {
-        const verifiedUser = this.pendingUsers.find(u => u.id === userId);
-        const name = verifiedUser ? verifiedUser.fullName : 'Professional';
-        this.successMessage = `${name} has been successfully verified.`;
+      this.processingId = userId;
+      this.adminService.verifyUser(userId).subscribe({
+        next: () => {
+          this.processingId = null;
+          const verifiedUser = this.pendingUsers.find(u => u.id === userId);
+          const name = verifiedUser ? verifiedUser.fullName : 'Professional';
+          this.successMessage = `${name} has been successfully verified.`;
 
-        // Mark as verified in the UI immediately
-        this.verifiedIds.add(userId);
+          // Mark as verified in the UI immediately
+          this.verifiedIds.add(userId);
 
-        // Auto-hide the message and reload the list after 3 seconds
-        setTimeout(() => {
-          this.successMessage = '';
-          this.verifiedIds.delete(userId);
-          this.loadPendingUsers();
-        }, 3000);
+          // Auto-hide the message and reload the list after 3 seconds
+          setTimeout(() => {
+            this.successMessage = '';
+            this.verifiedIds.delete(userId);
+            this.loadPendingUsers();
+          }, 3000);
+        },
+        error: (err) => {
+          this.processingId = null;
+          console.error('Failed to verify user', err);
+        }
+      });
+    }
+  }
+
+  rejectUser(userId: number): void {
+    if (confirm('Are you sure you want to reject and remove this professional?')) {
+      this.processingId = userId;
+      this.adminService.rejectUser(userId).subscribe({
+        next: () => {
+          this.processingId = null;
+          const rejectedUser = this.pendingUsers.find(u => u.id === userId);
+          const name = rejectedUser ? rejectedUser.fullName : 'Professional';
+          this.successMessage = `${name} has been rejected and removed.`;
+          
+          this.rejectedIds.add(userId);
+          this.pendingUsers = this.pendingUsers.filter(u => u.id !== userId);
+          
+          setTimeout(() => {
+            this.successMessage = '';
+          }, 4000);
+        },
+        error: (err) => {
+          this.processingId = null;
+          console.error('Failed to reject user', err);
+          alert('Failed to reject user. They might be tied to existing records.');
+        }
       });
     }
   }

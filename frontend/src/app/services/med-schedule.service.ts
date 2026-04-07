@@ -54,7 +54,7 @@ export interface ScheduleAudit {
 
 @Injectable({ providedIn: 'root' })
 export class MedScheduleService {
-    private base = 'http://localhost:8081/api/schedules';
+    private base = '/api/schedules';
 
     constructor(private http: HttpClient) { }
 

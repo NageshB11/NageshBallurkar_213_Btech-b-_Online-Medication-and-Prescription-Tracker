@@ -3,7 +3,7 @@
 /* ─── Page Layout ─────────────────────────────────────────────── */
 .audit-page {
     min-height: 100vh;
-    background: linear-gradient(135deg, #0f0c29 0%, #1a1a4e 50%, #0f0c29 100%);
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
     padding: 2.5rem;
     font-family: 'Inter', sans-serif;
     color: #f1f5f9;
@@ -27,10 +27,6 @@
 
 .back-link:hover {
     color: #4f8ef7;
-}
-
-.back-link i {
-    font-size: 1.1rem;
 }
 
 .page-title {
@@ -82,11 +78,6 @@
     color: rgba(255, 255, 255, 0.3);
 }
 
-.search-input::-webkit-inner-spin-button,
-.search-input::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-}
-
 .trace-btn {
     background: linear-gradient(135deg, #4f8ef7 0%, #6c63ff 100%);
     border: none;
@@ -112,362 +103,143 @@
 
 /* ─── Glass Card ──────────────────────────────────────────────── */
 .glass-card {
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-/* ─── Error Box ───────────────────────────────────────────────── */
-.error-box {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.4);
-    border-radius: 14px;
-    padding: 1rem 1.5rem;
-    color: #fca5a5;
-    font-size: 0.9rem;
-    margin-bottom: 2rem;
-}
-
-.error-box i {
-    font-size: 1.1rem;
-    color: #ef4444;
-}
-
-/* ─── Empty State ─────────────────────────────────────────────── */
-.empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 5rem 2rem;
-    text-align: center;
-}
-
-.empty-icon {
-    width: 90px;
-    height: 90px;
-    background: rgba(79, 142, 247, 0.1);
-    border: 2px solid rgba(79, 142, 247, 0.25);
+/* ─── User Identity ──────────────────────────────────────────── */
+.user-avatar-wrap {
+    width: 64px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.5rem;
-    color: #4f8ef7;
-    margin-bottom: 1.5rem;
-    animation: pulse 3s infinite;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-@keyframes pulse {
-
-    0%,
-    100% {
-        box-shadow: 0 0 0 0 rgba(79, 142, 247, 0.3);
-    }
-
-    50% {
-        box-shadow: 0 0 0 16px rgba(79, 142, 247, 0);
-    }
-}
-
-.empty-title {
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.85);
-    margin-bottom: 0.5rem;
-}
-
-.empty-sub {
+.info-label {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
     color: rgba(255, 255, 255, 0.4);
-    font-size: 0.9rem;
-    max-width: 380px;
-}
-
-/* ─── Timeline Header ─────────────────────────────────────────── */
-.timeline-section {
-    padding-top: 0.5rem;
-}
-
-.timeline-header {
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.timeline-title {
-    font-size: 1.2rem;
     font-weight: 700;
-    color: rgba(255, 255, 255, 0.9);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
 }
 
-.record-count-badge {
-    background: rgba(79, 142, 247, 0.2);
-    color: #7db8ff;
-    border: 1px solid rgba(79, 142, 247, 0.3);
-    border-radius: 20px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    padding: 0.2rem 0.7rem;
-    letter-spacing: 0.03em;
+.info-value {
+    color: #fff;
+    font-weight: 500;
+}
+
+.font-mono {
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.8rem;
+}
+
+.glass-inner-card {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* ─── Timeline ────────────────────────────────────────────────── */
 .timeline {
     position: relative;
+    border-left: 2px solid rgba(255, 255, 255, 0.05);
 }
 
 .timeline-item {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
     position: relative;
-}
-
-.timeline-connector {
-    position: absolute;
-    left: 22px;
-    top: 48px;
-    bottom: -2rem;
-    width: 2px;
-    display: flex;
-    justify-content: center;
-}
-
-.connector-line {
-    width: 2px;
-    height: 100%;
-    background: linear-gradient(180deg, rgba(79, 142, 247, 0.5) 0%, rgba(79, 142, 247, 0.05) 100%);
+    padding-left: 2rem;
 }
 
 .timeline-node {
-    width: 46px;
-    height: 46px;
+    position: absolute;
+    left: -13px;
+    top: 0;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.06);
-    border: 2px solid;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.15rem;
-    flex-shrink: 0;
+    font-size: 0.8rem;
     z-index: 2;
-    transition: transform 0.3s;
+    border: 2px solid;
+    background: #0f172a;
 }
 
-.timeline-item:hover .timeline-node {
-    transform: scale(1.12);
-}
+.node-security { border-color: #ef4444; color: #ef4444; }
+.node-clinical { border-color: #0ea5e9; color: #0ea5e9; }
 
-/* ─── Audit Card ──────────────────────────────────────────────── */
 .audit-card {
-    flex: 1;
-    padding: 1.5rem;
     border-left: 4px solid;
-    transition: transform 0.25s, box-shadow 0.25s;
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 0.2s;
 }
 
 .audit-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    background: rgba(255, 255, 255, 0.04);
 }
 
-/* Card Header Row */
-.card-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.25rem;
-    gap: 1rem;
+.border-security { border-left-color: #ef4444 !important; }
+.border-clinical { border-left-color: #0ea5e9 !important; }
+
+/* ─── Utility ────────────────────────────────────────────────── */
+.blur-10 { backdrop-filter: blur(10px); }
+.x-small { font-size: 0.7rem; }
+.pulse-text { animation: text-pulse 2s infinite; }
+
+@keyframes text-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
 }
 
-.version-block {
+.error-box {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-}
-
-.version-label {
-    font-size: 1.5rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1;
-}
-
-.action-badge {
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 0.3rem 0.85rem;
-    border-radius: 20px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-.badge-apollo {
-    background: rgba(79, 142, 247, 0.2);
-    color: #7db8ff;
-    border: 1px solid rgba(79, 142, 247, 0.35);
-}
-
-.badge-success {
-    background: rgba(34, 197, 94, 0.2);
-    color: #86efac;
-    border: 1px solid rgba(34, 197, 94, 0.35);
-}
-
-.badge-purple {
-    background: rgba(168, 85, 247, 0.2);
-    color: #d8b4fe;
-    border: 1px solid rgba(168, 85, 247, 0.35);
-}
-
-.timestamp-block {
-    font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.4);
-    white-space: nowrap;
-}
-
-/* Roles Row */
-.roles-row {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
     border-radius: 14px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1.25rem;
+    padding: 1rem 1.5rem;
+    color: #fca5a5;
+    margin-bottom: 2rem;
 }
 
-.role-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex: 1;
+.empty-state {
+    padding: 5rem 2rem;
+    text-align: center;
+    opacity: 0.6;
 }
 
-.role-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    flex-shrink: 0;
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #4f8ef7;
 }
 
-.doctor-icon {
-    background: rgba(79, 142, 247, 0.2);
-    color: #7db8ff;
-    border: 1px solid rgba(79, 142, 247, 0.3);
-}
-
-.pharmacist-icon {
-    background: rgba(34, 197, 94, 0.2);
-    color: #86efac;
-    border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.pending-icon {
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.role-label {
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.35);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 600;
-    margin-bottom: 0.15rem;
-}
-
-.role-name {
-    font-size: 0.92rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.88);
-}
-
-.pending-name {
-    color: rgba(255, 255, 255, 0.3);
-    font-style: italic;
-}
-
-.role-divider {
-    width: 1px;
-    height: 36px;
-    background: rgba(255, 255, 255, 0.1);
-    flex-shrink: 0;
-}
-
-/* Clinical Data Row */
-.clinical-row {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.clinical-chip {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 0.5rem 1rem;
-    font-size: 0.82rem;
-}
-
-.clinical-label {
-    color: rgba(255, 255, 255, 0.35);
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
-    margin-right: 0.25rem;
-}
-
-.clinical-value {
-    color: rgba(255, 255, 255, 0.88);
-    font-weight: 600;
-}
-
-/* ─── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 768px) {
-    .audit-page {
-        padding: 1.5rem 1rem;
-    }
-
-    .card-header-row {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .roles-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-
-    .role-divider {
-        width: 36px;
-        height: 1px;
-    }
-
-    .clinical-row {
-        flex-direction: column;
-    }
-
-    .search-card {
-        flex-wrap: wrap;
-    }
+    .audit-page { padding: 1.5rem 1rem; }
+    .search-card { flex-direction: column; align-items: stretch; }
 }
+/*  Quick Select Adjustments  */
+.dropdown-menu-dark .list-group-item-action:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+}
+
+.dropdown-menu-dark .list-group-item {
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+.italic { font-style: italic; }
+.opacity-75 { opacity: 0.75; }

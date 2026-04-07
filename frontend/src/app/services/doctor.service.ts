@@ -11,6 +11,8 @@ export interface PatientRisk {
     missedDoses: number;
     lastPharmacistName?: string;
     lastDispensedAt?: string;
+    prescriptionCount: number;
+    hasWorkload: boolean;
 }
 
 export interface DoctorUser {
@@ -24,7 +26,7 @@ export interface DoctorUser {
     providedIn: 'root'
 })
 export class DoctorService {
-    private apiUrl = 'http://localhost:8081/api/doctor';
+    private apiUrl = '/api/doctor';
 
     constructor(private http: HttpClient, private authService: AuthService) { }
 

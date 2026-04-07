@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
-
+@org.springframework.stereotype.Repository
 public interface DoseLogRepository extends JpaRepository<DoseLog, Long> {
 
         List<DoseLog> findByPatientOrderByScheduledTimeDesc(User patient);
@@ -33,4 +33,10 @@ public interface DoseLogRepository extends JpaRepository<DoseLog, Long> {
         List<DoseLog> findByScheduleItemAndDateRange(@Param("itemId") Long itemId,
                         @Param("start") LocalDateTime start,
                         @Param("end") LocalDateTime end);
+
+        List<DoseLog> findByPrescriptionIdOrderByDateAscMealAsc(Long prescriptionId);
+
+        long countByPrescriptionId(Long prescriptionId);
+
+        long countByPrescriptionIdAndIsTakenTrue(Long prescriptionId);
 }

@@ -38,15 +38,18 @@ public class DoctorController {
     }
 
     @GetMapping("/analytics")
-    public ResponseEntity<com.medical.backend.dto.DoctorAnalyticsDTO> getMyAnalytics(
+    public ResponseEntity<com.medical.backend.dto.DoctorAnalyticsSummaryDTO> getMyAnalytics(
             @RequestHeader("Authorization") String token) {
         String email = jwtUtil.extractUsername(token.substring(7));
         User doctor = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Doctor not found"));
-        return ResponseEntity.ok(prescriptionService.getDoctorAnalytics(doctor.getId()));
+        return ResponseEntity.ok(clinicalAnalyticsService.getDoctorAnalyticsSummary(doctor.getId()));
     }
 
     @Autowired
     private com.medical.backend.service.RiskService riskService;
+
+    @Autowired
+    private com.medical.backend.service.ClinicalAnalyticsService clinicalAnalyticsService;
 
     @Autowired
     private com.medical.backend.repository.RenewalRequestRepository renewalRequestRepository;

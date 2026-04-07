@@ -1,0 +1,243 @@
+/* ─── Root ─────────────────────────────────────────────── */
+.pi-root {
+  background: #f8fafc;
+  min-height: 100vh;
+  font-family: 'Inter', 'Outfit', sans-serif;
+}
+
+/* ─── Header ────────────────────────────────────────────── */
+.pi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 24px;
+  padding: 1.25rem 1.75rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+}
+.pi-header-left { display: flex; align-items: center; gap: 1rem; }
+.pi-header-icon {
+  width: 52px; height: 52px; border-radius: 16px;
+  background: linear-gradient(135deg, #0056b3, #00aaff);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 1.4rem;
+  box-shadow: 0 6px 20px rgba(0,86,179,.25);
+}
+.pi-title { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: -0.03em; }
+.pi-subtitle { font-size: 0.8rem; color: #94a3b8; margin: 0; }
+.pi-date-pill {
+  background: white; border: 1px solid #e2e8f0;
+  border-radius: 30px; padding: 0.45rem 1rem;
+  font-size: 0.82rem; font-weight: 600; color: #475569;
+}
+.pi-refresh-btn {
+  background: linear-gradient(135deg, #0056b3, #00aaff);
+  border: none; border-radius: 12px; padding: 0.5rem 1.1rem;
+  color: white; font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.pi-refresh-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,86,179,.3); }
+
+/* ─── Loading ────────────────────────────────────────────── */
+.pi-loading { text-align: center; padding: 4rem; }
+.pi-spinner {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 4px solid #e2e8f0; border-top-color: #0056b3;
+  animation: spin 0.9s linear infinite; margin: 0 auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── KPI Strip ─────────────────────────────────────────── */
+.pi-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.pi-kpi-card {
+  background: rgba(255,255,255,0.8); backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 20px; padding: 1.25rem 1.5rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  display: flex; flex-direction: column; gap: 0.3rem;
+}
+.pi-kpi-icon { font-size: 1.4rem; margin-bottom: 0.2rem; }
+.pi-kpi-value { font-size: 2rem; font-weight: 800; font-family: 'Outfit', sans-serif; letter-spacing: -0.04em; }
+.pi-kpi-label { font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }
+
+.pi-kpi-card.blue .pi-kpi-icon { color: #0984e3; }
+.pi-kpi-card.blue .pi-kpi-value { color: #0984e3; }
+.pi-kpi-card.green .pi-kpi-icon { color: #10b981; }
+.pi-kpi-card.green .pi-kpi-value { color: #10b981; }
+.pi-kpi-card.red .pi-kpi-icon { color: #ef4444; }
+.pi-kpi-card.red .pi-kpi-value { color: #ef4444; }
+.pi-kpi-card.amber .pi-kpi-icon { color: #f59e0b; }
+.pi-kpi-card.amber .pi-kpi-value { color: #f59e0b; }
+
+/* ─── Glass Card ─────────────────────────────────────────── */
+.pi-card {
+  background: rgba(255,255,255,0.78); backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.55);
+  border-radius: 24px; padding: 1.5rem;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.04);
+}
+.pi-card-header {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 1.25rem;
+}
+.pi-card-title { font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0; }
+
+.pi-section-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.pi-section-dot.blue  { background: #0984e3; box-shadow: 0 0 8px rgba(9,132,227,.4); }
+.pi-section-dot.green { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,.4); }
+.pi-section-dot.red   { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,.4); }
+.pi-section-dot.amber { background: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,.4); }
+.pi-section-dot.purple{ background: #8b5cf6; box-shadow: 0 0 8px rgba(139,92,246,.4); }
+
+.pi-badge-pill {
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em;
+  padding: 3px 10px; border-radius: 8px;
+  background: rgba(9,132,227,0.08); color: #0984e3;
+}
+.pi-badge-pill.green  { background: rgba(16,185,129,0.09); color: #059669; }
+.pi-badge-pill.amber  { background: rgba(245,158,11,0.09); color: #b45309; }
+.pi-badge-pill.purple { background: rgba(139,92,246,0.09); color: #7c3aed; }
+
+/* ─── Charts ─────────────────────────────────────────────── */
+.chart-wrap { position: relative; height: 280px; }
+.doughnut-wrap { position: relative; height: 220px; }
+.pi-chart-note { font-size: 0.74rem; color: #94a3b8; margin-top: 0.75rem; margin-bottom: 0; }
+
+/* ─── Expiry pills ───────────────────────────────────────── */
+.expiry-pills { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.expiry-pill {
+  border-radius: 12px; padding: 0.55rem 0.75rem;
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.expiry-pill.red    { background: rgba(239,68,68,0.07);   }
+.expiry-pill.amber  { background: rgba(245,158,11,0.07);  }
+.expiry-pill.blue   { background: rgba(59,130,246,0.07);  }
+.expiry-pill.dark   { background: rgba(31,41,55,0.06);    }
+.pill-count { font-size: 1.3rem; font-weight: 800; font-family: 'Outfit', sans-serif; color: #1e293b; }
+.pill-label { font-size: 0.72rem; font-weight: 600; color: #64748b; }
+
+/* ─── Top Sellers ────────────────────────────────────────── */
+.top-sellers-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.top-seller-item {
+  display: grid; align-items: center;
+  grid-template-columns: 40px 1fr 1fr 60px 90px;
+  gap: 1rem; padding: 0.85rem 1rem;
+  background: rgba(255,255,255,0.5);
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 14px; transition: all 0.2s ease;
+}
+.top-seller-item:hover { background: white; box-shadow: 0 4px 14px rgba(0,0,0,0.06); transform: translateX(2px); }
+.rank-badge {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; font-weight: 800; color: white;
+  flex-shrink: 0;
+}
+.rank-badge.gold   { background: linear-gradient(135deg, #f59e0b, #fcd34d); }
+.rank-badge.silver { background: linear-gradient(135deg, #94a3b8, #cbd5e1); }
+.rank-badge.bronze { background: linear-gradient(135deg, #b45309, #d97706); }
+.rank-badge.default{ background: linear-gradient(135deg, #e2e8f0, #f1f5f9); color: #64748b; }
+
+.seller-name  { font-weight: 700; color: #1e293b; font-size: 0.9rem; }
+.seller-meta  { font-size: 0.72rem; color: #94a3b8; margin-top: 2px; }
+
+.seller-bar-wrap { height: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; overflow: hidden; }
+.seller-bar { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #0056b3, #00aaff); transition: width 0.6s ease; }
+
+.seller-stats { text-align: center; }
+.seller-units { font-size: 1.1rem; font-weight: 800; color: #0984e3; display: block; }
+.seller-units-label { font-size: 0.65rem; color: #94a3b8; font-weight: 600; }
+
+/* ─── Expiry Urgency Cards ───────────────────────────────── */
+.expiry-urgency-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 0.5rem; }
+.expiry-urgency-card {
+  border-radius: 18px; padding: 1.25rem;
+  text-align: center; border: 1px solid transparent;
+  transition: transform 0.2s;
+}
+.expiry-urgency-card:hover { transform: translateY(-3px); }
+.expiry-urgency-card.critical { background: rgba(239,68,68,0.07); border-color: rgba(239,68,68,0.18); }
+.expiry-urgency-card.warning  { background: rgba(245,158,11,0.07); border-color: rgba(245,158,11,0.18); }
+.expiry-urgency-card.info     { background: rgba(59,130,246,0.07); border-color: rgba(59,130,246,0.18); }
+.expiry-urgency-card.expired  { background: rgba(31,41,55,0.05);   border-color: rgba(31,41,55,0.12); }
+
+.eu-icon { font-size: 1.6rem; margin-bottom: 0.5rem; }
+.expiry-urgency-card.critical .eu-icon { color: #ef4444; }
+.expiry-urgency-card.warning  .eu-icon { color: #f59e0b; }
+.expiry-urgency-card.info     .eu-icon { color: #3b82f6; }
+.expiry-urgency-card.expired  .eu-icon { color: #374151; }
+
+.eu-count { font-size: 2.5rem; font-weight: 800; font-family: 'Outfit', sans-serif; letter-spacing: -0.04em; color: #1e293b; }
+.eu-title { font-weight: 700; font-size: 0.85rem; margin-top: 0.2rem; }
+.eu-sub   { font-size: 0.75rem; color: #64748b; margin-top: 0.15rem; }
+.eu-action{ font-size: 0.7rem; color: #94a3b8; margin-top: 0.5rem; font-style: italic; }
+
+/* ─── Table ──────────────────────────────────────────────── */
+.pi-table { border-collapse: separate; border-spacing: 0 10px; }
+.pi-table thead th {
+  border: none; font-size: 0.68rem; font-weight: 800;
+  color: #94a3b8; letter-spacing: 0.07em; padding: 0 1.2rem;
+  background: transparent;
+}
+.pi-table tbody td {
+  background: rgba(255,255,255,0.45);
+  border-top: 1px solid rgba(255,255,255,0.3);
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  padding: 1rem 1.2rem;
+}
+.pi-table tbody td:first-child { border-left: 1px solid rgba(255,255,255,0.3); border-radius: 14px 0 0 14px; }
+.pi-table tbody td:last-child  { border-right:1px solid rgba(255,255,255,0.3); border-radius: 0 14px 14px 0; }
+.pi-table tbody tr:hover td { background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+
+.stock-pill {
+  background: #f1f5f9; color: #475569;
+  padding: 4px 14px; border-radius: 20px;
+  font-weight: 700; font-size: 0.9rem;
+}
+.fw-700 { font-weight: 700; }
+.fw-600 { font-weight: 600; }
+.x-tiny { font-size: 0.68rem; }
+
+/* ─── Status Badges ──────────────────────────────────────── */
+.badge-status {
+  display: inline-block;
+  font-size: 0.68rem; font-weight: 800;
+  padding: 4px 11px; border-radius: 8px;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+/* ─── Advice Cards ───────────────────────────────────────── */
+.pi-advice-card {
+  border-radius: 20px; padding: 1.25rem 1.5rem;
+  height: 100%;
+}
+.pi-advice-card.blue  { background: rgba(9,132,227,0.06); border: 1px solid rgba(9,132,227,0.14); }
+.pi-advice-card.amber { background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.14); }
+.pi-advice-card h6 { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.07em; margin-bottom: 0; color: #475569; }
+.pi-advice-card.blue  h6 { color: #0056b3; }
+.pi-advice-card.amber h6 { color: #b45309; }
+
+.velocity-pill {
+  background: rgba(0,86,179,0.08); color: #0056b3;
+  border: 1px solid rgba(0,86,179,0.15);
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 0.78rem; font-weight: 700;
+}
+.advice-text { font-size: 0.8rem; color: #64748b; margin: 0; }
+.advice-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.advice-list li {
+  display: flex; align-items: flex-start; gap: 0.6rem;
+  font-size: 0.82rem; color: #475569;
+}
+.advice-list li i { flex-shrink: 0; margin-top: 2px; }
+
+@media (max-width: 768px) {
+  .pi-kpi-row { grid-template-columns: 1fr 1fr; }
+  .expiry-urgency-grid { grid-template-columns: 1fr 1fr; }
+  .top-seller-item { grid-template-columns: 40px 1fr 90px; }
+  .seller-bar-wrap, .seller-stats { display: none; }
+}

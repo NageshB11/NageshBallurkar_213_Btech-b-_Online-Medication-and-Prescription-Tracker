@@ -953,7 +953,294 @@
 }
 
 /* ─── Shadow Utility ─────────────────────────────────────────────── */
-.shadow-2xl {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+/* ─── Slot-Based Blocks (Granular) ────────────────────────────────── */
+.slot-block {
+    width: 120px !important;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
+.adherence-pending {
+    background: rgba(9, 132, 227, 0.05) !important;
+    border-color: rgba(9, 132, 227, 0.2) !important;
+}
+
+.adherence-snoozed {
+    background: rgba(253, 203, 110, 0.1) !important;
+    border-color: #fdcb6e !important;
+}
+
+.block-icon-wrap {
+    transition: transform 0.2s ease;
+}
+
+.slot-block:active {
+    transform: scale(0.95);
+}
+
+.slot-block.adherence-high .block-icon-wrap i {
+    color: #00b894 !important;
+}
+
+/* ─── Professional Audit Timeline ────────────────────────────────── */
+.rx-group {
+    margin-bottom: 1.5rem;
+}
+
+.rx-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 14px;
+    padding: 0.9rem 1.4rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-bottom: 0.5rem;
+}
+
+.rx-group-header:hover {
+    background: rgba(9, 132, 227, 0.05);
+}
+
+.rx-id-pill {
+    background: rgba(9, 132, 227, 0.1);
+    color: #0984e3;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.3rem 0.85rem;
+    border-radius: 20px;
+}
+
+.version-timeline {
+    padding-left: 0.5rem;
+    margin-top: 1rem;
+}
+
+.version-item {
+    display: flex;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.v-connector {
+    position: absolute;
+    left: 21px;
+    top: 46px;
+    bottom: -1.5rem;
+    width: 2px;
+    display: flex;
+    justify-content: center;
+}
+
+.v-line {
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(9, 132, 227, 0.3) 0%, rgba(9, 132, 227, 0.02) 100%);
+}
+
+.v-node {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    z-index: 2;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.audit-card {
+    flex: 1;
+    padding: 1.4rem;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 20px;
+    border-left: 4px solid #0984e3;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+
+.card-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.version-num {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #2d3436;
+}
+
+.badge-purple {
+    background: rgba(108, 92, 231, 0.1);
+    color: #6c5ce7;
+    border: 1px solid rgba(108, 92, 231, 0.2);
+}
+
+.delta-alert {
+    background: #fffbeb;
+    border: 1px solid #fef3c7;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+}
+
+.delta-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.delta-chip {
+    background: #fff;
+    border: 1px solid #f3f4f6;
+    border-radius: 8px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.delta-old {
+    color: #9ca3af;
+    text-decoration: line-through;
+}
+
+.delta-new {
+    color: #059669;
+    font-weight: 600;
+}
+
+.roles-row {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 0.85rem 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.role-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex: 1;
+}
+
+.role-tag {
+    font-size: 0.65rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 0.1rem;
+}
+
+.role-val {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.clinical-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.clinical-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.8rem;
+    color: #475569;
+}
+
+.chip-val {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+/* ─── Profile Modal Field Cards ──────────────────────────────────── */
+.profile-field-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 1rem 1.15rem;
+    background: rgba(248, 250, 252, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 16px;
+    transition: all 0.2s ease;
+}
+
+.profile-field-card:hover {
+    background: rgba(248, 250, 252, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.profile-field-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.profile-field-icon.blue { background: rgba(9, 132, 227, 0.12); color: #0984e3; }
+.profile-field-icon.purple { background: rgba(108, 92, 231, 0.12); color: #6c5ce7; }
+.profile-field-icon.green { background: rgba(0, 184, 148, 0.12); color: #00b894; }
+.profile-field-icon.amber { background: rgba(253, 203, 110, 0.2); color: #e17055; }
+.profile-field-icon.red { background: rgba(214, 48, 49, 0.1); color: #d63031; }
+.profile-field-icon.orange { background: rgba(225, 112, 85, 0.12); color: #e17055; }
+
+.profile-field-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #94a3b8;
+    margin-bottom: 2px;
+}
+
+.profile-field-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.4;
+}
+
+.glass-input {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 12px !important;
+    padding: 0.65rem 1rem !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    transition: all 0.2s ease !important;
+}
+
+.glass-input:focus {
+    border-color: #0984e3 !important;
+    box-shadow: 0 0 0 3px rgba(9, 132, 227, 0.1) !important;
+    background: white !important;
+}

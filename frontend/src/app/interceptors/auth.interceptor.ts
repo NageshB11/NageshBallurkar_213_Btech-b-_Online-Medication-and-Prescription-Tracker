@@ -9,8 +9,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
     let authReq = req;
 
-    // Skip adding token for auth endpoints
-    if (token && !req.url.includes('/api/auth')) {
+    // Skip adding token ONLY for public auth endpoints (login/register)
+    const isPublicAuth = req.url.includes('/api/auth/login') || req.url.includes('/api/auth/register');
+    if (token && !isPublicAuth) {
         authReq = req.clone({
             setHeaders: {
                 Authorization: `Bearer ${token}`

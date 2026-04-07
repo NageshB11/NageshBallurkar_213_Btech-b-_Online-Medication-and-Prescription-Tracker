@@ -10,7 +10,7 @@ import { Prescription } from '../../models/prescription.model';
     standalone: true,
     imports: [CommonModule, RouterModule, FormsModule],
     templateUrl: './prescription-list.component.html',
-    styleUrl: './prescription-list.component.css'
+    styleUrls: ['./prescription-list.component.css']
 })
 export class PrescriptionListComponent implements OnInit {
     prescriptions: Prescription[] = [];
@@ -44,9 +44,10 @@ export class PrescriptionListComponent implements OnInit {
         this.filteredPrescriptions = this.prescriptions.filter(p => {
             const medicineName = p.items[0]?.medicineName?.toLowerCase() || '';
             const doctorName = p.doctor?.fullName?.toLowerCase() || '';
+            const pharmacyName = p.pharmacist?.pharmacyName?.toLowerCase() || '';
             const search = this.searchTerm.toLowerCase();
 
-            const matchesSearch = medicineName.includes(search) || doctorName.includes(search);
+            const matchesSearch = medicineName.includes(search) || doctorName.includes(search) || pharmacyName.includes(search);
             const matchesStatus = this.statusFilter === 'ALL' || p.status === this.statusFilter;
             return matchesSearch && matchesStatus;
         });

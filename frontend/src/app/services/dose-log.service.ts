@@ -21,7 +21,7 @@ export interface DoseLog {
 
 @Injectable({ providedIn: 'root' })
 export class DoseLogService {
-    private base = 'http://localhost:8081/api/doses';
+    private base = '/api/doses';
 
     constructor(private http: HttpClient) { }
 
@@ -40,7 +40,7 @@ export class DoseLogService {
     }
 
     getMyAdherenceStats(): Observable<{ percent: number, label: string }> {
-        return this.http.get<{ percent: number, label: string }>(`http://localhost:8081/api/analytics/schedules/my-adherence`);
+        return this.http.get<{ percent: number, label: string }>(`/api/analytics/schedules/my-adherence`);
     }
 
     getDoseHistory(): Observable<DoseLog[]> {

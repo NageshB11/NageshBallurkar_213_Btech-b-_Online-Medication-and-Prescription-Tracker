@@ -94,10 +94,16 @@
                     Good {{ getGreeting() }}, <strong>{{ userName }}</strong> 👋
                 </p>
             </div>
-            <button class="notif-btn border-0" (click)="activeSection='notifications'">
-                <i class="bi bi-bell fs-5"></i>
-                <span class="notif-dot" *ngIf="notifications.length > 0"></span>
-            </button>
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-danger btn-sm rounded-pill fw-bold shadow-sm" 
+                    style="font-size: 0.6rem; letter-spacing: 0.05em;" (click)="killOverlays()">
+                   UI EMERGENCY RESET
+                </button>
+                <button class="notif-btn border-0" (click)="activeSection='notifications'">
+                    <i class="bi bi-bell fs-5"></i>
+                    <span class="notif-dot" *ngIf="notifications.length > 0"></span>
+                </button>
+            </div>
         </header>
 
         <div class="page-content">
@@ -253,7 +259,7 @@
                                                 <h6 class="mb-1 fw-bold" style="color: #1e3a8a; font-size: 0.9rem;">
                                                     Doctor Issued</h6>
                                                 <p class="text-muted mb-0" style="font-size: 0.8rem;">Dr. {{
-                                                    p.doctor?.fullName }} prescribed {{ p.items?.[0]?.medicineName ||
+                                                    p.doctor?.fullName }} prescribed {{ p.items[0]?.medicineName ||
                                                     'medication' }}.</p>
                                             </div>
                                         </div>
@@ -357,7 +363,7 @@
                             <div class="clinical-row-item mb-3" *ngFor="let p of activePrescriptions.slice(0, 2)">
                                 <app-patient-guide-card 
                                     class="d-block"
-                                    [medicineName]="p.items?.[0]?.medicineName || 'Medication'" 
+                                    [medicineName]="p.items[0]?.medicineName || 'Medication'" 
                                     [batchId]="p.id?.toString() || 'DOC-' + p.id">
                                 </app-patient-guide-card>
                             </div>
@@ -427,45 +433,16 @@
                                             </div>
                                             <div>
                                                 <div style="font-weight:700; color:#2d3436; font-size:0.95rem;">
-                                                    {{ p.items[0]?.medicineName }}
+                                                    {{ p.items[0].medicineName }}
                                                 </div>
                                                 <div style="font-size:0.75rem; color:#636e72;">
-                                                    {{ p.items[0]?.dosage }}
+                                                    {{ p.items[0].dosage }}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
                                     <td style="color:#636e72; font-size:0.85rem;">
                                         <div class="mb-1">{{ getNextDoseTime(p) }}</div>
-                                        <div class="d-flex temporal-grid gap-2 overflow-auto py-2" style="max-width: 320px;">
-                                            <div class="temporal-block" *ngFor="let day of p.doseSchedule"
-                                                 [class.adherence-high]="day.taken"
-                                                 [class.adherence-mid]="isLoggable(day, p.id)"
-                                                 [class.adherence-low]="!day.taken && !isLoggable(day, p.id)"
-                                                 (click)="isLoggable(day, p.id) ? logAdherence(p) : null"
-                                                 [title]="day.date | date:'MMM d'">
-                                                <div class="block-fill"></div>
-                                                <span class="block-label">{{ day.date | date:'d' }}</span>
-                                                <i class="bi bi-check-lg block-icon text-white" *ngIf="day.taken"></i>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center justify-content-center gap-2">
-                                            <!-- Mini circular ring per med -->
-                                            <svg width="42" height="42">
-                                                <circle cx="21" cy="21" r="17"
-                                                    style="fill:none;stroke:#e9ecef;stroke-width:5;"></circle>
-                                                <circle cx="21" cy="21" r="17"
-                                                    style="fill:none;stroke:#00b894;stroke-width:5;stroke-dasharray:107;stroke-linecap:round;transform:rotate(-90deg);transform-origin:center;"
-                                                    [style.stroke-dashoffset]="107 - (getDosageProgress(p) / 100) * 107">
-                                                </circle>
-                                            </svg>
-                                            <span style="font-weight:700; font-size:0.85rem; color:#00b894;">
-                                                {{ getDosageProgress(p) }}%
-                                            </span>
-                                        </div>
-                                    </td>
                                     <td class="pe-4">
                                         <div class="d-flex align-items-center justify-content-end" style="gap: 1.5rem;">
                                             <button *ngIf="p.status === 'DISPENSED' && !hasActiveSchedule(p.id)"
@@ -474,10 +451,8 @@
                                                 (click)="openScheduleModal(p)" title="Setup Live Timers">
                                                 <i class="bi bi-alarm"></i> Setup Timers
                                             </button>
-                                            <button class="btn-icon" title="Log dose" 
-                                                    [disabled]="isAlreadyLoggedToday(p.id)" 
-                                                    (click)="logAdherence(p)">
-                                                <i class="bi bi-check-circle-fill text-success" [class.opacity-50]="isAlreadyLoggedToday(p.id)"></i>
+                                            <button class="btn-icon" title="View Adherence" (click)="activeSection='adherence'">
+                                                <i class="bi bi-heart-pulse text-primary"></i>
                                             </button>
                                             <button class="btn-icon" title="Download PDF" (click)="downloadPdf(p.id)">
                                                 <i class="bi bi-download"></i>
@@ -526,7 +501,7 @@
                                                 <i class="bi bi-bag-check-fill"></i>
                                             </div>
                                             <span style="font-weight:600;color:#2d3436;font-size:0.88rem;">{{
-                                                p.items[0]?.medicineName }}</span>
+                                                p.items[0]?.medicineName || 'Medication' }}</span>
                                         </div>
                                     </td>
                                     <td style="font-size:0.85rem;color:#636e72;">{{ p.pharmacist?.fullName }}</td>
@@ -547,7 +522,7 @@
                  SECTION: CLINICAL INTELLIGENCE LIBRARY
             ══════════════════════════════════════════════════ -->
             <ng-container *ngIf="activeSection === 'clinical'">
-                <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-4" @fadeSlide>
                     <div>
                         <h2 class="section-heading">Clinical Intelligence Library</h2>
                         <p class="section-sub">FDA-sourced data for your current medications</p>
@@ -557,20 +532,22 @@
                     </div>
                 </div>
 
-                <div class="clinical-rows-stack d-flex flex-column gap-3">
+                <div class="clinical-rows-stack d-flex flex-column gap-3" [@listAnimation]="activePrescriptions.length">
                     <div class="clinical-row-item" *ngFor="let p of activePrescriptions">
                         <app-patient-guide-card 
                             class="d-block"
-                            [medicineName]="p.items?.[0]?.medicineName || 'Medication'" 
+                            [medicineName]="p.items[0]?.medicineName || 'Medication'" 
                             [batchId]="p.id?.toString() || 'DOC-' + p.id">
                         </app-patient-guide-card>
                     </div>
                 </div>
                 
-                <div class="col-12 text-center py-3 opacity-50" *ngIf="activePrescriptions.length === 0">
-                    <i class="bi bi-journal-x display-1 mb-2"></i>
+                <div class="col-12 text-center py-5 opacity-75" *ngIf="activePrescriptions.length === 0" @fadeSlide>
+                    <div class="empty-state-icon mb-3">
+                        <i class="bi bi-journal-medical display-1 text-muted"></i>
+                    </div>
                     <h4>No Clinical Data Available</h4>
-                    <p>Detailed guides will appear here once you have active prescriptions.</p>
+                    <p class="text-muted mx-auto" style="max-width: 400px;">Detailed medical guides and safety information will appear here once your prescriptions are issued.</p>
                 </div>
             </ng-container>
 
@@ -676,33 +653,156 @@
                     </div>
                 </div>
 
+                <!-- New Modular Adherence Trend Chart Component -->
+                <div class="mb-4" *ngIf="userId">
+                    <app-adherence-trend-chart [patientId]="userId"></app-adherence-trend-chart>
+                </div>
+
+                <!-- ═══ TEMPORAL ADHERENCE BLOCKS ═══ -->
+                <div class="glass-card p-4 mb-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-grid-3x3-gap-fill me-2 fs-5" style="color:#6c5ce7;"></i>
+                            <h6 class="m-0" style="font-weight:700; color:#2d3436;">Adherence Blocks</h6>
+                        </div>
+                        <span class="badge rounded-pill"
+                            style="background:rgba(108,92,231,0.1);color:#6c5ce7;font-size:0.75rem;">
+                            {{adherenceBlocks.length}} days tracked
+                        </span>
+                    </div>
+                    <p class="small text-muted mb-3" style="line-height:1.4;">
+                        Each block = 1 day. Each dose = <strong>{{adherenceBlocks.length > 0 &&
+                            adherenceBlocks[0]?.weightPerDose ? adherenceBlocks[0].weightPerDose : 25}}%</strong> of
+                        daily adherence.
+                        <span style="color:#00b894;">■</span> Taken &nbsp;
+                        <span style="color:#0984e3;">■</span> Pending &nbsp;
+                        <span style="color:#d63031;">■</span> Missed
+                    </p>
+
+                    <div *ngIf="doseSlotBlocks.length > 0" class="d-flex flex-wrap gap-3">
+                        <div *ngFor="let block of doseSlotBlocks; let i = index" 
+                            class="adherence-block slot-block"
+                            [class.adherence-block-today]="isToday(block.date)" 
+                            [class.adherence-high]="block.status === 'TAKEN'"
+                            [class.adherence-low]="block.status === 'MISSED'"
+                            [class.adherence-snoozed]="block.status === 'SNOOZED'"
+                            [style.cursor]="isBlockLoggable(block) ? 'pointer' : 'default'"
+                            [style.opacity]="isBlockLoggable(block) ? '1' : '0.7'"
+                            (click)="isBlockLoggable(block) ? markBlockDose(block, 'TAKEN') : null">
+
+                             <!-- Day and Slot Label -->
+                             <div style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#636e72; margin-bottom:4px;">
+                                 {{block.dayLabel}} · {{block.mealSlot}}
+                             </div>
+
+                             <!-- Visual Indicator (Capsule/Icon) -->
+                             <div class="block-icon-wrap my-2" [style.color]="block.status === 'TAKEN' ? '#00b894' : (block.status === 'MISSED' ? '#d63031' : '#0984e3')">
+                                 <i class="bi" [ngClass]="{
+                                     'bi-capsule-pill': block.status === 'PENDING',
+                                     'bi-check-circle-fill': block.status === 'TAKEN',
+                                     'bi-x-circle-fill': block.status === 'MISSED',
+                                     'bi-alarm-fill': block.status === 'SNOOZED'
+                                 }" style="font-size: 1.5rem;"></i>
+                             </div>
+
+                            <!-- Date and Medicine -->
+                            <div style="font-size:0.75rem; font-weight:700; color:#2d3436; line-height:1.2;">
+                                {{block.medicineName}}
+                            </div>
+                            <div style="font-size:0.65rem; color:#636e72; margin-top:2px;">
+                                {{formatBlockDate(block.date)}}
+                            </div>
+                            
+                            <!-- Status Badge -->
+                            <div class="mt-2">
+                                <span class="badge rounded-pill" style="font-size:0.6rem;" 
+                                     [class.bg-success]="block.status === 'TAKEN'"
+                                     [class.bg-danger]="block.status === 'MISSED'"
+                                     [class.bg-primary]="block.status === 'PENDING'"
+                                     [class.bg-warning]="block.status === 'SNOOZED'">
+                                    {{block.status}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div *ngIf="adherenceBlocks.length === 0" class="text-center py-4 text-muted">
+                        <i class="bi bi-grid-3x3 display-5 d-block mb-2 opacity-25"></i>
+                        <p class="mb-0">No adherence blocks yet. Create a schedule to start tracking.</p>
+                    </div>
+                </div>
+
+                <!-- ═══ DOSE DETAIL PANEL (shown when a block is clicked) ═══ -->
+                <div *ngIf="selectedBlock" class="glass-card p-4 mb-4" style="border-left:4px solid #6c5ce7;">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div>
+                            <h6 class="fw-bold mb-0" style="color:#2d3436;">
+                                <i class="bi bi-calendar-day me-2" style="color:#6c5ce7;"></i>
+                                {{formatBlockDateFull(selectedBlock.date)}}
+                            </h6>
+                            <p class="small text-muted mb-0 mt-1">
+                                {{selectedBlock.takenCount}}/{{selectedBlock.totalDoses}} doses taken ·
+                                Each dose = {{selectedBlock.weightPerDose}}% daily adherence
+                            </p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" (click)="selectedBlock = null">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+
+                    <div *ngFor="let dose of selectedBlock.doses"
+                        class="d-flex align-items-center gap-3 p-3 mb-2 rounded-3"
+                        [style.background]="dose.status === 'TAKEN' ? 'rgba(0,184,148,0.06)' : dose.status === 'MISSED' ? 'rgba(214,48,49,0.06)' : 'rgba(9,132,227,0.06)'"
+                        [style.border]="'1px solid ' + (dose.status === 'TAKEN' ? 'rgba(0,184,148,0.2)' : dose.status === 'MISSED' ? 'rgba(214,48,49,0.2)' : 'rgba(9,132,227,0.2)')">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                            style="width:36px;height:36px;"
+                            [style.background]="dose.status === 'TAKEN' ? 'rgba(0,184,148,0.15)' : dose.status === 'MISSED' ? 'rgba(214,48,49,0.15)' : 'rgba(9,132,227,0.15)'"
+                            [style.color]="dose.status === 'TAKEN' ? '#00b894' : dose.status === 'MISSED' ? '#d63031' : '#0984e3'">
+                            <i class="bi" [ngClass]="{
+                                'bi-check-circle-fill': dose.status === 'TAKEN',
+                                'bi-x-circle-fill': dose.status === 'MISSED',
+                                'bi-clock': dose.status === 'PENDING' || dose.status === 'SNOOZED'
+                            }"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div style="font-weight:700; font-size:0.88rem; color:#2d3436;">{{dose.medicineName}}</div>
+                            <div class="small text-muted">{{dose.mealSlot}} · {{dose.dosage}} · +{{dose.weight}}%
+                                adherence</div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge rounded-pill" [ngClass]="{
+                                    'bg-success': dose.status === 'TAKEN',
+                                    'bg-danger': dose.status === 'MISSED',
+                                    'bg-primary': dose.status === 'PENDING',
+                                    'bg-warning text-dark': dose.status === 'SNOOZED'
+                                  }">{{dose.status}}</span>
+                            <button *ngIf="isBlockLoggable(dose)"
+                                class="btn btn-sm btn-success rounded-pill px-3 fw-bold"
+                                (click)="markBlockDose(dose, 'TAKEN')">
+                                <i class="bi bi-check2 me-1"></i>Take
+                            </button>
+                            <span *ngIf="!isBlockLoggable(dose) && dose.status !== 'TAKEN'" 
+                                  class="text-muted small">
+                                <i class="bi bi-lock-fill me-1"></i>Locked
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Per-medication breakdown -->
-                <div class="glass-card p-4" *ngFor="let p of activePrescriptions" style="margin-bottom:1rem;">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="med-icon-cell" style="width:44px;height:44px;border-radius:14px;">
-                            <i class="bi bi-capsule-pill"></i>
+                <div class="glass-card p-4" *ngFor="let p of activePrescriptions" style="margin-bottom:1.5rem; border-radius: 28px;">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="med-icon-cell" style="width:48px;height:48px;border-radius:16px;background:rgba(9,132,227,0.1);color:#0984e3;display:flex;align-items:center;justify-content:center;transition: all 0.3s ease;">
+                            <i class="bi bi-capsule-pill fs-5"></i>
                         </div>
                         <div>
-                            <div style="font-weight:700;color:#2d3436;">{{ p.items[0]?.medicineName }}</div>
-                            <div style="font-size:0.78rem;color:#636e72;">{{ p.items[0]?.dosage }} · Dr. {{
-                                p.doctor?.fullName }}</div>
-                        </div>
-                        <div class="ms-auto text-end">
-                            <span style="font-size:1.5rem;font-weight:800;color:#0984e3;">{{ getDosageProgress(p)
-                                }}%</span>
-                            <div style="font-size:0.72rem;color:#636e72;">adherence</div>
+                            <div style="font-weight:800;color:#2d3436;font-size:1.1rem;letter-spacing:-0.3px;">{{ p.items[0].medicineName }}</div>
+                            <div style="font-size:0.85rem;color:#636e72;font-weight:500;">{{ p.items[0].dosage }} · Issued by Dr. {{ p.doctor?.fullName }}</div>
                         </div>
                     </div>
-                    <div class="med-progress">
-                        <div class="med-progress-bar" [style.width.%]="getDosageProgress(p)" [style.background]="getDosageProgress(p) >= 80 ? 'linear-gradient(90deg,#00b894,#55efc4)'
-                                : getDosageProgress(p) >= 50 ? 'linear-gradient(90deg,#0984e3,#74b9ff)'
-                                : 'linear-gradient(90deg,#e17055,#fab1a0)'">
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-between mt-1" style="font-size:0.72rem;color:#b2bec3;">
-                        <span>{{ p.items[0]?.startDate | date:'MMM d' }}</span>
-                        <span>{{ p.items[0]?.endDate | date:'MMM d' }}</span>
-                    </div>
+
+                    <!-- Apollo Adherence Matrix Component -->
+                    <app-patient-adherence *ngIf="p.id" [prescriptionId]="p.id"></app-patient-adherence>
                 </div>
 
                 <div *ngIf="activePrescriptions.length === 0" class="glass-card p-5 text-center text-muted">
@@ -764,173 +864,58 @@
                     </a>
                 </div>
 
-                <!-- Today's Upcoming Doses -->
-                <div class="glass-card p-4 mb-4">
+                <!-- Today's Upcoming Doses (Reminders) -->
+                <div class="glass-card p-4 mb-4" style="border-left: 4px solid #fdcb6e;">
                     <div class="d-flex align-items-center mb-3">
-                        <i class="bi bi-clock-fill text-warning me-2 fs-5"></i>
-                        <h6 class="m-0" style="font-weight:700; color:#2d3436;">Today's Doses</h6>
-                        <span class="badge bg-warning text-dark ms-auto rounded-pill">{{dueDoses.length}} due</span>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-alarm-fill text-warning me-2 fs-5"></i>
+                            <h6 class="m-0" style="font-weight:700; color:#2d3436;">Medication Reminders</h6>
+                        </div>
+                        <span class="badge bg-warning text-dark ms-auto rounded-pill px-3 anim-pulse" *ngIf="dueDoses.length > 0">
+                            {{dueDoses.length}} doses pending today
+                        </span>
                     </div>
 
-                    <div *ngIf="dueDoses.length > 0">
+                    <div *ngIf="dueDoses.length > 0" @listAnimation>
                         <div *ngFor="let dose of dueDoses"
-                            class="d-flex align-items-center justify-content-between p-3 mb-2 rounded-3"
+                            class="d-flex align-items-center justify-content-between p-3 mb-2 rounded-3 hover-lift"
                             style="background:rgba(253,203,110,0.08); border:1px solid rgba(253,203,110,0.25);">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center"
-                                    style="width:40px;height:40px;background:rgba(253,203,110,0.2);color:#e17055;">
-                                    <i class="bi bi-capsule-pill"></i>
+                                    style="width:45px;height:45px;background:rgba(253,203,110,0.2);color:#e17055;">
+                                    <i class="bi" [ngClass]="{
+                                        'bi-sun': dose.mealSlot === 'BREAKFAST',
+                                        'bi-brightness-high': dose.mealSlot === 'LUNCH',
+                                        'bi-moon-stars': dose.mealSlot === 'DINNER',
+                                        'bi-capsule-pill': !['BREAKFAST','LUNCH','DINNER'].includes(dose.mealSlot)
+                                    }"></i>
                                 </div>
                                 <div>
-                                    <div style="font-weight:700;font-size:0.9rem;color:#2d3436;">{{dose.medicineName}}
+                                    <div style="font-weight:700;font-size:0.95rem;color:#2d3436;">{{dose.medicineName}}</div>
+                                    <div style="font-size:0.8rem;color:#636e72;">
+                                        <span class="badge bg-light text-dark me-1" style="font-weight:600;">{{dose.mealSlot}}</span>
+                                        {{dose.dosage}} · {{dose.foodInstruction}}
                                     </div>
-                                    <div style="font-size:0.78rem;color:#636e72;">{{dose.dosage}} · Scheduled:
-                                        {{formatDate(dose.scheduledTime)}}</div>
                                 </div>
                             </div>
                             <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-success rounded-pill px-3 fw-bold"
-                                    (click)="takeDoseAlert(dose)">
-                                    <i class="bi bi-check2 me-1"></i>Take
+                                <button class="btn btn-success rounded-pill px-4 fw-bold shadow-sm"
+                                    (click)="takeDoseAlert(dose)" style="font-size:0.85rem;">
+                                    <i class="bi bi-check2-circle me-1"></i>Take Now
                                 </button>
-                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3"
-                                    (click)="snoozeDoseAlert(dose)">
+                                <button class="btn btn-outline-secondary rounded-pill px-3"
+                                    (click)="snoozeDoseAlert(dose)" style="font-size:0.85rem;">
                                     <i class="bi bi-alarm me-1"></i>Snooze
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <div *ngIf="dueDoses.length === 0" class="text-center py-4 text-muted">
-                        <i class="bi bi-check-circle display-5 d-block mb-2 opacity-25" style="color:#00b894;"></i>
-                        <p class="mb-0">All caught up! No doses due right now.</p>
-                    </div>
-                </div>
-
-                <!-- ═══ TEMPORAL ADHERENCE BLOCKS ═══ -->
-                <div class="glass-card p-4 mb-4">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-grid-3x3-gap-fill me-2 fs-5" style="color:#6c5ce7;"></i>
-                            <h6 class="m-0" style="font-weight:700; color:#2d3436;">Adherence Blocks</h6>
+                    <div *ngIf="dueDoses.length === 0" class="text-center py-5 text-muted">
+                        <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;">
+                            <i class="bi bi-check2-all fs-2 text-success"></i>
                         </div>
-                        <span class="badge rounded-pill"
-                            style="background:rgba(108,92,231,0.1);color:#6c5ce7;font-size:0.75rem;">
-                            {{adherenceBlocks.length}} days tracked
-                        </span>
-                    </div>
-                    <p class="small text-muted mb-3" style="line-height:1.4;">
-                        Each block = 1 day. Each dose = <strong>{{adherenceBlocks.length > 0 &&
-                            adherenceBlocks[0]?.weightPerDose ? adherenceBlocks[0].weightPerDose : 25}}%</strong> of
-                        daily adherence.
-                        <span style="color:#00b894;">■</span> Taken &nbsp;
-                        <span style="color:#0984e3;">■</span> Pending &nbsp;
-                        <span style="color:#d63031;">■</span> Missed
-                    </p>
-
-                    <div *ngIf="adherenceBlocks.length > 0" class="d-flex flex-wrap gap-3">
-                        <div *ngFor="let block of adherenceBlocks; let i = index" 
-                            class="adherence-block"
-                            [class.adherence-block-today]="isToday(block.date)" 
-                            [class.adherence-low]="block.dailyAdherence === 0"
-                            [class.adherence-mid]="block.dailyAdherence > 0 && block.dailyAdherence < 100"
-                            [class.adherence-high]="block.dailyAdherence === 100"
-                            (click)="selectAdherenceBlock(block)">
-
-                             <!-- Day Label -->
-                             <div
-                                 style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#636e72; margin-bottom:6px;">
-                                 {{block.dayLabel}}
-                             </div>
-
-                             <!-- Circular Gauge -->
-                             <div class="position-relative d-inline-block mb-1" style="width:60px; height:60px;">
-                                 <svg width="60" height="60" viewBox="0 0 60 60">
-                                     <circle cx="30" cy="30" r="24" fill="none" stroke="#e2e8f0" stroke-width="5" />
-                                     <circle cx="30" cy="30" r="24" fill="none"
-                                         [attr.stroke]="block.dailyAdherence >= 100 ? '#00b894' : block.dailyAdherence > 0 ? '#fdcb6e' : '#dae1e7'"
-                                         stroke-width="5" [attr.stroke-dasharray]="150.796"
-                                         [attr.stroke-dashoffset]="150.796 - (150.796 * block.dailyAdherence / 100)"
-                                         stroke-linecap="round" transform="rotate(-90 30 30)"
-                                         style="transition: stroke-dashoffset 0.6s ease-in-out;" />
-                                 </svg>
-                                <div class="position-absolute top-50 start-50 translate-middle"
-                                    style="font-size:0.72rem; font-weight:800; color:#2d3436;">
-                                    {{block.dailyAdherence}}%
-                                </div>
-                            </div>
-
-                            <!-- Date -->
-                            <div style="font-size:0.78rem; font-weight:700; color:#2d3436;">
-                                {{formatBlockDate(block.date)}}
-                            </div>
-
-                            <!-- Dose Pills -->
-                            <div class="d-flex justify-content-center gap-1 mt-1 flex-wrap">
-                                <span *ngFor="let dose of block.doses" class="d-inline-block rounded-circle"
-                                    style="width:8px; height:8px;"
-                                    [style.background]="dose.status === 'TAKEN' ? '#00b894' : dose.status === 'MISSED' ? '#d63031' : '#0984e3'"
-                                    [title]="dose.medicineName + ' (' + dose.mealSlot + ') — ' + dose.status">
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div *ngIf="adherenceBlocks.length === 0" class="text-center py-4 text-muted">
-                        <i class="bi bi-grid-3x3 display-5 d-block mb-2 opacity-25"></i>
-                        <p class="mb-0">No adherence blocks yet. Create a schedule to start tracking.</p>
-                    </div>
-                </div>
-
-                <!-- ═══ DOSE DETAIL PANEL (shown when a block is clicked) ═══ -->
-                <div *ngIf="selectedBlock" class="glass-card p-4 mb-4" style="border-left:4px solid #6c5ce7;">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div>
-                            <h6 class="fw-bold mb-0" style="color:#2d3436;">
-                                <i class="bi bi-calendar-day me-2" style="color:#6c5ce7;"></i>
-                                {{formatBlockDateFull(selectedBlock.date)}}
-                            </h6>
-                            <p class="small text-muted mb-0 mt-1">
-                                {{selectedBlock.takenCount}}/{{selectedBlock.totalDoses}} doses taken ·
-                                Each dose = {{selectedBlock.weightPerDose}}% daily adherence
-                            </p>
-                        </div>
-                        <button class="btn btn-sm btn-outline-secondary rounded-pill" (click)="selectedBlock = null">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
-
-                    <div *ngFor="let dose of selectedBlock.doses"
-                        class="d-flex align-items-center gap-3 p-3 mb-2 rounded-3"
-                        [style.background]="dose.status === 'TAKEN' ? 'rgba(0,184,148,0.06)' : dose.status === 'MISSED' ? 'rgba(214,48,49,0.06)' : 'rgba(9,132,227,0.06)'"
-                        [style.border]="'1px solid ' + (dose.status === 'TAKEN' ? 'rgba(0,184,148,0.2)' : dose.status === 'MISSED' ? 'rgba(214,48,49,0.2)' : 'rgba(9,132,227,0.2)')">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                            style="width:36px;height:36px;"
-                            [style.background]="dose.status === 'TAKEN' ? 'rgba(0,184,148,0.15)' : dose.status === 'MISSED' ? 'rgba(214,48,49,0.15)' : 'rgba(9,132,227,0.15)'"
-                            [style.color]="dose.status === 'TAKEN' ? '#00b894' : dose.status === 'MISSED' ? '#d63031' : '#0984e3'">
-                            <i class="bi" [ngClass]="{
-                                'bi-check-circle-fill': dose.status === 'TAKEN',
-                                'bi-x-circle-fill': dose.status === 'MISSED',
-                                'bi-clock': dose.status === 'PENDING' || dose.status === 'SNOOZED'
-                            }"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div style="font-weight:700; font-size:0.88rem; color:#2d3436;">{{dose.medicineName}}</div>
-                            <div class="small text-muted">{{dose.mealSlot}} · {{dose.dosage}} · +{{dose.weight}}%
-                                adherence</div>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge rounded-pill" [ngClass]="{
-                                    'bg-success': dose.status === 'TAKEN',
-                                    'bg-danger': dose.status === 'MISSED',
-                                    'bg-primary': dose.status === 'PENDING',
-                                    'bg-warning text-dark': dose.status === 'SNOOZED'
-                                }">{{dose.status}}</span>
-                            <button *ngIf="dose.status === 'PENDING' || dose.status === 'SNOOZED'"
-                                class="btn btn-sm btn-success rounded-pill px-3 fw-bold"
-                                (click)="markBlockDose(dose, 'TAKEN')">
-                                <i class="bi bi-check2 me-1"></i>Take
-                            </button>
-                        </div>
+                        <h6 class="fw-bold text-dark">All Caught Up!</h6>
+                        <p class="mb-0 small">No pending doses for today. Great job staying on track!</p>
                     </div>
                 </div>
 
@@ -1087,7 +1072,7 @@
                                                     font-size:1rem;font-weight:800;color:white;" [style.background]="selectedDoctorId === doc.id
                                                 ? 'linear-gradient(135deg,#0984e3,#74b9ff)'
                                                 : 'linear-gradient(135deg,#a0aec0,#cbd5e0)'">
-                                            {{ doc.fullName?.charAt(0)?.toUpperCase() }}
+                                            {{ doc.fullName.charAt(0).toUpperCase() }}
                                         </div>
                                         <!-- Info -->
                                         <div class="flex-grow-1 overflow-hidden">
@@ -1166,34 +1151,116 @@
 </div>
 
 <!-- ══ History Modal ═════════════════════════════════════════════ -->
-<div class="modal show d-block" tabindex="-1" *ngIf="selectedHistory"
+<div class="modal show d-block" tabindex="-1" *ngIf="selectedHistory && selectedHistory.length > 0"
     style="background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);">
     <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width:680px;">
         <div class="modal-content border-0 rounded-4 shadow-lg"
             style="background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);">
             <div class="modal-header border-0 px-4 pt-4 pb-0">
                 <h5 class="fw-bold m-0" style="color:#2d3436;">
-                    <i class="bi bi-clock-history me-2 text-primary"></i>Prescription History
+                    <i class="bi bi-clock-history me-2 text-primary"></i>Prescription Audit Timeline
                 </h5>
                 <button type="button" class="btn-close ms-auto" (click)="closeHistory()"></button>
             </div>
-            <div class="modal-body p-4">
-                <div class="v-timeline" *ngIf="selectedHistory.length > 0; else noHistory">
-                    <div class="v-event" *ngFor="let audit of selectedHistory">
-                        <div class="v-dot blue"><i class="bi bi-pencil-square"></i></div>
-                        <div class="v-body">
-                            <p class="v-title">
-                                Version {{ audit.version }}
-                                <span class="badge ms-1 rounded-pill"
-                                    style="background:rgba(9,132,227,0.1);color:#0984e3;font-size:0.7rem;font-weight:500;">
-                                    By {{ audit.modifiedBy }}
-                                </span>
-                            </p>
-                            <p class="v-meta">{{ audit.changeReason }}</p>
+            <div class="modal-body p-4" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Professional Enriched Timeline -->
+                <div class="version-timeline" *ngIf="currentPrescriptionAudit; else basicHistory">
+                    <div class="version-item" *ngFor="let v of currentPrescriptionAudit.versions; let i = index; let last = last">
+                        <!-- Connector -->
+                        <div class="v-connector" *ngIf="!last">
+                            <div class="v-line"></div>
                         </div>
-                        <span class="v-timestamp">{{ audit.modifiedAt | date:'MMM d, hh:mm a' }}</span>
+
+                        <!-- Node -->
+                        <div class="v-node" [style.border-color]="getCardAccent(v.actionType)">
+                            <i class="bi" [class.bi-check-circle-fill]="v.actionType === 'DISPENSED'"
+                                [class.bi-arrow-repeat]="v.actionType === 'RENEWED'"
+                                [class.bi-file-medical-fill]="v.actionType !== 'DISPENSED' && v.actionType !== 'RENEWED'"
+                                [style.color]="getCardAccent(v.actionType)">
+                            </i>
+                        </div>
+
+                        <!-- Audit Card -->
+                        <div class="audit-card" [style.border-left-color]="getCardAccent(v.actionType)">
+                            <div class="card-top-row">
+                                <div class="version-label-wrap">
+                                    <span class="version-num">{{ v.versionLabel }}</span>
+                                    <span class="action-badge" [ngClass]="getBadgeClass(v.actionType)">{{ v.actionType }}</span>
+                                </div>
+                                <span class="ts-pill"><i class="bi bi-clock me-1"></i>{{ v.modifiedAt }}</span>
+                            </div>
+
+                            <!-- Delta Alert -->
+                            <div class="delta-alert" *ngIf="v.hasDelta">
+                                <i class="bi bi-arrow-left-right me-2"></i>
+                                <strong>Clinical Changes Detected:</strong>
+                                <div class="delta-chips">
+                                    <span class="delta-chip" *ngIf="v.prevMedicineName">
+                                        <span class="delta-old">{{ v.prevMedicineName }}</span>
+                                        <i class="bi bi-arrow-right mx-1"></i>
+                                        <span class="delta-new">{{ v.medicineName }}</span>
+                                    </span>
+                                    <span class="delta-chip" *ngIf="v.prevDosage">
+                                        <span class="delta-old">{{ v.prevDosage }}</span>
+                                        <i class="bi bi-arrow-right mx-1"></i>
+                                        <span class="delta-new">{{ v.dosage }}</span>
+                                    </span>
+                                    <span class="delta-chip" *ngIf="v.prevDuration">
+                                        <span class="delta-old">{{ v.prevDuration }}</span>
+                                        <i class="bi bi-arrow-right mx-1"></i>
+                                        <span class="delta-new">{{ v.duration }}</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Roles Row -->
+                            <div class="roles-row">
+                                <div class="role-pill">
+                                    <div class="role-tag">Prescribed by</div>
+                                    <div class="role-val">{{ v.prescribedByName || v.modifiedBy || 'N/A' }}</div>
+                                </div>
+                                <div class="role-pill" *ngIf="v.dispensedByName">
+                                    <div class="role-tag">Dispensed by</div>
+                                    <div class="role-val">{{ v.dispensedByName }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Clinical Row -->
+                            <div class="clinical-row mt-2">
+                                <div class="clinical-chip">
+                                    <span class="chip-val">{{ v.medicineName }}</span>
+                                </div>
+                                <div class="clinical-chip">
+                                    <span class="chip-val">{{ v.dosage }}</span>
+                                </div>
+                                <div class="clinical-chip">
+                                    <span class="chip-val">{{ v.duration }}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Fallback Basic History -->
+                <ng-template #basicHistory>
+                    <div class="v-timeline" *ngIf="selectedHistory && selectedHistory.length > 0; else noHistory">
+                        <div class="v-event" *ngFor="let audit of selectedHistory">
+                            <div class="v-dot blue"><i class="bi bi-pencil-square"></i></div>
+                            <div class="v-body">
+                                <p class="v-title">
+                                    Version {{ audit.version }}
+                                    <span class="badge ms-1 rounded-pill"
+                                        style="background:rgba(9,132,227,0.1);color:#0984e3;font-size:0.7rem;font-weight:500;">
+                                        By {{ audit.modifiedBy }}
+                                    </span>
+                                </p>
+                                <p class="v-meta">{{ audit.changeReason }}</p>
+                            </div>
+                            <span class="v-timestamp">{{ audit.modifiedAt | date:'MMM d, hh:mm a' }}</span>
+                        </div>
+                    </div>
+                </ng-template>
+
                 <ng-template #noHistory>
                     <p class="text-center text-muted py-4">No history records found.</p>
                 </ng-template>
@@ -1251,33 +1318,150 @@
 <!-- ══ Patient Profile Modal ═════════════════════════════════════════════ -->
 <div class="modal show d-block" tabindex="-1" *ngIf="showProfileModal"
     style="background:rgba(15,23,42,0.4); backdrop-filter:blur(12px); z-index: 2000;">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-card-modal border-0 shadow-2xl">
-            <div class="modal-header border-0 px-4 pt-4 pb-0">
-                <h5 class="fw-bold m-0" style="color:#2d3436;">
-                    <i class="bi bi-person-badge text-primary me-2"></i>Patient Profile
-                </h5>
-                <button type="button" class="btn-close ms-auto" (click)="showProfileModal = false"></button>
-            </div>
-            <div class="modal-body p-4 text-center">
-                <div class="user-avatar fs-2 mx-auto mb-3" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; background: rgba(9,132,227,0.1); color: #0984e3; border-radius: 50%;">
-                    {{ userName.charAt(0).toUpperCase() }}
-                </div>
-                <h4 class="fw-bold text-dark mb-1">{{ currentUser?.fullName || userName }}</h4>
-                <p class="text-muted small mb-4">{{ currentUser?.email }}</p>
-
-                <div class="glass-card p-4 text-start" style="background: rgba(255,255,255,0.7); box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="bi bi-clipboard2-pulse text-danger me-2"></i>
-                        <h6 class="text-uppercase fw-bold text-muted mb-0" style="font-size: 0.8rem; letter-spacing: 1px;">Medical History</h6>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content glass-card-modal border-0 shadow-2xl" style="border-radius: 28px; overflow: hidden;">
+            <!-- Header -->
+            <div class="modal-header border-0 px-4 pt-4 pb-0" style="background: linear-gradient(135deg, #0984e3 0%, #6c5ce7 100%); padding-bottom: 3rem !important;">
+                <div class="d-flex align-items-center gap-3 w-100">
+                    <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; color: white; border: 3px solid rgba(255,255,255,0.3);">
+                        {{ userName.charAt(0).toUpperCase() }}
                     </div>
-                    <p class="mb-0 text-dark fw-bold" style="font-size: 1rem; color: #2d3436 !important;">
-                        {{ currentUser?.medicalHistory || 'No verified medical history on record.' }}
-                    </p>
+                    <div class="flex-grow-1">
+                        <h4 class="fw-bold m-0 text-white">{{ currentUser?.fullName || userName }}</h4>
+                        <p class="text-white-50 small m-0"><i class="bi bi-envelope me-1"></i>{{ currentUser?.email }}</p>
+                        <span class="badge mt-1" style="background: rgba(255,255,255,0.2); color: white; font-size: 0.7rem;">{{ currentUser?.role }}</span>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" (click)="showProfileModal = false"></button>
                 </div>
             </div>
-            <div class="modal-footer border-0 px-4 pb-4 pt-0 justify-content-center">
-                <button type="button" class="btn btn-outline-secondary rounded-pill px-5 fw-bold" (click)="showProfileModal = false">Close</button>
+
+            <div class="modal-body p-4">
+                <!-- Success Alert -->
+                <div *ngIf="profileSuccess" class="alert border-0 mb-4 d-flex align-items-center gap-2" style="background: rgba(16, 185, 129, 0.1); color: #059669; border-radius: 16px;">
+                    <i class="bi bi-check-circle-fill fs-5"></i>
+                    <span class="fw-bold">Profile updated successfully! Changes are reflected everywhere.</span>
+                </div>
+
+                <!-- View Mode -->
+                <div *ngIf="!isEditingProfile">
+                    <div class="row g-3">
+                        <!-- Full Name -->
+                        <div class="col-md-6">
+                            <div class="profile-field-card">
+                                <div class="profile-field-icon blue"><i class="bi bi-person-fill"></i></div>
+                                <div>
+                                    <div class="profile-field-label">Full Name</div>
+                                    <div class="profile-field-value">{{ currentUser?.fullName || '—' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Email -->
+                        <div class="col-md-6">
+                            <div class="profile-field-card">
+                                <div class="profile-field-icon purple"><i class="bi bi-envelope-fill"></i></div>
+                                <div>
+                                    <div class="profile-field-label">Email Address</div>
+                                    <div class="profile-field-value">{{ currentUser?.email || '—' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Phone -->
+                        <div class="col-md-6">
+                            <div class="profile-field-card">
+                                <div class="profile-field-icon green"><i class="bi bi-telephone-fill"></i></div>
+                                <div>
+                                    <div class="profile-field-label">Phone Number</div>
+                                    <div class="profile-field-value">{{ (currentUser)?.phone || 'Not provided' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Address -->
+                        <div class="col-md-6">
+                            <div class="profile-field-card">
+                                <div class="profile-field-icon amber"><i class="bi bi-geo-alt-fill"></i></div>
+                                <div>
+                                    <div class="profile-field-label">Address</div>
+                                    <div class="profile-field-value">{{ (currentUser)?.address || 'Not provided' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Medical History -->
+                        <div class="col-12">
+                            <div class="profile-field-card">
+                                <div class="profile-field-icon red"><i class="bi bi-clipboard2-pulse-fill"></i></div>
+                                <div class="flex-grow-1">
+                                    <div class="profile-field-label">Medical History</div>
+                                    <div class="profile-field-value">{{ currentUser?.medicalHistory || 'No medical history on record' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Allergies -->
+                        <div class="col-12">
+                            <div class="profile-field-card">
+                                <div class="profile-field-icon orange"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                                <div class="flex-grow-1">
+                                    <div class="profile-field-label">Allergies</div>
+                                    <div class="profile-field-value">{{ (currentUser)?.allergies || 'No known allergies' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit Mode -->
+                <div *ngIf="isEditingProfile">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase text-muted" style="letter-spacing: 0.5px;">Full Name</label>
+                            <input type="text" class="form-control glass-input" [(ngModel)]="profileForm.fullName" placeholder="Enter full name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase text-muted" style="letter-spacing: 0.5px;">Phone Number</label>
+                            <input type="tel" class="form-control glass-input" [(ngModel)]="profileForm.phone" placeholder="Enter phone number">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold small text-uppercase text-muted" style="letter-spacing: 0.5px;">Address</label>
+                            <textarea class="form-control glass-input" [(ngModel)]="profileForm.address" rows="2" placeholder="Enter your address"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold small text-uppercase text-muted" style="letter-spacing: 0.5px;">Medical History</label>
+                            <textarea class="form-control glass-input" [(ngModel)]="profileForm.medicalHistory" rows="3" placeholder="Describe your medical history"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold small text-uppercase text-muted" style="letter-spacing: 0.5px;">Allergies</label>
+                            <textarea class="form-control glass-input" [(ngModel)]="profileForm.allergies" rows="2" placeholder="List any known allergies"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer border-0 px-4 pb-4 pt-2 d-flex justify-content-between">
+                <button *ngIf="!isEditingProfile" type="button"
+                    class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
+                    (click)="showProfileModal = false">
+                    Close
+                </button>
+                <button *ngIf="!isEditingProfile" type="button"
+                    class="btn rounded-pill px-4 fw-bold text-white"
+                    style="background: linear-gradient(135deg, #0984e3, #6c5ce7); border: none;"
+                    (click)="toggleEditProfile()">
+                    <i class="bi bi-pencil-square me-1"></i> Edit Profile
+                </button>
+
+                <button *ngIf="isEditingProfile" type="button"
+                    class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
+                    (click)="toggleEditProfile()">
+                    Cancel
+                </button>
+                <button *ngIf="isEditingProfile" type="button"
+                    class="btn rounded-pill px-4 fw-bold text-white"
+                    style="background: linear-gradient(135deg, #10b981, #059669); border: none;"
+                    [disabled]="profileSaving"
+                    (click)="saveProfile()">
+                    <span *ngIf="!profileSaving"><i class="bi bi-check-circle-fill me-1"></i> Save Changes</span>
+                    <span *ngIf="profileSaving"><span class="spinner-border spinner-border-sm me-1"></span> Saving...</span>
+                </button>
             </div>
         </div>
     </div>

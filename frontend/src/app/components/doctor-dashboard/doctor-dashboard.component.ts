@@ -53,9 +53,12 @@ export class DoctorDashboardComponent implements OnInit {
     loadPrescriptions(): void {
         this.prescriptionService.getIssuedPrescriptions().subscribe({
             next: (data) => {
-                this.prescriptions = data;
-                this.issuedPrescriptions = data.filter(p => !p.isDraft);
-                this.draftPrescriptions = data.filter(p => p.isDraft);
+                // Sorting by ID descending to ensure latest first as a frontend fallback
+                const sortedData = [...data].sort((a, b) => (b.id || 0) - (a.id || 0));
+                
+                this.prescriptions = sortedData;
+                this.issuedPrescriptions = sortedData.filter(p => !p.isDraft);
+                this.draftPrescriptions = sortedData.filter(p => p.isDraft);
             },
             error: (err: any) => console.error('Failed to load prescriptions', err)
         });

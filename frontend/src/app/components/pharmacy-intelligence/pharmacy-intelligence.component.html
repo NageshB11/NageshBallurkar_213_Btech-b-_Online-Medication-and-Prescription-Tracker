@@ -1,0 +1,285 @@
+<div class="pi-root p-4">
+
+  <!-- ── Header ── -->
+  <div class="pi-header mb-4" *ngIf="showTitle">
+    <div class="pi-header-left">
+      <div class="pi-header-icon"><i class="bi bi-graph-up-arrow"></i></div>
+      <div>
+        <h2 class="pi-title">Pharmacy Insights</h2>
+        <p class="pi-subtitle">Sales analytics, stock health &amp; expiration radar</p>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <div class="pi-date-pill"><i class="bi bi-calendar3 me-2"></i>{{ today | date:'d MMM yyyy' }}</div>
+      <button class="pi-refresh-btn" (click)="loadAnalytics()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+    </div>
+  </div>
+
+  <!-- ── Loading State ── -->
+  <div *ngIf="loading" class="pi-loading">
+    <div class="pi-spinner"></div>
+    <p class="mt-3 text-muted">Loading pharmacy data…</p>
+  </div>
+
+  <ng-container *ngIf="!loading && analyticsData">
+
+    <!-- ══════════════════════════════════
+         KPI Strip
+    ══════════════════════════════════ -->
+    <div class="pi-kpi-row mb-4">
+      <div class="pi-kpi-card blue">
+        <div class="pi-kpi-icon"><i class="bi bi-bar-chart-fill"></i></div>
+        <div class="pi-kpi-value">{{ analyticsData.topSelling.length }}</div>
+        <div class="pi-kpi-label">Top Drugs Tracked</div>
+      </div>
+      <div class="pi-kpi-card green">
+        <div class="pi-kpi-icon"><i class="bi bi-bag-check-fill"></i></div>
+        <div class="pi-kpi-value">{{ getTotalUnitsSold() }}</div>
+        <div class="pi-kpi-label">Units Sold (30d)</div>
+      </div>
+      <div class="pi-kpi-card red">
+        <div class="pi-kpi-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="pi-kpi-value">{{ analyticsData.expiryInsights.within30Days }}</div>
+        <div class="pi-kpi-label">Expiring in 30d</div>
+      </div>
+      <div class="pi-kpi-card amber">
+        <div class="pi-kpi-icon"><i class="bi bi-x-circle-fill"></i></div>
+        <div class="pi-kpi-value">{{ analyticsData.expiryInsights.totalExpired }}</div>
+        <div class="pi-kpi-label">Already Expired</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         Row 1: Sales vs Stock Chart + Expiration Radar
+    ══════════════════════════════════ -->
+    <div class="row g-4 mb-4">
+      <!-- Sales vs Stock Bar Chart -->
+      <div class="col-lg-8">
+        <div class="pi-card h-100">
+          <div class="pi-card-header">
+            <div class="d-flex align-items-center gap-2">
+              <span class="pi-section-dot blue"></span>
+              <h5 class="pi-card-title">Sales vs. Stock Visualization</h5>
+            </div>
+            <span class="pi-badge-pill">INVENTORY OPTIMIZATION</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas baseChart [data]="barChartData" [options]="barChartOptions" [type]="barChartType"></canvas>
+          </div>
+          <p class="pi-chart-note">Bar chart shows current stock units (green) vs. units sold in the last 30 days (blue) for your top-selling medications.</p>
+        </div>
+      </div>
+
+      <!-- Expiration Doughnut -->
+      <div class="col-lg-4">
+        <div class="pi-card h-100">
+          <div class="pi-card-header">
+            <div class="d-flex align-items-center gap-2">
+              <span class="pi-section-dot red"></span>
+              <h5 class="pi-card-title">Expiration Radar</h5>
+            </div>
+          </div>
+          <div class="doughnut-wrap">
+            <canvas baseChart [data]="doughnutChartData" [options]="doughnutChartOptions" [type]="doughnutChartType"></canvas>
+          </div>
+          <!-- Expiry breakdown pills -->
+          <div class="expiry-pills mt-3">
+            <div class="expiry-pill red">
+              <span class="pill-count">{{ analyticsData.expiryInsights.within30Days }}</span>
+              <span class="pill-label">≤ 30 days</span>
+            </div>
+            <div class="expiry-pill amber">
+              <span class="pill-count">{{ analyticsData.expiryInsights.within60Days }}</span>
+              <span class="pill-label">≤ 60 days</span>
+            </div>
+            <div class="expiry-pill blue">
+              <span class="pill-count">{{ analyticsData.expiryInsights.within90Days }}</span>
+              <span class="pill-label">≤ 90 days</span>
+            </div>
+            <div class="expiry-pill dark">
+              <span class="pill-count">{{ analyticsData.expiryInsights.totalExpired }}</span>
+              <span class="pill-label">Expired</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         Row 2: Top Selling Drugs
+    ══════════════════════════════════ -->
+    <div class="pi-card mb-4">
+      <div class="pi-card-header">
+        <div class="d-flex align-items-center gap-2">
+          <span class="pi-section-dot green"></span>
+          <h5 class="pi-card-title">Top-Selling Drugs (Last 30 Days)</h5>
+        </div>
+        <span class="pi-badge-pill green">BY VOLUME</span>
+      </div>
+
+      <div *ngIf="analyticsData.topSelling.length === 0" class="text-center py-5 text-muted">
+        <i class="bi bi-inbox display-4 d-block mb-2 opacity-25"></i>
+        No sales data available yet.
+      </div>
+
+      <div *ngIf="analyticsData.topSelling.length > 0" class="top-sellers-list">
+        <div class="top-seller-item" *ngFor="let item of analyticsData.topSelling; let i = index">
+          <!-- Rank badge -->
+          <div class="rank-badge" [ngClass]="i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'default'">
+            {{ i + 1 }}
+          </div>
+          <!-- Drug info -->
+          <div class="seller-info">
+            <div class="seller-name">{{ item.productName }}</div>
+            <div class="seller-meta">{{ item.totalUnitsSold }} units sold · {{ item.currentStock }} in stock</div>
+          </div>
+          <!-- Volume bar -->
+          <div class="seller-bar-wrap">
+            <div class="seller-bar" [style.width.%]="getTopSellerPercent(item)"></div>
+          </div>
+          <!-- Stats -->
+          <div class="seller-stats">
+            <span class="seller-units">{{ item.totalUnitsSold }}</span>
+            <span class="seller-units-label">units</span>
+          </div>
+          <!-- Stock status -->
+          <span class="badge-status" [ngClass]="getStatusClass(item)">{{ getOptimizationStatus(item) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         Row 3: Upcoming Expirations Table
+    ══════════════════════════════════ -->
+    <div class="pi-card mb-4">
+      <div class="pi-card-header">
+        <div class="d-flex align-items-center gap-2">
+          <span class="pi-section-dot amber"></span>
+          <h5 class="pi-card-title">Upcoming Expirations</h5>
+        </div>
+        <span class="pi-badge-pill amber">ACTION REQUIRED</span>
+      </div>
+      <div class="expiry-urgency-grid">
+        <div class="expiry-urgency-card critical">
+          <div class="eu-icon"><i class="bi bi-exclamation-octagon-fill"></i></div>
+          <div class="eu-count">{{ analyticsData.expiryInsights.within30Days }}</div>
+          <div class="eu-title">Critical</div>
+          <div class="eu-sub">Expiring within 30 days</div>
+          <div class="eu-action">Prioritize for FEFO dispatch immediately</div>
+        </div>
+        <div class="expiry-urgency-card warning">
+          <div class="eu-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+          <div class="eu-count">{{ analyticsData.expiryInsights.within60Days }}</div>
+          <div class="eu-title">Monitor</div>
+          <div class="eu-sub">Expiring within 60 days</div>
+          <div class="eu-action">Schedule promotions or bulk dispensing</div>
+        </div>
+        <div class="expiry-urgency-card info">
+          <div class="eu-icon"><i class="bi bi-info-circle-fill"></i></div>
+          <div class="eu-count">{{ analyticsData.expiryInsights.within90Days }}</div>
+          <div class="eu-title">Plan Ahead</div>
+          <div class="eu-sub">Expiring within 90 days</div>
+          <div class="eu-action">Include in next procurement cycle</div>
+        </div>
+        <div class="expiry-urgency-card expired">
+          <div class="eu-icon"><i class="bi bi-x-circle-fill"></i></div>
+          <div class="eu-count">{{ analyticsData.expiryInsights.totalExpired }}</div>
+          <div class="eu-title">Expired</div>
+          <div class="eu-sub">Past expiration date</div>
+          <div class="eu-action">Remove from shelves &amp; log disposal</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         Row 4: Full Inventory Optimization
+    ══════════════════════════════════ -->
+    <div class="pi-card mb-4">
+      <div class="pi-card-header">
+        <div class="d-flex align-items-center gap-2">
+          <span class="pi-section-dot purple"></span>
+          <h5 class="pi-card-title">Full Inventory Optimization Report</h5>
+        </div>
+        <span class="pi-badge-pill purple">REORDER ANALYSIS</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table pi-table mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>MEDICATION</th>
+              <th>CURRENT STOCK</th>
+              <th>SALES (30D)</th>
+              <th>REORDER POINT</th>
+              <th>EFFICIENCY</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of analyticsData.stockOptimization">
+              <td>
+                <div class="fw-700 text-dark">{{ item.productName }}</div>
+                <div class="x-tiny text-muted">PHARMA-GRADE</div>
+              </td>
+              <td>
+                <span class="stock-pill">{{ item.currentStock }}</span>
+              </td>
+              <td class="text-primary fw-600">{{ item.totalUnitsSold }} units</td>
+              <td>
+                <div class="fw-700">{{ item.reorderPoint }}</div>
+                <div class="x-tiny text-muted">TARGET ROP</div>
+              </td>
+              <td style="width:160px;">
+                <div class="progress" style="height:5px; border-radius:4px; background:rgba(0,0,0,0.05);">
+                  <div class="progress-bar"
+                    [style.width.%]="getOptimizationRatio(item)"
+                    [ngClass]="item.status === 'CRITICAL' ? 'bg-danger' : 'bg-primary'">
+                  </div>
+                </div>
+                <div class="x-tiny text-muted mt-1">{{ getOptimizationRatio(item).toFixed(0) }}% turnover</div>
+              </td>
+              <td>
+                <span class="badge-status" [ngClass]="getStatusClass(item)">{{ getOptimizationStatus(item) }}</span>
+              </td>
+            </tr>
+            <tr *ngIf="analyticsData.stockOptimization.length === 0">
+              <td colspan="6" class="text-center py-4 text-muted">No inventory data available.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Procurement Advice Footer ── -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <div class="pi-advice-card blue">
+          <h6><i class="bi bi-star-fill me-2"></i>HIGH-VELOCITY MEDICATIONS</h6>
+          <div class="d-flex flex-wrap gap-2 mt-2 mb-3">
+            <span *ngFor="let item of (analyticsData.topSelling | slice:0:5)"
+              class="velocity-pill">{{ item.productName }}</span>
+          </div>
+          <p class="advice-text">These drugs represent the majority of your daily turnover. Prioritize in recurring orders to prevent stockouts.</p>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="pi-advice-card amber">
+          <h6><i class="bi bi-lightbulb-fill me-2"></i>PROCUREMENT RECOMMENDATIONS</h6>
+          <ul class="advice-list mt-2">
+            <li><i class="bi bi-check2-circle text-success"></i> Apply <strong>FEFO</strong> strategy for batches expiring in &lt;90 days.</li>
+            <li><i class="bi bi-dash-circle text-warning"></i> Hold orders for <strong>OVERSTOCK</strong> items to optimize cash flow.</li>
+            <li><i class="bi bi-arrow-repeat text-primary"></i> Reorder <strong>CRITICAL</strong> items within 48 hours to avoid stockout.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- Empty state if no data returned -->
+  <div *ngIf="!loading && !analyticsData" class="text-center py-5 text-muted">
+    <i class="bi bi-bar-chart display-3 d-block mb-3 opacity-25"></i>
+    <h5>No analytics data available</h5>
+    <p>Make sure inventory items are added to the system.</p>
+  </div>
+
+</div>

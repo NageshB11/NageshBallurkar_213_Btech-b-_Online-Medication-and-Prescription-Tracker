@@ -28,14 +28,14 @@ export class StockAlertPanelComponent implements OnInit {
     }
 
     loadAlerts(): void {
-        this.http.get<StockAlert[]>('http://localhost:8081/api/stock-alerts/active').subscribe({
+        this.http.get<StockAlert[]>('/api/stock-alerts/active').subscribe({
             next: (data) => { this.alerts = data; this.loading = false; },
             error: () => { this.loading = false; }
         });
     }
 
     resolve(id: number): void {
-        this.http.patch(`http://localhost:8081/api/stock-alerts/${id}/resolve`, {}).subscribe({
+        this.http.patch(`/api/stock-alerts/${id}/resolve`, {}).subscribe({
             next: () => { this.alerts = this.alerts.filter(a => a.id !== id); }
         });
     }

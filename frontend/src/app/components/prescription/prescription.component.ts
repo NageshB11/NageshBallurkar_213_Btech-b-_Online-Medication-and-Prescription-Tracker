@@ -108,6 +108,10 @@ export class PrescriptionComponent implements OnInit {
             expiryDate: data.expiryDate
         });
 
+        if (data.pharmacist) {
+            this.selectedPharmacistId = data.pharmacist.id;
+        }
+
         this.items.clear();
         if (data.items && data.items.length > 0) {
             data.items.forEach((item: any) => {
@@ -178,7 +182,8 @@ export class PrescriptionComponent implements OnInit {
             expiryDate: formValue.expiryDate,
             items: formValue.items,
             isDraft: isDraft,
-            overrideInteraction: this.overrideInteraction
+            overrideInteraction: this.overrideInteraction,
+            pharmacist: this.selectedPharmacistId ? { id: this.selectedPharmacistId } : null
         };
 
         const request$ = this.currentPrescriptionId

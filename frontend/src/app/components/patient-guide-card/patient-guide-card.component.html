@@ -1,90 +1,100 @@
 <div class="apollo-guide-card glass-card w-100" [class.expanded]="isExpanded">
     
     <ng-container *ngIf="!isLoading; else loadingTemplate">
-        <div class="d-flex flex-row align-items-stretch w-100 position-relative overflow-hidden" style="min-height: 110px;">
+        <div class="d-flex flex-column w-100 position-relative overflow-hidden">
             <!-- Soft background glow based on risk -->
             <div class="card-glow" [ngClass]="{'danger': drugProfile?.alcoholWarning || drugProfile?.pregnancyWarning}"></div>
 
-            <!-- Main Card Info (Fixed Left Side) -->
-            <div class="main-info-block px-4 py-3 d-flex align-items-center flex-shrink-0" (click)="toggleExpand()" style="cursor: pointer; width: 320px; z-index: 5;">
+            <!-- Main Card Info (Fixed Top) -->
+            <div class="main-info-block px-4 py-3 d-flex align-items-center w-100" (click)="toggleExpand()" style="cursor: pointer; z-index: 5;">
                 <div class="d-flex align-items-center gap-3 w-100">
-                    <!-- Left Shield -->
-                    <div style="font-size: 1.8rem; line-height: 1; flex-shrink: 0;">
+                    <!-- Left Shield Indicator -->
+                    <div class="indicator-icon">
                         <i class="bi bi-shield-fill-check" style="color: #0984e3;" *ngIf="!drugProfile?.alcoholWarning && !drugProfile?.pregnancyWarning"></i>
                         <div *ngIf="drugProfile?.alcoholWarning || drugProfile?.pregnancyWarning" class="d-flex align-items-center" style="position: relative;">
-                            <i class="bi bi-shield-fill" style="color: #ff6b6b;"></i>
-                            <i class="bi bi-exclamation-triangle-fill position-absolute bg-white rounded flex-center" style="color: #ea2027; font-size: 0.8rem; border: 1px solid white; bottom: 0; right: -4px;"></i>
+                            <i class="bi bi-shield-fill text-danger"></i>
+                            <i class="bi bi-exclamation-triangle-fill position-absolute bg-white rounded-circle flex-center" style="color: #ea2027; font-size: 0.7rem; bottom: -2px; right: -2px; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></i>
                         </div>
                     </div>
 
                     <!-- Text Column -->
                     <div class="flex-grow-1 overflow-hidden">
                         <div class="d-flex flex-column">
-                            <h4 class="fw-bold text-dark mb-0 text-truncate" style="font-size: 1.15rem; letter-spacing: -0.5px;">{{ medicineName }}</h4>
-                            <span class="badge rounded-pill align-self-start mt-1" style="background: rgba(9, 132, 227, 0.1); color: #0984e3; font-weight: 700; font-size: 0.65rem;">
-                                {{ drugProfile?.pharmacologicalCategory || 'CLINICAL THERAPY' }}
-                            </span>
+                            <h4 class="fw-bold text-dark mb-0 text-truncate" style="font-size: 1.1rem; letter-spacing: -0.4px;">{{ medicineName }}</h4>
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                <span class="badge-premium">
+                                    {{ drugProfile?.pharmacologicalCategory || 'CLINICAL THERAPY' }}
+                                </span>
+                                <span class="badge-id">Ref: {{ batchId }}</span>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Right Chevron -->
-                    <button class="btn-expand ms-auto d-flex align-items-center justify-content-center shadow-sm" [class.rotated]="isExpanded" style="background: white; border: 1.5px solid #006aff; width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%;">
-                        <i class="bi bi-chevron-right" style="color: #006aff; -webkit-text-stroke: 1px #006aff; font-size: 0.85rem;"></i>
+                    <button class="btn-expand ms-auto d-flex align-items-center justify-content-center" [class.rotated]="isExpanded">
+                        <i class="bi bi-chevron-down"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Animated Detail Panel (Horizontal Slide-Out to Right) -->
-            <div class="detail-panel-horizontal flex-grow-1" [@horizontalSlide]="isExpanded ? 'expanded' : 'collapsed'" style="z-index: 1;">
-                <div class="d-flex flex-row flex-nowrap h-100 panel-container bg-white border-start border-light" style="overflow-x: auto; scrollbar-width: none;">
-                    
-                    <!-- Column 1: COMPOSITION -->
-                    <div class="detail-column p-4 border-end border-light" style="min-width: 240px;">
-                        <div class="column-header mb-3 d-flex align-items-center gap-2">
-                            <i class="bi bi-info-circle-fill" style="color: #0984e3;"></i>
-                            <label class="label-tiny mb-0" style="color: #0984e3;">COMPOSITION</label>
+            <!-- Animated Detail Panel (Vertical Slide-Down) -->
+            <div class="detail-panel-vertical w-100" [@verticalExpansion]="isExpanded ? 'expanded' : 'collapsed'" style="z-index: 1;">
+                <div class="bg-white border-top border-light p-0">
+                    <div class="row g-0">
+                        <!-- Column 1: COMPOSITION -->
+                        <div class="col-md-4 p-4 border-end-md border-light detail-section">
+                            <div class="section-tag mb-3">
+                                <i class="bi bi-layers-half text-primary"></i>
+                                <span>COMPOSITION</span>
+                            </div>
+                            <div class="mb-3 d-flex flex-wrap gap-2">
+                                <span class="pill-badge" *ngFor="let ing of drugProfile?.activeIngredients">
+                                    {{ ing }}
+                                </span>
+                            </div>
+                            <div class="mt-4 pt-3 border-top border-light">
+                                <label class="label-tiny text-muted">MANUFACTURER</label>
+                                <span class="d-block fw-bold text-dark" style="font-size: 0.85rem;">{{ drugProfile?.manufacturer || 'N/A' }}</span>
+                                <span class="small text-muted d-block mt-1">{{ drugProfile?.countryOfOrigin }}</span>
+                            </div>
                         </div>
-                        <div class="mb-2 d-flex flex-wrap gap-1">
-                            <span class="badge rounded-pill border py-1 px-2" 
-                                  style="background: rgba(9, 132, 227, 0.05); color: #2d3436; font-size: 0.7rem;"
-                                  *ngFor="let ing of drugProfile?.activeIngredients">
-                                {{ ing }}
-                            </span>
-                        </div>
-                        <div class="mt-2">
-                            <label class="label-tiny mb-0 text-muted" style="font-size: 0.6rem;">MANUFACTURER</label>
-                            <span class="d-block fw-bold text-dark" style="font-size: 0.75rem;">{{ drugProfile?.manufacturer || 'N/A' }}</span>
-                        </div>
-                    </div>
 
-                    <!-- Column 2: USAGE PROTOCOL -->
-                    <div class="detail-column p-4 border-end border-light" style="min-width: 320px;">
-                        <div class="column-header mb-3 d-flex align-items-center gap-2">
-                            <i class="bi bi-check-circle-fill text-success"></i>
-                            <label class="label-tiny mb-0 text-success">PROTOCOL</label>
+                        <!-- Column 2: USAGE PROTOCOL -->
+                        <div class="col-md-4 p-4 border-end-md border-light detail-section">
+                            <div class="section-tag mb-3 text-success">
+                                <i class="bi bi-journal-check"></i>
+                                <span>USAGE PROTOCOL</span>
+                            </div>
+                            <div class="instruction-list">
+                                <div class="step-item mb-2" *ngFor="let step of drugProfile?.usageInstructions">
+                                    <i class="bi bi-dot"></i>
+                                    <span>{{ step }}</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-top border-light">
+                                <label class="label-tiny text-muted">MISSED DOSE ADVICE</label>
+                                <p class="small text-dark mb-0">{{ drugProfile?.missedDoseAdvice }}</p>
+                            </div>
                         </div>
-                        <div class="instruction-list">
-                            <div class="bullet-point mb-2 d-flex align-items-start gap-2" *ngFor="let step of drugProfile?.usageInstructions">
-                                <i class="bi bi-check2 text-success fw-bold" style="font-size: 0.9rem;"></i>
-                                <span class="small-text text-dark" style="font-size: 0.78rem;">{{ step }}</span>
+
+                        <!-- Column 3: SAFETY GATES -->
+                        <div class="col-md-4 p-4 detail-section">
+                            <div class="section-tag mb-3 text-danger">
+                                <i class="bi bi-shield-lock-fill"></i>
+                                <span>SAFETY GATES</span>
+                            </div>
+                            <div class="warning-box rounded-lg p-3">
+                                <div class="warning-item mb-2" *ngFor="let warning of drugProfile?.contraindications">
+                                    <i class="bi bi-shield-fill-exclamation me-2"></i>
+                                    <span>{{ warning }}</span>
+                                </div>
+                                <div class="warning-item text-muted mt-3 pt-2 border-top border-danger-subtle" *ngIf="drugProfile?.alcoholWarning">
+                                    <i class="bi bi-slash-circle me-2"></i>
+                                    <span>Avoid alcohol while on this medication.</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Column 3: CRITICAL WARNINGS -->
-                    <div class="detail-column p-4" style="min-width: 320px;">
-                        <div class="column-header mb-3 d-flex align-items-center gap-2">
-                            <i class="bi bi-exclamation-octagon-fill text-danger"></i>
-                            <label class="label-tiny mb-0 text-danger">SAFETY GATES</label>
-                        </div>
-                        <div class="warning-container rounded-3 p-2" style="background: rgba(234, 32, 39, 0.03); border: 1px solid rgba(234, 32, 39, 0.08);">
-                            <div class="bullet-point mb-2 d-flex align-items-start gap-2" *ngFor="let warning of drugProfile?.contraindications">
-                                <i class="bi bi-x-circle-fill text-danger" style="font-size: 0.8rem; margin-top: 2px;"></i>
-                                <span class="small-text text-dark fw-bold" style="font-size: 0.75rem;">{{ warning }}</span>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
         </div>

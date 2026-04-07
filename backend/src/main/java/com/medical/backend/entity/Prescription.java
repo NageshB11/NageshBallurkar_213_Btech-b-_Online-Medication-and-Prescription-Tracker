@@ -21,13 +21,8 @@ public class Prescription {
     @Version
     private Long version;
 
-    /**
-     * Semantic audit version string (e.g. "1.0", "1.1"). Updated after each
-     * meaningful lifecycle event.
-     */
     private String auditVersion = "1.0";
 
-    /** ID of the last user who modified this prescription */
     private Long updatedBy;
 
     @Transient
@@ -36,11 +31,6 @@ public class Prescription {
     @Transient
     private boolean overrideInteraction;
 
-    /**
-     * When true, the PrescriptionEntityListener will skip audit logging for this
-     * save.
-     * Use this to prevent @PostUpdate conflicts inside active JPA transactions.
-     */
     @Transient
     private boolean skipAuditListener = false;
 
@@ -61,9 +51,7 @@ public class Prescription {
         this.createdAt = createdAt;
     }
 
-    // private int version = 1; // Removed duplicate
-
-    private Long parentPrescriptionId; // For cloning/renewing
+    private Long parentPrescriptionId;
 
     @Column(name = "file_path", length = 512)
     private String filePath;
@@ -95,5 +83,21 @@ public class Prescription {
         PROCEEDED_TO_PHARMACIST,
         DISPENSED,
         EXPIRED
+    }
+
+    public boolean isSkipAuditListener() {
+        return skipAuditListener;
+    }
+
+    public void setSkipAuditListener(boolean skipAuditListener) {
+        this.skipAuditListener = skipAuditListener;
+    }
+
+    public String getAuditVersion() {
+        return auditVersion;
+    }
+
+    public void setAuditVersion(String auditVersion) {
+        this.auditVersion = auditVersion;
     }
 }

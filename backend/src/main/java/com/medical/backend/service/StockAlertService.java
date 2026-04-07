@@ -33,31 +33,53 @@ public class StockAlertService {
         Medicine medicine = medicineRepo.findById(medicineId)
                 .orElseThrow(() -> new RuntimeException("Medicine not found"));
 
-        if (newStock > 0)
-            return; // no alert needed
-
-        // Avoid duplicate unresolved alerts
-        if (alertRepo.existsByMedicine_IdAndIsResolvedFalse(medicineId))
+        if (newStock > medicine.getLowStockThreshold()) {
+            // Auto-resolve any existing alerts if stock is now above threshold
+            alertRepo.findFirstByMedicine_IdAndIsResolvedFalse(medicineId).ifPresent(alert -> {
+                alert.setResolved(true);
+                alert.setResolvedAt(LocalDateTime.now());
+                alertRepo.save(alert);
+            });
             return;
+        }
+
+        StockAlert.AlertType type = (newStock == 0) ? StockAlert.AlertType.OUT_OF_STOCK
+                : StockAlert.AlertType.LOW_STOCK;
+
+        // Avoid duplicate alerts of the same type
+        if (alertRepo.existsByMedicine_IdAndAlertTypeAndIsResolvedFalse(medicineId, type))
+            return;
+
+        // Resolve previous alert if type changed (e.g. LOW -> OUT)
+        alertRepo.findFirstByMedicine_IdAndIsResolvedFalse(medicineId).ifPresent(oldAlert -> {
+            oldAlert.setResolved(true);
+            oldAlert.setResolvedAt(LocalDateTime.now());
+            alertRepo.save(oldAlert);
+        });
 
         StockAlert alert = new StockAlert();
         alert.setMedicine(medicine);
-        alert.setAlertType(StockAlert.AlertType.OUT_OF_STOCK);
+        alert.setAlertType(type);
         alertRepo.save(alert);
+
+        String priority = (type == StockAlert.AlertType.OUT_OF_STOCK) ? "CRITICAL" : "WARNING";
+        String message = (type == StockAlert.AlertType.OUT_OF_STOCK)
+                ? "⚠️ OUT OF STOCK: " + medicine.getName() + " — patients have active schedules"
+                : "⚠️ LOW STOCK: " + medicine.getName() + " (Only " + newStock + " remaining)";
 
         // Notify all pharmacists
         userRepo.findAll().stream()
                 .filter(u -> u.getRole() != null && u.getRole().name().equals("PHARMACIST"))
-                .forEach(pharmacist -> notificationService.createNotification(pharmacist,
-                        "⚠️ OUT OF STOCK: " + medicine.getName() + " — patients have active schedules",
-                        "CRITICAL"));
+                .forEach(pharmacist -> notificationService.createNotification(pharmacist, message, priority));
 
-        // Notify affected patients
-        List<User> affectedPatients = itemRepo.findPatientsByActiveMedicine(medicineId);
-        for (User patient : affectedPatients) {
-            notificationService.createNotification(patient,
-                    medicine.getName() + " is currently out of stock in pharmacy. Please contact your pharmacist.",
-                    "WARNING");
+        // Notify affected patients only if OUT_OF_STOCK
+        if (type == StockAlert.AlertType.OUT_OF_STOCK) {
+            List<User> affectedPatients = itemRepo.findPatientsByActiveMedicine(medicineId);
+            for (User patient : affectedPatients) {
+                notificationService.createNotification(patient,
+                        medicine.getName() + " is currently out of stock in pharmacy. Please contact your pharmacist.",
+                        "WARNING");
+            }
         }
     }
 

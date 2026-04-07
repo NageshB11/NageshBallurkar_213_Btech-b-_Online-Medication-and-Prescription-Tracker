@@ -10,12 +10,16 @@ public class PatientRiskDTO {
     private int missedDoses;
     private String lastPharmacistName;
     private java.time.LocalDateTime lastDispensedAt;
+    private int prescriptionCount;
+    @com.fasterxml.jackson.annotation.JsonProperty("hasWorkload")
+    private boolean hasWorkload;
 
-    public PatientRiskDTO(User patient, int adherenceScore, int missedDoses) {
+    public PatientRiskDTO(User patient, int adherenceScore, int missedDoses, int prescriptionCount) {
         this.patientId = patient.getId();
         this.patientName = patient.getFullName();
         this.adherenceScore = adherenceScore;
         this.missedDoses = missedDoses;
+        this.prescriptionCount = prescriptionCount;
         this.riskLevel = calculateRiskLevel(adherenceScore);
     }
 
@@ -62,5 +66,21 @@ public class PatientRiskDTO {
 
     public void setLastDispensedAt(java.time.LocalDateTime lastDispensedAt) {
         this.lastDispensedAt = lastDispensedAt;
+    }
+
+    public int getPrescriptionCount() {
+        return prescriptionCount;
+    }
+
+    public void setPrescriptionCount(int prescriptionCount) {
+        this.prescriptionCount = prescriptionCount;
+    }
+
+    public boolean isHasWorkload() {
+        return hasWorkload;
+    }
+
+    public void setHasWorkload(boolean hasWorkload) {
+        this.hasWorkload = hasWorkload;
     }
 }

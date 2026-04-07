@@ -1,0 +1,52 @@
+<div class="adherence-matrix-container">
+    <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Loading Adherence Matrix...</p>
+    </div>
+
+    <div *ngIf="!loading && dates.length > 0" class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+        <div class="col" *ngFor="let day of dates">
+            <div class="date-block glass-card" 
+                 [class.day-complete]="isDayComplete(day)"
+                 [class.expanded]="expandedDate === day.date"
+                 (click)="toggleDay(day.date)">
+                <div class="date-header d-flex justify-content-between align-items-center mb-0">
+                    <span class="date-label">{{ day.date | date:'EEE, MMM d' }}</span>
+                    <i *ngIf="isDayComplete(day)" class="bi bi-check-circle-fill text-success glow-icon"></i>
+                    <i *ngIf="!isDayComplete(day)" class="bi" [ngClass]="expandedDate === day.date ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                </div>
+
+                <div class="meal-buttons d-flex flex-column gap-2 mt-3" *ngIf="expandedDate === day.date">
+                    <button *ngFor="let meal of day.meals" 
+                            class="btn meal-btn d-flex align-items-center justify-content-between p-2"
+                            [disabled]="meal.taken"
+                            [ngClass]="{'bg-green text-white': meal.taken, 'bg-gray text-muted': !meal.taken}"
+                            (click)="onTakeDose($event, meal, day)">
+                        <span class="d-flex align-items-center gap-2">
+                            <i class="bi" [ngClass]="{
+                                'bi-egg-fried': meal.mealSlot === 'BREAKFAST' || meal.meal === 'BREAKFAST',
+                                'bi-box-seam': meal.mealSlot === 'LUNCH' || meal.meal === 'LUNCH',
+                                'bi-moon-stars': meal.mealSlot === 'DINNER' || meal.meal === 'DINNER'
+                            }"></i>
+                            {{ meal.mealSlot || meal.meal }}
+                        </span>
+                        <i class="bi" [ngClass]="meal.taken ? 'bi-check-lg' : 'bi-circle'"></i>
+                    </button>
+                </div>
+                
+                <div class="completion-bar mt-3" *ngIf="!isDayComplete(day)">
+                    <div class="progress" style="height: 4px; background: rgba(0,0,0,0.05);">
+                        <div class="progress-bar bg-primary" 
+                             [style.width.%]="(day.meals | filterTaken).length / day.meals.length * 100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="!loading && dates.length === 0" class="text-center py-5 glass-card">
+        <i class="bi bi-calendar-x display-4 text-muted mb-3"></i>
+        <h5>No Dosage Schedule Found</h5>
+        <p class="text-muted">Once your prescription is active, your adherence matrix will appear here.</p>
+    </div>
+</div>

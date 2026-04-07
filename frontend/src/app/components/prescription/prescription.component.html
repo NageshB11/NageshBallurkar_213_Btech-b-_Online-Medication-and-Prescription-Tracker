@@ -158,7 +158,19 @@
                                     Valid email is required.
                                 </div>
                             </div>
-
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary small text-uppercase">Assigned Pharmacist (Optional)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-person-badge"></i></span>
+                                    <select class="form-select border-start-0 ps-0 font-mono small" [(ngModel)]="selectedPharmacistId" [ngModelOptions]="{standalone: true}">
+                                        <option [ngValue]="null">Select a Verified Pharmacist</option>
+                                        <option *ngFor="let p of availablePharmacists" [ngValue]="p.id">
+                                            {{ p.fullName }} ({{ p.email }}) ({{ p.pharmacyName || 'Independent' }})
+                                        </option>
+                                    </select>
+                                </div>
+                                <small class="text-muted mt-1 d-block" style="font-size: 0.7rem;">Only verified pharmacists are listed.</small>
+                            </div>
                         </div>
 
                         <!-- Medication Section -->
@@ -303,14 +315,6 @@
                             }">{{ currentPrescriptionStatus }}</span>
                         </div>
                         <div class="d-flex align-items-center" *ngIf="currentPrescriptionStatus !== 'ISSUED'">
-                            <div class="me-3">
-                                <select class="form-select form-select-sm" [(ngModel)]="selectedPharmacistId"
-                                    [ngModelOptions]="{standalone: true}">
-                                    <option [ngValue]="null">Select a Pharmacist (Optional)</option>
-                                    <option *ngFor="let p of availablePharmacists" [ngValue]="p.id">{{ p.fullName }} -
-                                        {{ p.email }}</option>
-                                </select>
-                            </div>
                             <button class="btn btn-success btn-validate-glow rounded-pill px-4"
                                 (click)="validatePrescription()">
                                 <i class="bi bi-shield-check me-2"></i> Validate & Sign

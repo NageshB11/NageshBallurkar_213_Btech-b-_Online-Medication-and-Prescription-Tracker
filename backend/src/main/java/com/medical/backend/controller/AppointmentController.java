@@ -2,6 +2,7 @@ package com.medical.backend.controller;
 
 import com.medical.backend.entity.Appointment;
 import com.medical.backend.entity.User;
+import com.medical.backend.entity.Role;
 import com.medical.backend.service.AppointmentService;
 import com.medical.backend.config.JwtUtil;
 import com.medical.backend.repository.UserRepository;
@@ -31,12 +32,28 @@ public class AppointmentController {
     public ResponseEntity<Appointment> requestAppointment(@RequestHeader("Authorization") String token,
             @RequestBody Map<String, Object> request) {
         String email = jwtUtil.extractUsername(token.substring(7));
-        User patient = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Long patientId = patient.getId();
+        Long patientId;
+        Long doctorId;
 
-        Long doctorId = Long.valueOf(request.get("doctorId").toString());
+        // If a doctor is logged in, they are suggesting an appointment for a patient
+        if (currentUser.getRole() == Role.DOCTOR) {
+            if (!request.containsKey("patientId")) {
+                throw new RuntimeException("patientId is required for doctor-initiated requests");
+            }
+            patientId = Long.valueOf(request.get("patientId").toString());
+            doctorId = currentUser.getId();
+        } else {
+            // Patient is requesting an appointment with a doctor
+            patientId = currentUser.getId();
+            if (!request.containsKey("doctorId")) {
+                throw new RuntimeException("doctorId is required for patient-initiated requests");
+            }
+            doctorId = Long.valueOf(request.get("doctorId").toString());
+        }
+
         String dateStr = request.get("appointmentDate").toString();
         LocalDateTime date = LocalDateTime.parse(dateStr);
         String notes = (String) request.get("notes");

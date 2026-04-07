@@ -1,0 +1,87 @@
+.adherence-matrix-container {
+    padding: 1rem 0;
+}
+
+.date-block {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 24px;
+    padding: 1.2rem;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    height: auto;
+    cursor: pointer;
+}
+
+.date-block:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.date-block.expanded {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: #0984e3;
+    transform: scale(1.02);
+}
+
+.date-label {
+    font-weight: 700;
+    color: #2d3436;
+    font-size: 0.95rem;
+}
+
+.meal-btn {
+    border-radius: 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1.5px solid rgba(255,255,255,0.8);
+    transition: all 0.3s ease;
+    text-transform: capitalize;
+}
+
+.meal-btn:not(:disabled):hover {
+    background: white;
+    transform: scale(1.02);
+    border-color: #0984e3;
+    color: #0984e3;
+}
+
+.meal-btn.bg-green {
+    background: #00b894 !important;
+    border-color: #00b894 !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 184, 148, 0.25);
+}
+
+.meal-btn.bg-gray {
+    background: rgba(241, 242, 246, 0.7) !important;
+    border-color: #dfe4ea !important;
+}
+
+/* Day Complete Glow Effect */
+.day-complete {
+    border-color: #00b894 !important;
+    box-shadow: 0 0 20px rgba(0, 184, 148, 0.2) !important;
+    background: rgba(0, 184, 148, 0.05) !important;
+    animation: glow-pulse 2s infinite;
+}
+
+.glow-icon {
+    filter: drop-shadow(0 0 5px rgba(0, 184, 148, 0.5));
+}
+
+@keyframes glow-pulse {
+    0% { box-shadow: 0 0 15px rgba(0, 184, 148, 0.15); }
+    50% { box-shadow: 0 0 30px rgba(0, 184, 148, 0.35); }
+    100% { box-shadow: 0 0 15px rgba(0, 184, 148, 0.15); }
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    transition: width 0.6s ease;
+}

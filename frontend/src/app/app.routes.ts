@@ -24,16 +24,47 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
-        path: 'doctor-workspace',
-        loadComponent: () => import('./components/doctor-dashboard/doctor-dashboard.component').then(m => m.DoctorDashboardComponent),
+        path: 'doctor',
+        loadComponent: () => import('./components/doctor-layout/doctor-layout.component').then(m => m.DoctorLayoutComponent),
         canActivate: [authGuard, roleGuard],
-        data: { role: 'DOCTOR' }
+        data: { role: 'DOCTOR' },
+        children: [
+            {
+                path: 'dashboard',
+                loadComponent: () => import('./components/doctor-dashboard/doctor-dashboard.component').then(m => m.DoctorDashboardComponent)
+            },
+            {
+                path: 'appointments',
+                loadComponent: () => import('./components/doctor-appointments/doctor-appointments.component').then(m => m.DoctorAppointmentsComponent)
+            },
+            {
+                path: 'analytics',
+                loadComponent: () => import('./components/doctor-analytics/doctor-analytics.component').then(m => m.DoctorAnalyticsComponent)
+            },
+            {
+                path: 'patients',
+                loadComponent: () => import('./components/my-patients/my-patients.component').then(m => m.MyPatientsComponent)
+            },
+            {
+                path: 'patients/:id',
+                loadComponent: () => import('./components/patient-profile/patient-profile.component').then(m => m.PatientProfileComponent)
+            }
+        ]
+    },
+    {
+        path: 'doctor-workspace',
+        redirectTo: 'doctor/dashboard',
+        pathMatch: 'full'
     },
     {
         path: 'doctor-appointments',
-        loadComponent: () => import('./components/doctor-appointments/doctor-appointments.component').then(m => m.DoctorAppointmentsComponent),
-        canActivate: [authGuard, roleGuard],
-        data: { role: 'DOCTOR' }
+        redirectTo: 'doctor/appointments',
+        pathMatch: 'full'
+    },
+    {
+        path: 'patients',
+        redirectTo: 'doctor/patients',
+        pathMatch: 'full'
     },
     {
         path: 'issue-prescription',
@@ -70,52 +101,58 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
-        path: 'patients',
-        loadComponent: () => import('./components/my-patients/my-patients.component').then(m => m.MyPatientsComponent),
+        path: 'admin',
+        loadComponent: () => import('./components/admin-layout/admin-layout.component').then(m => m.AdminLayoutComponent),
         canActivate: [authGuard, roleGuard],
-        data: { role: 'DOCTOR' }
-    },
-    {
-        path: 'patients/:id',
-        loadComponent: () => import('./components/patient-profile/patient-profile.component').then(m => m.PatientProfileComponent),
-        canActivate: [authGuard, roleGuard],
-        data: { role: 'DOCTOR' }
+        data: { role: 'ADMIN' },
+        children: [
+            {
+                path: 'dashboard',
+                loadComponent: () => import('./components/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent)
+            },
+            {
+                path: 'verification',
+                loadComponent: () => import('./components/verification-queue/verification-queue.component').then(m => m.VerificationQueueComponent)
+            },
+            {
+                path: 'audit-trace',
+                loadComponent: () => import('./components/audit-trace/audit-trace.component').then(m => m.AuditTraceComponent)
+            },
+            {
+                path: 'patient-history',
+                loadComponent: () => import('./components/patient-audit-timeline/patient-audit-timeline.component').then(m => m.PatientAuditTimelineComponent)
+            },
+            {
+                path: '',
+                redirectTo: 'dashboard',
+                pathMatch: 'full'
+            }
+        ]
     },
     {
         path: 'pharmacist',
-        loadComponent: () => import('./components/pharmacist-dashboard/pharmacist-dashboard.component').then(m => m.PharmacistDashboardComponent),
+        loadComponent: () => import('./components/pharmacist-layout/pharmacist-layout.component').then(m => m.PharmacistLayoutComponent),
         canActivate: [authGuard, roleGuard],
-        data: { role: 'PHARMACIST' }
-    },
-    {
-        path: 'pharmacist/inventory',
-        loadComponent: () => import('./components/inventory-dashboard-v2/inventory-dashboard-v2.component').then(m => m.InventoryDashboardV2Component),
-        canActivate: [authGuard, roleGuard],
-        data: { role: 'PHARMACIST' }
-    },
-    {
-        path: 'admin',
-        loadComponent: () => import('./components/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
-        canActivate: [authGuard, roleGuard],
-        data: { role: 'ADMIN' }
-    },
-    {
-        path: 'admin/verification',
-        loadComponent: () => import('./components/verification-queue/verification-queue.component').then(m => m.VerificationQueueComponent),
-        canActivate: [authGuard, roleGuard],
-        data: { role: 'ADMIN' }
-    },
-    {
-        path: 'admin/audit-trace',
-        loadComponent: () => import('./components/audit-trace/audit-trace.component').then(m => m.AuditTraceComponent),
-        canActivate: [authGuard, roleGuard],
-        data: { role: 'ADMIN' }
-    },
-    {
-        path: 'admin/patient-history',
-        loadComponent: () => import('./components/patient-audit-timeline/patient-audit-timeline.component').then(m => m.PatientAuditTimelineComponent),
-        canActivate: [authGuard, roleGuard],
-        data: { role: 'ADMIN' }
+        data: { role: 'PHARMACIST' },
+        children: [
+            {
+                path: 'dashboard',
+                loadComponent: () => import('./components/pharmacist-dashboard/pharmacist-dashboard.component').then(m => m.PharmacistDashboardComponent)
+            },
+            {
+                path: 'inventory',
+                loadComponent: () => import('./components/inventory-dashboard-v2/inventory-dashboard-v2.component').then(m => m.InventoryDashboardV2Component)
+            },
+            {
+                path: 'analytics',
+                loadComponent: () => import('./components/pharmacy-intelligence/pharmacy-intelligence.component').then(m => m.PharmacyIntelligenceComponent)
+            },
+            {
+                path: '',
+                redirectTo: 'dashboard',
+                pathMatch: 'full'
+            }
+        ]
     },
     {
         path: 'pending-verification',

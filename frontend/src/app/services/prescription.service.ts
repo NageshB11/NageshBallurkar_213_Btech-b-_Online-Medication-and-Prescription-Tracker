@@ -9,7 +9,7 @@ import { PrescriptionAudit } from '../models/prescription-audit.model';
     providedIn: 'root'
 })
 export class PrescriptionService {
-    private apiUrl = 'http://localhost:8081/api/prescriptions';
+    private apiUrl = '/api/prescriptions';
 
     constructor(private http: HttpClient) { }
 
@@ -74,6 +74,12 @@ export class PrescriptionService {
         const token = localStorage.getItem('authToken');
         const headers = { 'Authorization': `Bearer ${token}` };
         return this.http.get<PrescriptionAudit[]>(`${this.apiUrl}/${id}/audit`, { headers });
+    }
+
+    getMyAuditTimeline(): Observable<any[]> {
+        const token = localStorage.getItem('authToken');
+        const headers = { 'Authorization': `Bearer ${token}` };
+        return this.http.get<any[]>(`${this.apiUrl}/my-audit-timeline`, { headers });
     }
 
     downloadPrescription(id: number): Observable<Blob> {

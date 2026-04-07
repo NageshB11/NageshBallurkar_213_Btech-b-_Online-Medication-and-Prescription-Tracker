@@ -15,7 +15,7 @@ export interface Notification {
     providedIn: 'root'
 })
 export class NotificationService {
-    private apiUrl = 'http://localhost:8081/api/notifications';
+    private apiUrl = '/api/notifications';
 
     constructor(private http: HttpClient) { }
 
@@ -29,5 +29,11 @@ export class NotificationService {
         const token = localStorage.getItem('authToken');
         const headers = { 'Authorization': `Bearer ${token}` };
         return this.http.put<Notification>(`${this.apiUrl}/${id}/read`, {}, { headers });
+    }
+
+    sendNotification(userId: number, message: string, type: string = 'MESSAGE'): Observable<Notification> {
+        const token = localStorage.getItem('authToken');
+        const headers = { 'Authorization': `Bearer ${token}` };
+        return this.http.post<Notification>(`${this.apiUrl}/send`, { userId, message, type }, { headers });
     }
 }

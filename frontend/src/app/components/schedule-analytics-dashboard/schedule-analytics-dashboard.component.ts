@@ -45,7 +45,7 @@ export class ScheduleAnalyticsDashboardComponent implements OnInit, AfterViewIni
     ngAfterViewInit(): void { }
 
     loadData(): void {
-        this.http.get<AdherenceDTO[]>('http://localhost:8081/api/analytics/schedules/adherence').subscribe({
+        this.http.get<AdherenceDTO[]>('/api/analytics/schedules/adherence').subscribe({
             next: (data) => {
                 this.adherenceData = data;
                 this.highRiskPatients = data.filter(d => d.highMissRate);
@@ -55,7 +55,7 @@ export class ScheduleAnalyticsDashboardComponent implements OnInit, AfterViewIni
             error: () => { this.loading = false; }
         });
 
-        this.http.get<TopMedicine[]>('http://localhost:8081/api/analytics/schedules/top-medicines').subscribe({
+        this.http.get<TopMedicine[]>('/api/analytics/schedules/top-medicines').subscribe({
             next: (data) => { this.topMedicines = data; }
         });
     }

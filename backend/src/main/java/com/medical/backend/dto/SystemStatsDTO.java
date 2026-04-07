@@ -1,12 +1,12 @@
 package com.medical.backend.dto;
 
-import lombok.AllArgsConstructor;
+import com.medical.backend.entity.AlertLog;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 import java.util.Map;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class SystemStatsDTO {
     private long totalPatients;
@@ -17,6 +17,28 @@ public class SystemStatsDTO {
     private long activeUsers;
     private double dispensingRate;
 
-    private Map<String, Double> pharmacistPerformance; // Name -> Avg Hours to Dispense
-    private Map<String, Long> globalAdherence; // "Success" -> count, "Missed" -> count
+    private Map<String, Double> pharmacistPerformance;
+    private Map<String, Long> globalAdherence;
+
+    private long pendingVerificationsCount;
+
+    // New: System Alert Feed
+    private List<AlertLog> recentAlerts;
+
+    // Constructor without alerts (backward-compatible)
+    public SystemStatsDTO(long totalPatients, long totalDoctors, long totalPharmacists,
+                          long totalPrescriptions, long dispensedPrescriptions, long activeUsers,
+                          double dispensingRate, Map<String, Double> pharmacistPerformance,
+                          Map<String, Long> globalAdherence, long pendingVerificationsCount) {
+        this.totalPatients = totalPatients;
+        this.totalDoctors = totalDoctors;
+        this.totalPharmacists = totalPharmacists;
+        this.totalPrescriptions = totalPrescriptions;
+        this.dispensedPrescriptions = dispensedPrescriptions;
+        this.activeUsers = activeUsers;
+        this.dispensingRate = dispensingRate;
+        this.pharmacistPerformance = pharmacistPerformance;
+        this.globalAdherence = globalAdherence;
+        this.pendingVerificationsCount = pendingVerificationsCount;
+    }
 }

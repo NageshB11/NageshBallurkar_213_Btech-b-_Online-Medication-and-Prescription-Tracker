@@ -1,46 +1,68 @@
-<div class="glass-panel p-6">
-    <h2 class="text-2xl font-bold mb-4 text-gray-800">Appointment Requests</h2>
-
-    <div *ngIf="appointments.length === 0" class="text-gray-500">
-        No pending appointment requests.
-    </div>
-
-    <div class="space-y-4">
-        <div *ngFor="let apt of appointments"
-            class="bg-white rounded-xl p-4 shadow-sm flex justify-between items-center transition hover:shadow-md">
-            <!-- Patient Info -->
-            <div class="flex flex-col">
-                <span class="font-semibold text-lg">{{ apt.patient?.fullName || 'Unknown Patient' }} <span
-                        *ngIf="apt.patient?.email" class="text-sm font-normal text-gray-500 ml-1">({{ apt.patient?.email
-                        }})</span></span>
-                <span class="text-sm text-gray-500">{{ apt.appointmentDate | date:'medium' }}</span>
-                <p class="text-gray-600 mt-1 italic" *ngIf="apt.notes">"{{ apt.notes }}"</p>
-                <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide mt-2 w-max"
-                    [ngClass]="statusBadges[apt.status]">
-                    {{ apt.status }}
-                </span>
+<div class="appointments-container p-lg-4">
+    <div class="glass-panel p-4 p-md-5">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h2 class="h2 mb-1">Appointment Requests</h2>
+                <p class="text-secondary mb-0">Manage and process patient scheduling requests</p>
             </div>
+            <div class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill">
+                {{ appointments.length }} Total Requests
+            </div>
+        </div>
 
-            <!-- Actions -->
-            <div class="d-flex align-items-center gap-3">
-                <div *ngIf="apt.status === 'REQUESTED'" class="flex gap-2">
-                    <button (click)="approve(apt.id!)"
-                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                        Approve
-                    </button>
-                    <button (click)="reject(apt.id!)"
-                        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                        Reject
-                    </button>
+        <div *ngIf="appointments.length === 0" class="empty-state">
+            <i class="bi bi-calendar-x empty-icon"></i>
+            <h4 class="text-secondary">No pending requests</h4>
+            <p class="text-muted">You're all caught up with your appointments.</p>
+        </div>
+
+        <div class="appointment-list">
+            <div *ngFor="let apt of appointments" class="appointment-card">
+                <!-- Patient Info Section -->
+                <div class="info-section">
+                    <div class="patient-name">
+                        {{ apt.patient?.fullName || 'Unknown Patient' }}
+                        <span *ngIf="apt.patient?.email" class="patient-email ms-2">
+                            &lt;{{ apt.patient?.email }}&gt;
+                        </span>
+                    </div>
+                    
+                    <div class="appointment-time">
+                        <i class="bi bi-clock-history"></i>
+                        {{ apt.appointmentDate | date:'EEEE, MMM d, y • h:mm a' }}
+                    </div>
+
+                    <div *ngIf="apt.notes" class="notes-container">
+                        <p class="notes-text">
+                            <i class="bi bi-quote me-1"></i>{{ apt.notes }}
+                        </p>
+                    </div>
+
+                    <div class="mt-3">
+                        <span [class]="statusBadges[apt.status]">
+                            {{ apt.status }}
+                        </span>
+                    </div>
                 </div>
 
-                <div *ngIf="apt.status === 'APPROVED' || apt.status === 'COMPLETED'">
-                    <button (click)="issuePrescription(apt.patient?.email)"
-                        class="btn btn-primary d-flex align-items-center shadow-sm py-2 px-3">
-                        <i class="bi bi-file-earmark-medical me-2"></i> Issue Prescription
-                    </button>
+                <!-- Actions Section -->
+                <div class="action-buttons">
+                    <ng-container *ngIf="apt.status === 'REQUESTED'">
+                        <button (click)="approve(apt.id!)" class="btn-action btn-approve">
+                            <i class="bi bi-check-lg"></i> Approve
+                        </button>
+                        <button (click)="reject(apt.id!)" class="btn-action btn-reject">
+                            <i class="bi bi-x-lg"></i> Reject
+                        </button>
+                    </ng-container>
+
+                    <ng-container *ngIf="apt.status === 'APPROVED' || apt.status === 'COMPLETED'">
+                        <button (click)="issuePrescription(apt.patient?.email)" class="btn-action btn-prescription">
+                            <i class="bi bi-file-earmark-medical"></i> Issue Prescription
+                        </button>
+                    </ng-container>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</div>

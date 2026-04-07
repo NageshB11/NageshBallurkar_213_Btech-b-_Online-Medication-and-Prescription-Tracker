@@ -10,15 +10,14 @@ import { ExternalDrugService, DrugProfile } from '../../services/external-drug.s
   templateUrl: './patient-guide-card.component.html',
   styleUrls: ['./patient-guide-card.component.css'],
   animations: [
-    trigger('horizontalSlide', [
+    trigger('verticalExpansion', [
       state('collapsed', style({
-        width: '0px',
+        height: '0px',
         opacity: 0,
-        overflow: 'hidden',
-        whiteSpace: 'nowrap'
+        overflow: 'hidden'
       })),
       state('expanded', style({
-        width: '100%',
+        height: '*',
         opacity: 1
       })),
       transition('collapsed <=> expanded', [

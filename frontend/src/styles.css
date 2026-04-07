@@ -134,6 +134,7 @@ span {
   font-weight: 700;
   font-size: 1.5rem;
   letter-spacing: -0.5px;
+  color: #ffffff !important;
 }
 
 .nav-link {

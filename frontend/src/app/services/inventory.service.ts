@@ -18,7 +18,7 @@ export interface Inventory {
     providedIn: 'root'
 })
 export class InventoryService {
-    private apiUrl = 'http://localhost:8081/api/inventory';
+    private apiUrl = '/api/inventory';
 
     constructor(private http: HttpClient, private authService: AuthService) { }
 

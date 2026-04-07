@@ -16,10 +16,89 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    /* NUCLEAR OVERLAY SUPPRESSION */
+    .modal-backdrop, .drawer-overlay, .m-360-overlay, .backdrop, .glass-overlay { 
+      display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important;
+    }
+  </style>
 </head>
 
 <body>
-  <app-root></app-root>
+  <app-root>
+    <!-- Inline splash – rendered instantly, replaced when Angular bootstraps -->
+    <style>
+      .medtrack-splash {
+        position: fixed; inset: 0; z-index: 99999;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        background: linear-gradient(145deg, #f0f6ff 0%, #e8f4f8 50%, #f8fafc 100%);
+        font-family: 'Outfit', 'Inter', sans-serif;
+        overflow: hidden;
+      }
+      .medtrack-splash::before {
+        content: ''; position: absolute; inset: 0;
+        background: radial-gradient(circle at 20% 80%, rgba(0,86,179,.06) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(0,170,255,.06) 0%, transparent 50%);
+      }
+      .splash-logo-wrap {
+        position: relative; width: 80px; height: 80px;
+        margin-bottom: 28px;
+        animation: splash-float 2.5s ease-in-out infinite;
+      }
+      .splash-logo-icon {
+        width: 80px; height: 80px; border-radius: 22px;
+        background: linear-gradient(135deg, #0056b3 0%, #00aaff 100%);
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 12px 40px -8px rgba(0,86,179,.3);
+      }
+      .splash-logo-icon svg { width: 42px; height: 42px; }
+      .splash-brand {
+        font-size: 1.6rem; font-weight: 700; letter-spacing: -0.03em;
+        color: #1e293b; margin-bottom: 6px; position: relative;
+      }
+      .splash-brand span { color: #0056b3; }
+      .splash-tagline {
+        font-family: 'Inter', sans-serif; font-size: 0.82rem;
+        color: #94a3b8; font-weight: 500; letter-spacing: 0.04em;
+        text-transform: uppercase; margin-bottom: 32px;
+      }
+      .splash-bar-track {
+        width: 200px; height: 4px; border-radius: 4px;
+        background: rgba(0,86,179,.08); overflow: hidden;
+      }
+      .splash-bar-fill {
+        width: 40%; height: 100%; border-radius: 4px;
+        background: linear-gradient(90deg, #0056b3, #00aaff);
+        animation: splash-slide 1.2s ease-in-out infinite;
+      }
+      @keyframes splash-float {
+        0%,100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+      }
+      @keyframes splash-slide {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(400%); }
+      }
+    </style>
+    <div class="medtrack-splash">
+      <div class="splash-logo-wrap">
+        <div class="splash-logo-icon">
+          <!-- Medical cross + pulse icon -->
+          <svg viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="15" y="6" width="12" height="30" rx="3" fill="rgba(255,255,255,.9)"/>
+            <rect x="6" y="15" width="30" height="12" rx="3" fill="rgba(255,255,255,.9)"/>
+            <path d="M8 21h6l2-5 3 10 2-7 2 4h5l3-2h3" stroke="rgba(255,255,255,.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="splash-brand">Med<span>Track</span> Plus</div>
+      <div class="splash-tagline">Smart Healthcare Platform</div>
+      <div class="splash-bar-track">
+        <div class="splash-bar-fill"></div>
+      </div>
+    </div>
+  </app-root>
 </body>
 
 </html>

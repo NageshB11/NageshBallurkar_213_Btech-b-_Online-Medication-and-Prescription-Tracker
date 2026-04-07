@@ -12,17 +12,56 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+import com.medical.backend.service.AuditReportingService;
+
 @RestController
 @RequestMapping("/api/admin")
 @CrossOrigin(origins = "*")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     @Autowired
     private AdminService adminService;
 
+    @Autowired
+    private AuditReportingService auditReportingService;
+
+    @Autowired
+    private com.medical.backend.service.AdminAnalyticsService adminAnalyticsService;
+
     @GetMapping("/stats")
     public ResponseEntity<SystemStatsDTO> getStats() {
         return ResponseEntity.ok(adminService.getSystemStats());
+    }
+
+    @GetMapping("/census")
+    public ResponseEntity<java.util.Map<String, Object>> getPlatformCensus() {
+        return ResponseEntity.ok(adminAnalyticsService.getPlatformCensus());
+    }
+
+    @GetMapping("/reports/export")
+    public ResponseEntity<byte[]> exportAuditReport(
+            @RequestParam(value = "type", defaultValue = "AUDIT") String type,
+            @RequestParam(value = "start", required = false) String start,
+            @RequestParam(value = "end", required = false) String end) {
+        
+        byte[] pdfBytes;
+        String filename;
+
+        if ("DISBURSEMENT".equalsIgnoreCase(type)) {
+            pdfBytes = auditReportingService.generateDisbursementReport(start, end);
+            filename = "Pharmacy_Disbursement_Report.pdf";
+        } else {
+            pdfBytes = auditReportingService.generateAuditReport(start, end);
+            filename = "Official_Audit_Report.pdf";
+        }
+        
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("filename", filename);
+        
+        return new ResponseEntity<>(pdfBytes, headers, org.springframework.http.HttpStatus.OK);
     }
 
     @GetMapping("/users")
@@ -68,5 +107,35 @@ public class AdminController {
     @PostMapping("/verify/{userId}")
     public ResponseEntity<User> verifyUser(@PathVariable("userId") Long userId) {
         return ResponseEntity.ok(adminService.verifyUser(userId));
+    }
+
+    @DeleteMapping("/reject/{userId}")
+    public ResponseEntity<Void> rejectUser(@PathVariable("userId") Long userId) {
+        adminService.rejectUser(userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/users/{userId}/toggle-status")
+    public ResponseEntity<User> toggleUserStatus(@PathVariable("userId") Long userId) {
+        return ResponseEntity.ok(adminService.toggleUserStatus(userId));
+    }
+
+    @PutMapping("/users/{userId}/update-profile")
+    public ResponseEntity<User> updatePatientDetails(@PathVariable("userId") Long userId, @RequestBody java.util.Map<String, String> details) {
+        return ResponseEntity.ok(adminService.updatePatientDetails(userId, details));
+    }
+    @PostMapping("/users/{userId}/reset-password")
+    public ResponseEntity<User> resetPassword(@PathVariable("userId") Long userId) {
+        return ResponseEntity.ok(adminService.resetPassword(userId));
+    }
+    @GetMapping("/users/{userId}/audit-trace")
+    public ResponseEntity<java.util.Map<String, Object>> getUserAuditTrace(@PathVariable("userId") Long userId) {
+        return ResponseEntity.ok(adminService.getUserAuditTrace(userId));
+    }
+
+    @PostMapping("/system/clear-all-data")
+    public ResponseEntity<Void> clearAllData() {
+        adminService.clearAllMedtrackData();
+        return ResponseEntity.ok().build();
     }
 }

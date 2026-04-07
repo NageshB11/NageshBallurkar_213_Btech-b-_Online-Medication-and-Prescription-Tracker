@@ -30,10 +30,13 @@
                         <a class="nav-link" routerLink="/prescription" routerLinkActive="active">Issue Prescription</a>
                     </li>
                     <li class="nav-item" *ngIf="isLoggedIn && userRole === 'PHARMACIST'">
-                        <a class="nav-link" routerLink="/pharmacist" routerLinkActive="active">Prescriptions</a>
+                        <a class="nav-link" routerLink="/pharmacist/dashboard" routerLinkActive="active">Prescriptions</a>
                     </li>
                     <li class="nav-item" *ngIf="isLoggedIn && userRole === 'PHARMACIST'">
                         <a class="nav-link" routerLink="/pharmacist/inventory" routerLinkActive="active">Inventory</a>
+                    </li>
+                    <li class="nav-item" *ngIf="isLoggedIn && userRole === 'PHARMACIST'">
+                        <a class="nav-link" routerLink="/pharmacist/analytics" routerLinkActive="active">Pharmacy Intelligence</a>
                     </li>
 
                     <!-- Patient Links -->

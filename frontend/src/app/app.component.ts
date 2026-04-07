@@ -19,11 +19,9 @@ export class AppComponent {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
-      const hiddenRoutes = ['/login', '/signup', '/landing', '/register', '/doctor-dashboard'];
-      // Check if current url is in hiddenRoutes (exact match or starts with)
-      // Actually strictly hiding on login/register/landing
+      const hiddenRoutes = ['/login', '/signup', '/landing', '/register', '/doctor', '/admin'];
       const url = event.urlAfterRedirects;
-      this.showNavbar = !hiddenRoutes.some(route => url.includes(route));
+      this.showNavbar = !hiddenRoutes.some(route => url.startsWith(route));
     });
   }
 }

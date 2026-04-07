@@ -2,98 +2,151 @@
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-radius: 20px;
+    border-radius: 18px;
     border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-    transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     position: relative;
     overflow: hidden;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
-.glass-card.expanded {
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+.glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    border-color: rgba(9, 132, 227, 0.2);
 }
 
-.main-info-block {
-    z-index: 10;
-    background: inherit;
-    transition: all 0.3s;
-}
-
-.detail-panel-horizontal {
-    overflow: hidden;
-    background: #fff;
-}
-
-.panel-container {
-    height: 100%;
-}
-
-.detail-column {
+.indicator-icon {
+    font-size: 1.6rem;
+    line-height: 1;
     display: flex;
-    flex-direction: column;
+    align-items: center;
 }
 
-.column-header i {
-    font-size: 1rem;
-}
-
-.label-tiny {
-    font-size: 0.65rem;
+.badge-premium {
+    background: rgba(9, 132, 227, 0.08);
+    color: #0984e3;
+    font-size: 0.62rem;
     font-weight: 800;
-    letter-spacing: 1px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
 }
 
-.bullet-point {
-    line-height: 1.4;
-}
-
-.small-text {
-    font-size: 0.8rem;
-    color: #4a5568;
+.badge-id {
+    font-size: 0.65rem;
+    color: #b2bec3;
+    font-weight: 500;
 }
 
 .btn-expand {
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid #edf2f7;
+    background: white;
+    color: #718096;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .btn-expand.rotated {
     transform: rotate(180deg);
-    background: #006aff !important;
-    color: white !important;
+    border-color: #0984e3;
+    color: #0984e3;
+    background: rgba(9, 132, 227, 0.05);
 }
 
-/* Sideways alignment */
-.main-info-block {
-    border-right: 1px solid rgba(0,0,0,0.03);
+.detail-panel-vertical {
+    border-top: 1px solid #f1f5f9;
 }
 
-/* Risk Backgrounds */
+.section-tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.section-tag i {
+    font-size: 1rem;
+}
+
+.pill-badge {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 0.72rem;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: #334155;
+    line-height: 1.5;
+}
+
+.step-item i {
+    color: #10b981;
+    font-size: 1.2rem;
+    margin-top: -4px;
+}
+
+.warning-box {
+    background: rgba(239, 68, 68, 0.03);
+    border: 1px solid rgba(239, 68, 68, 0.1);
+}
+
+.warning-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.78rem;
+    color: #991b1b;
+    font-weight: 600;
+}
+
+.label-tiny {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+}
+
 .card-glow {
     position: absolute;
     top: 0;
     left: 0;
-    width: 5px;
+    width: 4px;
     height: 100%;
     background: #0984e3;
-    z-index: 15;
 }
 
 .card-glow.danger {
-    background: #ff6b6b;
+    background: #ef4444;
 }
 
-.skeleton {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
+@media (min-width: 768px) {
+    .border-end-md {
+        border-right: 1px solid #f1f5f9;
+    }
 }
 
-@keyframes loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+@media (max-width: 767px) {
+    .detail-section {
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .detail-section:last-child {
+        border-bottom: none;
+    }
 }
 

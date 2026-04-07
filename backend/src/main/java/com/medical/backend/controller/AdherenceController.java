@@ -2,6 +2,7 @@ package com.medical.backend.controller;
 
 import com.medical.backend.entity.AdherenceLog;
 import com.medical.backend.service.AdherenceService;
+import com.medical.backend.service.ScheduleAnalyticsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,8 @@ public class AdherenceController {
 
     @Autowired
     private AdherenceService adherenceService;
+    @Autowired
+    private ScheduleAnalyticsService scheduleAnalyticsService;
 
     @PostMapping("/log")
     public ResponseEntity<AdherenceLog> logAdherence(@RequestBody Map<String, Long> request) {
@@ -33,5 +36,12 @@ public class AdherenceController {
     public ResponseEntity<Map<String, Object>> getPatientAdherenceScore(@PathVariable("patientId") Long patientId) {
         double score = adherenceService.calculatePatientAdherence(patientId);
         return ResponseEntity.ok(Map.of("score", score, "patientId", patientId));
+    }
+
+    @GetMapping("/patient/{patientId}/trend")
+    public ResponseEntity<List<Map<String, Object>>> getPatientTrend(
+            @PathVariable("patientId") Long patientId,
+            @RequestParam(defaultValue = "14") int days) {
+        return ResponseEntity.ok(scheduleAnalyticsService.getAdherenceTrend(patientId, days));
     }
 }

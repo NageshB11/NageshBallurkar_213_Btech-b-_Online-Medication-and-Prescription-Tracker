@@ -1,20 +1,4 @@
-<div class="dashboard-container">
-    <!-- Glassmorphic Header -->
-    <nav class="navbar glass-header py-3 mb-5">
-        <div class="container-fluid px-4 px-lg-5">
-            <a class="navbar-brand d-flex align-items-center" routerLink="/doctor-dashboard">
-                <i class="bi bi-heart-pulse text-primary me-2 fs-4"></i>
-                <span class="fs-4 brand-title">MedTrack<span class="fw-light text-secondary">Plus</span></span>
-            </a>
-
-            <div class="d-flex align-items-center">
-                <button class="btn btn-light rounded-circle shadow-sm border" (click)="logout()" title="Logout">
-                    <i class="bi bi-box-arrow-right text-danger"></i>
-                </button>
-            </div>
-        </div>
-    </nav>
-
+<div class="dashboard-container py-4">
     <!-- Main Content -->
     <div class="container px-4 px-lg-5">
         <div class="row mb-5">
@@ -52,14 +36,14 @@
                                 <tbody>
                                     <tr *ngFor="let req of renewalRequests">
                                         <td class="ps-4 py-3 font-weight-bold">
-                                            {{ req.prescription?.patient?.fullName || 'Patient' }}
+                                            {{ req.prescription.patient?.fullName || 'Patient' }}
                                         </td>
                                         <td class="py-3">
                                             <span *ngFor="let item of req.prescription?.items; let last = last">
                                                 {{item.medicineName}} ({{item.dosage}}) {{!last ? ', ' : ''}}
                                             </span>
                                         </td>
-                                        <td class="py-3 text-muted small">{{ req.prescription?.createdAt |
+                                        <td class="py-3 text-muted small">{{ req.prescription.createdAt |
                                             date:'mediumDate' }}</td>
                                         <td class="pe-4 py-3 text-end">
                                             <button class="btn btn-sm btn-success rounded-pill me-2"
@@ -149,7 +133,7 @@
                                 <small class="text-muted">{{draft.createdAt | date:'MMM d, h:mm a'}}</small>
                             </div>
                             <h6 class="fw-bold mb-1">{{draft.patient?.fullName || draft.patientEmail}}</h6>
-                            <p class="small text-muted mb-3">{{draft.items?.length || 0}} items</p>
+                            <p class="small text-muted mb-3">{{draft.items.length || 0}} items</p>
                             <a [routerLink]="['/prescription']" [queryParams]="{id: draft.id}"
                                 class="btn btn-sm btn-outline-dark w-100 stretched-link">
                                 <i class="bi bi-pencil-square me-1"></i> Continue Editing
@@ -284,7 +268,7 @@
         <div class="row justify-content-center g-4">
 
             <!-- Issue Prescription -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-3">
                 <a routerLink="/prescription" class="apollo-card text-center d-flex flex-column align-items-center">
                     <div class="icon-box-lg">
                         <i class="bi bi-file-earmark-medical-fill"></i>
@@ -298,7 +282,7 @@
             </div>
 
             <!-- My Patients -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-3">
                 <div class="apollo-card text-center d-flex flex-column align-items-center">
                     <div class="icon-box-lg bg-success-subtle text-success">
                         <i class="bi bi-people-fill"></i>
@@ -312,7 +296,7 @@
             </div>
 
             <!-- Appointments -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-3">
                 <div class="apollo-card text-center d-flex flex-column align-items-center">
                     <div class="icon-box-lg bg-warning-subtle text-warning">
                         <i class="bi bi-calendar-check-fill"></i>
@@ -322,6 +306,21 @@
                     <a routerLink="/doctor-appointments"
                         class="btn btn-outline-warning text-dark rounded-pill px-4 fw-bold mt-auto">
                         Check Schedule
+                    </a>
+                </div>
+            </div>
+
+            <!-- Clinical Intelligence -->
+            <div class="col-md-6 col-lg-3">
+                <div class="apollo-card text-center d-flex flex-column align-items-center border border-primary-subtle" style="background: rgba(13, 110, 253, 0.02)">
+                    <div class="icon-box-lg bg-primary-subtle text-primary">
+                        <i class="bi bi-bar-chart-line-fill"></i>
+                    </div>
+                    <h4>Clinical Insights</h4>
+                    <p class="mb-4 text-muted">Population health matrix and critical risk patient triage layer.</p>
+                    <a routerLink="/doctor/analytics"
+                        class="btn btn-primary text-white rounded-pill px-4 fw-bold mt-auto shadow-sm">
+                        View Analytics
                     </a>
                 </div>
             </div>

@@ -65,7 +65,7 @@ export class MedicationScheduleCreateComponent implements OnInit {
     loadPrescriptionItems(): void {
         // Reuse existing prescription detail API
         const token = localStorage.getItem('authToken');
-        fetch(`http://localhost:8081/api/prescriptions/${this.prescriptionId}`, {
+        fetch(`/api/prescriptions/${this.prescriptionId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
             .then(res => res.json())

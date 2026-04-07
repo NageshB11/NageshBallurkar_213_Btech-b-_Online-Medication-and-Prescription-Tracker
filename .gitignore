@@ -1,0 +1,37 @@
+# Logs
+*.log
+backend/*.log
+frontend/*.log
+
+# Project specific logs/dumps
+*.txt
+backend/*.txt
+frontend/*.txt
+!backend/src/main/resources/*.txt
+!frontend/src/assets/*.txt
+
+# Node
+node_modules/
+frontend/node_modules/
+package-lock.json
+frontend/package-lock.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build
+backend/target/
+frontend/dist/
+frontend/.angular/
+
+# Scripts
+*.js
+!frontend/src/**/*.js
+!backend/src/**/*.js
+
+# Temp
+tmp/
+/tmp/

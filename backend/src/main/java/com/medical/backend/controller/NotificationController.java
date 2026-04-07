@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -36,5 +37,15 @@ public class NotificationController {
     @PutMapping("/{id}/read")
     public ResponseEntity<Notification> markAsRead(@PathVariable("id") Long id) {
         return ResponseEntity.ok(notificationService.markAsRead(id));
+    }
+
+    @PostMapping("/send")
+    public ResponseEntity<Notification> sendNotification(@RequestBody Map<String, Object> request) {
+        Long userId = Long.valueOf(request.get("userId").toString());
+        String message = (String) request.get("message");
+        String type = (String) request.get("type");
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        return ResponseEntity.ok(notificationService.createNotification(user, message, type));
     }
 }

@@ -12,10 +12,17 @@ export interface User {
     specialization?: string;
 
     // Pharmacist specific
+    pharmacyName?: string;
+    pharmacyLicenseNumber?: string;
     shopDetails?: string;
 
     // Patient specific
     medicalHistory?: string;
+    allergies?: string;
+
+    // Contact
+    phone?: string;
+    address?: string;
 
     verified?: boolean;
 }

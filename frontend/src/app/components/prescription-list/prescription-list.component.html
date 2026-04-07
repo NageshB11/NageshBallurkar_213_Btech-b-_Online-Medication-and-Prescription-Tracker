@@ -23,6 +23,7 @@
                     <th>Ref ID</th>
                     <th>Medication</th>
                     <th>Doctor</th>
+                    <th>Pharmacy</th>
                     <th>Dosage</th>
                     <th>Status</th>
                     <th>Action</th>
@@ -31,9 +32,10 @@
             <tbody>
                 <tr *ngFor="let p of filteredPrescriptions">
                     <td>#{{ p.id }}</td>
-                    <td>{{ p.items[0]?.medicineName || 'N/A' }}</td>
+                    <td>{{ p.items[0].medicineName || 'N/A' }}</td>
                     <td>{{ p.doctor?.fullName || 'N/A' }}</td>
-                    <td>{{ p.items[0]?.dosage || 'N/A' }}</td>
+                    <td>{{ p.pharmacist?.pharmacyName || 'N/A' }}</td>
+                    <td>{{ p.items[0].dosage || 'N/A' }}</td>
                     <td>
                         <span class="badge rounded-pill fw-bold text-white px-2 py-1" [ngStyle]="{
                                 'background-color': p.status === 'PROCEEDED_TO_PHARMACIST' ? '#f59e0b' : 

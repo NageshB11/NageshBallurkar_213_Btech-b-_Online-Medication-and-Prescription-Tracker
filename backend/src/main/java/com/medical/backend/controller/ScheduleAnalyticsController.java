@@ -48,4 +48,29 @@ public class ScheduleAnalyticsController {
                 "percent", pct,
                 "label", pct >= 80 ? "Good" : pct >= 50 ? "Fair" : "Poor"));
     }
+
+    @GetMapping("/patient-trend/{id}")
+    public ResponseEntity<List<Map<String, Object>>> getPatientTrend(
+            @PathVariable("id") Long patientId,
+            @RequestParam(defaultValue = "14") int days) {
+        return ResponseEntity.ok(analyticsService.getAdherenceTrend(patientId, days));
+    }
+
+    @Autowired
+    private com.medical.backend.repository.UserRepository userRepository;
+
+    @GetMapping("/my-trend")
+    public ResponseEntity<List<Map<String, Object>>> getMyTrend(
+            @RequestHeader("Authorization") String token,
+            @RequestParam(defaultValue = "14") int days) {
+
+        String email = emailFrom(token);
+        com.medical.backend.entity.User patient = userRepository.findByEmail(email).orElse(null);
+
+        if (patient == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(analyticsService.getAdherenceTrend(patient.getId(), days));
+    }
 }

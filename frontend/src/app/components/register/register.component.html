@@ -52,6 +52,26 @@
                 </div>
 
                 <div class="form-floating mb-3">
+                    <input type="tel" class="form-control rounded-3" id="phone" formControlName="phone"
+                        placeholder="+1 234 567 890">
+                    <label for="phone">Phone Number</label>
+                    <div *ngIf="registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched"
+                        class="text-danger small mt-1">
+                        Phone number is required
+                    </div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <textarea class="form-control rounded-3" id="address" formControlName="address"
+                        placeholder="123 Main St" style="height: 80px"></textarea>
+                    <label for="address">Physical Address</label>
+                    <div *ngIf="registerForm.get('address')?.invalid && registerForm.get('address')?.touched"
+                        class="text-danger small mt-1">
+                        Address is required
+                    </div>
+                </div>
+
+                <div class="form-floating mb-3">
                     <input type="email" class="form-control rounded-3" id="email" formControlName="email"
                         placeholder="name@example.com">
                     <label for="email">Email address</label>
@@ -107,13 +127,31 @@
                 <div *ngIf="registerForm.get('role')?.value === Role.PHARMACIST"
                     class="bg-light p-3 rounded-3 mb-3 border">
                     <h6 class="text-primary small fw-bold text-uppercase mb-3">Pharmacy Details</h6>
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" formControlName="pharmacyName"
+                            placeholder="Pharmacy Name">
+                        <label>Pharmacy Name</label>
+                        <div *ngIf="registerForm.get('pharmacyName')?.invalid && registerForm.get('pharmacyName')?.touched"
+                            class="text-danger small mt-1">
+                            Pharmacy Name is required
+                        </div>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" formControlName="pharmacyLicenseNumber"
+                            placeholder="License Number">
+                        <label>Pharmacy License Number</label>
+                        <div *ngIf="registerForm.get('pharmacyLicenseNumber')?.invalid && registerForm.get('pharmacyLicenseNumber')?.touched"
+                            class="text-danger small mt-1">
+                            Pharmacy License Number is required
+                        </div>
+                    </div>
                     <div class="form-floating">
-                        <input type="text" class="form-control" formControlName="shopDetails"
-                            placeholder="Shop Name, Address">
-                        <label>Shop Name & Address</label>
+                        <textarea class="form-control" formControlName="shopDetails"
+                            placeholder="Address" style="height: 80px"></textarea>
+                        <label>Pharmacy Address</label>
                         <div *ngIf="registerForm.get('shopDetails')?.invalid && registerForm.get('shopDetails')?.touched"
                             class="text-danger small mt-1">
-                            Shop details are required
+                            Pharmacy Address is required
                         </div>
                     </div>
                 </div>

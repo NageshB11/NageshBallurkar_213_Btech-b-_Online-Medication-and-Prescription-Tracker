@@ -18,7 +18,7 @@ export interface HealthVitals {
     providedIn: 'root'
 })
 export class VitalsService {
-    private apiUrl = 'http://localhost:8081/api/vitals';
+    private apiUrl = '/api/vitals';
 
     constructor(private http: HttpClient, private authService: AuthService) { }
 

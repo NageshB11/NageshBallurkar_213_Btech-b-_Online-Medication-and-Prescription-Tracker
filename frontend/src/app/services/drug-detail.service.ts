@@ -23,7 +23,7 @@ export interface DrugInfo {
   providedIn: 'root'
 })
 export class DrugDetailService {
-  private apiUrl = 'http://localhost:8081/api/drug-info';
+  private apiUrl = '/api/drug-info';
 
   constructor(private http: HttpClient) { }
 
