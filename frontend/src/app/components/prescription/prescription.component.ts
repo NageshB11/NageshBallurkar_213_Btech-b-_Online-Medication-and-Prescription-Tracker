@@ -48,6 +48,11 @@ export class PrescriptionComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        // Clear any stale message from a previous session/navigation
+        this.message = null;
+        this.activeSafetyReport = null;
+        this.showSafetyConflict = false;
+
         this.pharmacistService.getAllPharmacists().subscribe({
             next: (data) => this.availablePharmacists = data,
             error: (err) => console.error('Failed to load pharmacists', err)
@@ -211,6 +216,8 @@ export class PrescriptionComponent implements OnInit {
                     this.activeSafetyReport = err.error;
                     this.showSafetyConflict = true;
                     this.message = '⚠️ CRITICAL CLINICAL CONFLICT DETECTED. PREVIEW BLOCKED.';
+                } else if (err.status === 403) {
+                    this.message = '❌ Access Denied: Your account may not be verified yet, or you do not have permission to issue prescriptions. Please contact the Admin.';
                 } else {
                     this.message = 'Error: ' + (err.error?.message || err.message);
                 }

@@ -103,7 +103,7 @@ public class PrescriptionService {
     private SafetyGateValidator safetyGateValidator;
 
     @Transactional
-    public Prescription createPrescription(Prescription prescription) throws IOException {
+    public Prescription createPrescription(Prescription prescription) {
         System.out.println("[SERVICE] createPrescription started. Status: ISSUED");
         prescription.setStatus(Prescription.PrescriptionStatus.ISSUED);
 
@@ -132,42 +132,52 @@ public class PrescriptionService {
 
         // 2. Link items to this prescription
         if (prescription.getItems() != null) {
-            for (PrescriptionItem item : prescription.getItems()) {
+            System.out.println("[SERVICE] Linking items: " + prescription.getItems().size());
+            List<PrescriptionItem> itemsCopy = new ArrayList<>(prescription.getItems());
+            for (PrescriptionItem item : itemsCopy) {
                 item.setPrescription(prescription);
             }
         }
 
         // 3. Save first so the prescription gets an ID
         System.out.println("[SERVICE] Saving initial prescription...");
-        Prescription saved = prescriptionRepository
-                .save(prescription);
+        final Prescription saved = prescriptionRepository.save(prescription);
         System.out.println("[SERVICE] Initial save successful. ID: " + saved.getId());
 
-        // 4. Generate PDF AFTER patient and ID are set
+        // 4. PDF generation & Anomaly Detection run ASYNC (fire-and-forget)
+        //    This means the doctor gets an instant response. PDF is ready in the background.
         if (!saved.isDraft()) {
-            System.out.println("[SERVICE] Generating PDF...");
-            String fileName = pdfService.generatePrescriptionPdf(saved);
-            saved.setFilePath(fileName);
-            System.out.println("[SERVICE] PDF generated: " + fileName);
-            saved = prescriptionRepository.save(saved);
+            new Thread(() -> {
+                try {
+                    System.out.println("[ASYNC] Generating PDF for prescription #" + saved.getId());
+                    String fileName = pdfService.generatePrescriptionPdf(saved);
+                    saved.setFilePath(fileName);
+                    prescriptionRepository.save(saved);
+                    System.out.println("[ASYNC] PDF generated: " + fileName);
+                } catch (Exception e) {
+                    System.err.println("[ASYNC] PDF generation failed for #" + saved.getId() + ": " + e.getMessage());
+                }
+
+                if (saved.getDoctor() != null) {
+                    try {
+                        if (anomalyDetectionService.checkAnomaly(saved.getDoctor().getId())) {
+                            System.out.println("[ASYNC] ANOMALY DETECTED for Doctor ID: " + saved.getDoctor().getId());
+                            com.medical.backend.entity.SystemAlert alert = new com.medical.backend.entity.SystemAlert();
+                            alert.setType("FRAUD_DETECTION");
+                            alert.setSeverity("CRITICAL");
+                            alert.setMessage("Doctor " + saved.getDoctor().getFullName()
+                                    + " has exceeded the 24h prescription threshold.");
+                            systemAlertRepository.save(alert);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("[ASYNC] Anomaly check failed: " + e.getMessage());
+                    }
+                }
+            }, "async-pdf-anomaly-" + saved.getId()).start();
         }
 
-        // 5. Anomaly Detection
-        if (saved.getDoctor() != null) {
-            System.out
-                    .println("[SERVICE] Running anomaly detection for Doctor ID: " + saved.getDoctor().getId());
-            if (anomalyDetectionService.checkAnomaly(saved.getDoctor().getId())) {
-                System.out.println("[SERVICE] ANOMALY DETECTED!");
-                com.medical.backend.entity.SystemAlert alert = new com.medical.backend.entity.SystemAlert();
-                alert.setType("FRAUD_DETECTION");
-                alert.setSeverity("CRITICAL");
-                alert.setMessage("Doctor " + prescription.getDoctor().getFullName()
-                        + " has exceeded the 24h prescription threshold.");
-                systemAlertRepository.save(alert);
-            }
-        }
-
-        return prescriptionRepository.save(prescription);
+        System.out.println("[SERVICE] createPrescription completed successfully. Returning instantly.");
+        return saved;
     }
 
     @Transactional
@@ -548,7 +558,10 @@ public class PrescriptionService {
         if (end == null) end = start.plusDays(7); // Default to 7 days if not specified
 
         java.time.LocalDate current = start;
-        
+
+        // ✅ FIX: Pre-collect all dose logs, then batch-save them at the end
+        List<com.medical.backend.entity.DoseLog> logsToSave = new ArrayList<>();
+
         // Collect all prescribed slots across all items for this matrix
         java.util.Set<String> activeSlots = new java.util.HashSet<>();
         for (PrescriptionItem item : prescription.getItems()) {
@@ -584,9 +597,9 @@ public class PrescriptionService {
                 for (com.medical.backend.entity.MealType mealType : com.medical.backend.entity.MealType.values()) {
                     // If specific slots are prescribed, only generate those.
                     if (!activeSlots.isEmpty() && !activeSlots.contains(mealType.name())) {
-                        continue; 
+                        continue;
                     }
-                    
+
                     com.medical.backend.entity.DoseLog log = new com.medical.backend.entity.DoseLog();
                     log.setPrescription(prescription);
                     log.setPrescriptionId(prescription.getId());
@@ -594,21 +607,23 @@ public class PrescriptionService {
                     log.setDate(current);
                     log.setMeal(mealType);
                     log.setTaken(false);
-                    
+
                     // Map to legacy mealSlot for backward compatibility UI
                     log.setMealSlot(mealType.name());
-                    
+
                     // Set a mock scheduled time for the legacy scheduler
                     int hour = (mealType == com.medical.backend.entity.MealType.BREAKFAST) ? 8 :
                                (mealType == com.medical.backend.entity.MealType.LUNCH) ? 13 : 20;
                     log.setScheduledTime(current.atTime(hour, 0));
-                    
-                    doseLogRepository.save(log);
+
+                    logsToSave.add(log); // ✅ FIX: Collect, don't save one-by-one
                 }
             }
             current = current.plusDays(1);
             dayIndex++;
         }
-        System.out.println("[ADHERENCE] Generated dose matrix for Prescription #" + prescription.getId() + " from " + start + " to " + end);
+        // ✅ FIX: Single bulk INSERT instead of N individual INSERTs
+        doseLogRepository.saveAll(logsToSave);
+        System.out.println("[ADHERENCE] Batch-saved " + logsToSave.size() + " dose logs for Prescription #" + prescription.getId() + " from " + start + " to " + end);
     }
 }

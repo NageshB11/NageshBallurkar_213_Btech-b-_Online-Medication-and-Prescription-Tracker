@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { PharmacistService } from '../../services/pharmacist.service';
 import { PrescriptionService } from '../../services/prescription.service';
 import { Prescription } from '../../models/prescription.model';
+import { AuthService } from '../../services/auth.service';
 import { MedicationDetailModalComponent } from '../medication-detail-modal/medication-detail-modal.component';
 
 import { RouterModule } from '@angular/router';
@@ -17,8 +18,9 @@ import { RouterModule } from '@angular/router';
       <div class="container-fluid px-4 px-lg-5">
         <div class="row mb-4 align-items-center border-bottom border-secondary-subtle pb-3">
           <div class="col">
-             <h1 class="m-0 text-dark fw-bold" style="letter-spacing: -0.5px;"><i class="bi bi-bezier2 me-2 text-primary"></i>Dispensing Hub</h1>
-             <p class="text-secondary mb-0 mt-1" style="font-size: 0.95rem;">Manage incoming prescription requests directed to you.</p>
+             <h1 class="m-0 text-dark fw-bold" style="letter-spacing: -0.5px;">Welcome, <span class="text-primary">{{ pharmacistName }}</span></h1>
+             <h5 class="text-secondary fw-bold mt-2 mb-0"><i class="bi bi-bezier2 me-2"></i>💊 Pharmacist Dashboard & Dispensing Hub</h5>
+             <p class="text-secondary mb-0 mt-2" style="font-size: 0.95rem;">Manage incoming prescription requests directed to you.</p>
           </div>
           <div class="col-auto d-flex gap-2">
              <button class="btn btn-dark rounded-pill px-4 shadow-sm" routerLink="/pharmacist/analytics">
@@ -259,12 +261,17 @@ export class PharmacistDashboardComponent implements OnInit {
   isModalOpen = false;
   selectedDrugName = '';
 
+  pharmacistName: string = '';
+
   constructor(
     private pharmacistService: PharmacistService,
-    private prescriptionService: PrescriptionService
+    private prescriptionService: PrescriptionService,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
+    const profile = this.authService.getProfile();
+    this.pharmacistName = profile?.fullName || 'Pharmacist';
     this.loadQueue();
   }
 

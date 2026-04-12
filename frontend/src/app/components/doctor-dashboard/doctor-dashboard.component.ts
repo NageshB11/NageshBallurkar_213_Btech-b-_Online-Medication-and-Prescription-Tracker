@@ -32,6 +32,7 @@ export class DoctorDashboardComponent implements OnInit {
         adherenceRate: 0
     };
     doctorId: number | null = null;
+    doctorName: string = '';
 
     constructor(
         private prescriptionService: PrescriptionService,
@@ -43,6 +44,7 @@ export class DoctorDashboardComponent implements OnInit {
     ngOnInit(): void {
         const profile = this.authService.getProfile();
         this.doctorId = profile?.id ? Number(profile.id) : null;
+        this.doctorName = profile?.fullName || 'Doctor';
 
         this.loadPrescriptions();
         this.loadAnalytics();
@@ -134,4 +136,3 @@ export class DoctorDashboardComponent implements OnInit {
         this.authService.logout();
     }
 }
-

@@ -1,11 +1,185 @@
-<div class="glass-card">
-    <h1 class="welcome-title">Welcome to MedTrack Plus</h1>
-    <p class="welcome-text">
-        Manage your prescriptions, consult with doctors, and organize your medical history securely and efficiently.
-    </p>
-
-    <div class="button-group">
-        <a routerLink="/login" class="btn-primary">Sign In</a>
-        <a routerLink="/register" class="btn-secondary">Sign Up</a>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg fixed-top glass-navbar">
+  <div class="container">
+    <a class="navbar-brand fw-bold text-gradient d-flex align-items-center" href="#">
+      <i class="bi bi-heart-pulse-fill fs-3 me-2 text-primary"></i> MedTrack Plus
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav align-items-center gap-3">
+        <li class="nav-item">
+          <a class="nav-link fw-medium" href="#home">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link fw-medium" href="#about">About Us</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link fw-medium" href="#contact">Contact Us</a>
+        </li>
+        <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+          <a routerLink="/login" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center">
+            Login <i class="bi bi-box-arrow-in-right ms-2"></i>
+          </a>
+        </li>
+      </ul>
     </div>
-</div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section id="home" class="hero-section min-vh-100 d-flex align-items-center position-relative overflow-hidden">
+  <!-- Decorative Orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  
+  <div class="container position-relative z-1">
+    <div class="row align-items-center text-center text-lg-start">
+      <div class="col-lg-6 mb-5 mb-lg-0" data-aos="fade-up">
+        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-medium mb-3 shadow-sm border border-primary-subtle">
+          🚀 The Future of Healthcare IT
+        </span>
+        <h1 class="display-3 fw-black mb-4 title-gradient">Intelligent Prescription Management</h1>
+        <p class="lead text-secondary mb-5 pe-lg-4" style="font-size: 1.25rem; line-height: 1.8;">
+          MedTrack Plus bridges the gap between doctors, patients, and pharmacists through seamless clinical intelligence, digital prescriptions, and predictive adherence monitoring.
+        </p>
+        <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
+          <a routerLink="/login" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-lg hover-lift">
+            Get Started <i class="bi bi-arrow-right ms-2"></i>
+          </a>
+          <a href="#about" class="btn btn-outline-dark btn-lg rounded-pill px-5 fw-bold hover-lift bg-white">
+            Learn More
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-6" data-aos="fade-left" data-aos-delay="200">
+        <div class="hero-image-wrapper p-4 glass-panel rounded-4 shadow-lg position-relative">
+          <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient rounded-4 opacity-10" style="background: linear-gradient(135deg, #2563eb, #3b82f6);"></div>
+          <!-- Abstract representation of the dashboard -->
+          <div class="bg-white rounded-3 shadow-sm p-4 text-start position-relative z-1">
+            <div class="d-flex align-items-center mb-4">
+              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                <i class="bi bi-person"></i>
+              </div>
+              <div>
+                <h6 class="mb-0 fw-bold text-dark">Patient Adherence</h6>
+                <small class="text-secondary">Real-time syncing</small>
+              </div>
+            </div>
+            <div class="w-100 bg-light rounded-pill mb-3" style="height: 8px;">
+              <div class="bg-success rounded-pill h-100" style="width: 85%;"></div>
+            </div>
+            
+            <div class="d-flex align-items-center mb-4 mt-4">
+              <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                <i class="bi bi-box-seam"></i>
+              </div>
+              <div>
+                <h6 class="mb-0 fw-bold text-dark">Pharmacy Hub</h6>
+                <small class="text-secondary">Low stock alert: Metformin</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="py-6 bg-white position-relative">
+  <div class="container py-5">
+    <div class="text-center mb-5" data-aos="fade-up">
+      <h2 class="display-5 fw-bold text-dark mb-3">Why MedTrack Plus?</h2>
+      <p class="lead text-secondary mx-auto" style="max-width: 700px;">
+        Designed from the ground up to securely handle complex workflows between clinics and pharmacies, completely removing paper from the equation.
+      </p>
+    </div>
+    
+    <div class="row g-4 mt-4">
+      <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+        <div class="card h-100 border-0 shadow-sm custom-card p-4 text-center">
+          <div class="icon-box mx-auto mb-4 bg-primary-subtle text-primary">
+            <i class="bi bi-file-earmark-medical-fill fs-2"></i>
+          </div>
+          <h4 class="fw-bold mb-3">Digital Prescriptions</h4>
+          <p class="text-secondary">Instantly issue cryptographically authentic prescriptions that get routed directly to the pharmacist dashboard.</p>
+        </div>
+      </div>
+      <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+        <div class="card h-100 border-0 shadow-sm custom-card p-4 text-center">
+          <div class="icon-box mx-auto mb-4 bg-success-subtle text-success">
+            <i class="bi bi-graph-up-arrow fs-2"></i>
+          </div>
+          <h4 class="fw-bold mb-3">Live Adherence</h4>
+          <p class="text-secondary">Patients can log doses dynamically, and doctors receive analytics on predictive compliance risk in real-time.</p>
+        </div>
+      </div>
+      <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+        <div class="card h-100 border-0 shadow-sm custom-card p-4 text-center">
+          <div class="icon-box mx-auto mb-4 bg-warning-subtle text-warning">
+            <i class="bi bi-box-fill fs-2"></i>
+          </div>
+          <h4 class="fw-bold mb-3">Inventory Sync</h4>
+          <p class="text-secondary">Pharmacists maintain stock visibility visually. The system immediately alerts specific clinical nodes when stocks run low.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Contact Section -->
+<section id="contact" class="py-6 bg-light position-relative">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8" data-aos="zoom-in">
+        <div class="glass-panel p-5 rounded-4 shadow-lg border border-white">
+          <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold text-dark mb-3">Contact Us</h2>
+            <p class="text-secondary">Have a question or want to request a live demo? Drop us a message.</p>
+          </div>
+          
+          <!-- Web3Forms Integration -->
+          <form action="https://api.web3forms.com/submit" method="POST" class="contact-form">
+            <input type="hidden" name="access_key" value="57cee3ba-9eb2-43b7-96cd-6e0c0fe99bdb">
+            
+            <div class="row g-4">
+              <div class="col-md-6">
+                <div class="form-floating">
+                  <input type="text" class="form-control bg-white shadow-sm" id="name" name="name" placeholder="John Doe" required>
+                  <label for="name" class="text-secondary"><i class="bi bi-person me-2"></i>Your Name</label>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-floating">
+                  <input type="email" class="form-control bg-white shadow-sm" id="email" name="email" placeholder="name@example.com" required>
+                  <label for="email" class="text-secondary"><i class="bi bi-envelope me-2"></i>Email Address</label>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="form-floating">
+                  <textarea class="form-control bg-white shadow-sm" id="message" name="message" placeholder="Leave a message here" style="height: 150px" required></textarea>
+                  <label for="message" class="text-secondary"><i class="bi bi-chat-text me-2"></i>Your Message</label>
+                </div>
+              </div>
+              <div class="col-12 text-center mt-5">
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow hover-lift w-100">
+                  <i class="bi bi-send-fill me-2"></i> Send Message
+                </button>
+              </div>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-4 text-center bg-white border-top">
+  <div class="container">
+    <p class="mb-0 fw-medium text-secondary">© 2026 MedTrack Plus. Elevating Healthcare Together.</p>
+  </div>
+</footer>

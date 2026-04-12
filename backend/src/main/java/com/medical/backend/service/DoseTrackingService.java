@@ -148,6 +148,17 @@ public class DoseTrackingService {
      * Each "block" represents one dose slot on a specific date.
      * Weight per dose = 1/N where N = total doses for that day.
      */
+    // Status priority: TAKEN=4, MISSED=3, SNOOZED=2, PENDING=1
+    private int statusPriority(DoseLog.DoseStatus status) {
+        if (status == null) return 0;
+        return switch (status) {
+            case TAKEN   -> 4;
+            case MISSED  -> 3;
+            case SNOOZED -> 2;
+            default      -> 1; // PENDING
+        };
+    }
+
     public List<java.util.Map<String, Object>> getAdherenceBlocks(String email) {
         User patient = getUser(email);
         List<DoseLog> allLogs = doseLogRepo.findByPatientOrderByScheduledTimeDesc(patient);
@@ -159,9 +170,20 @@ public class DoseTrackingService {
                         java.util.TreeMap::new,
                         Collectors.toList()));
 
-        // Within each day, sort by scheduled time ASC
-        byDate.forEach((date, dayLogs) -> {
-            dayLogs.sort(java.util.Comparator.comparing(DoseLog::getScheduledTime));
+        // Within each day, deduplicate by (medicineName + mealSlot), keeping highest-priority status
+        byDate.replaceAll((date, dayLogs) -> {
+            java.util.Map<String, DoseLog> deduped = new java.util.LinkedHashMap<>();
+            for (DoseLog log : dayLogs) {
+                String key = (log.getScheduleItem().getMedicineName() + "|" +
+                        (log.getMealSlot() != null ? log.getMealSlot().toUpperCase() : "")).trim();
+                DoseLog existing = deduped.get(key);
+                if (existing == null || statusPriority(log.getStatus()) > statusPriority(existing.getStatus())) {
+                    deduped.put(key, log);
+                }
+            }
+            List<DoseLog> result = new java.util.ArrayList<>(deduped.values());
+            result.sort(java.util.Comparator.comparing(DoseLog::getScheduledTime));
+            return result;
         });
 
         List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();

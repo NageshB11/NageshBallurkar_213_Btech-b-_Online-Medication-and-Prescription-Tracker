@@ -15,14 +15,27 @@ public class ExternalDrugService {
     private final RestTemplate restTemplate = new RestTemplate();
     private static final String FDA_API_URL = "https://api.fda.gov/drug/label.json?search=(openfda.brand_name:\"%s\"+openfda.generic_name:\"%s\")&limit=1";
 
+    // ✅ FIX: In-memory cache — avoids repeated slow FDA API calls for the same drug
+    private final java.util.concurrent.ConcurrentHashMap<String, DrugProfileDTO> drugCache = new java.util.concurrent.ConcurrentHashMap<>();
+
     public DrugProfileDTO fetchDrugProfile(String medicineName) {
         if (medicineName == null || medicineName.isEmpty()) {
             return createMockProfile("Unknown Medication");
         }
 
+        // ✅ FIX: Return from cache if already looked up this drug
+        String cacheKey = medicineName.trim().toLowerCase();
+        if (drugCache.containsKey(cacheKey)) {
+            log.debug("[CACHE HIT] Returning cached profile for: {}", medicineName);
+            return drugCache.get(cacheKey);
+        }
+
         // Check for specific mock data first to provide a "premium" dummy experience
         DrugProfileDTO specificMock = getSpecificMock(medicineName);
-        if (specificMock != null) return specificMock;
+        if (specificMock != null) {
+            drugCache.put(cacheKey, specificMock);
+            return specificMock;
+        }
 
         try {
             String searchName = medicineName.split(" ")[0].replaceAll("[^a-zA-Z0-9]", "");
@@ -152,7 +165,9 @@ public class ExternalDrugService {
             log.warn("Failed to fetch FDA data for {}: {}", medicineName, e.getMessage());
         }
 
-        return createMockProfile(medicineName);
+        DrugProfileDTO fallback = createMockProfile(medicineName);
+        drugCache.put(cacheKey, fallback); // cache fallback too
+        return fallback;
     }
 
     private DrugProfileDTO getSpecificMock(String name) {
