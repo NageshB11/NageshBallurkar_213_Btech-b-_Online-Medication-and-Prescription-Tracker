@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { MedScheduleService, PatientMealPrefs, MedScheduleRequest } from '../../services/med-schedule.service';
+import { PrescriptionService } from '../../services/prescription.service';
 
 interface PrescriptionItem {
     id: number;
@@ -25,8 +26,9 @@ interface PrescriptionItem {
 })
 export class MedicationScheduleCreateComponent implements OnInit {
     step = 1;
-    prescriptionId!: number;
+    prescriptionId: number | undefined;
     prescriptionItems: PrescriptionItem[] = [];
+    availablePrescriptions: any[] = [];
 
     mealPrefs: PatientMealPrefs = {
         breakfastTime: '08:30',
@@ -42,13 +44,44 @@ export class MedicationScheduleCreateComponent implements OnInit {
     constructor(
         private route: ActivatedRoute,
         private router: Router,
-        private scheduleService: MedScheduleService
+        private scheduleService: MedScheduleService,
+        private prescriptionService: PrescriptionService
     ) { }
 
     ngOnInit(): void {
-        this.prescriptionId = +this.route.snapshot.queryParams['prescriptionId'];
-        this.loadMealPrefs();
-        this.loadPrescriptionItems();
+        const idParam = this.route.snapshot.queryParams['prescriptionId'];
+        if (idParam) {
+            this.prescriptionId = +idParam;
+            if (isNaN(this.prescriptionId)) {
+                this.error = 'Invalid prescription ID.';
+                return;
+            }
+            this.loadMealPrefs();
+            this.loadPrescriptionItems();
+        } else {
+            this.loadMealPrefs();
+            this.prescriptionService.getMyPrescriptions().subscribe({
+                next: (data) => {
+                    this.availablePrescriptions = data.filter(p => p.status === 'DISPENSED');
+                    if (this.availablePrescriptions.length === 0) {
+                        this.error = 'No dispensed prescriptions available to schedule.';
+                    } else if (this.availablePrescriptions.length === 1) {
+                        this.prescriptionId = this.availablePrescriptions[0].id;
+                        this.loadPrescriptionItems();
+                    }
+                },
+                error: () => {
+                    this.error = 'Please select a prescription to schedule.';
+                }
+            });
+        }
+    }
+
+    onPrescriptionChange(): void {
+        if (this.prescriptionId) {
+            this.error = '';
+            this.loadPrescriptionItems();
+        }
     }
 
     loadMealPrefs(): void {
@@ -91,12 +124,25 @@ export class MedicationScheduleCreateComponent implements OnInit {
         return map[slot?.toUpperCase()] || '💊';
     }
 
-    nextStep(): void { this.step++; }
-    prevStep(): void { this.step--; }
+    nextStep(): void { 
+        if (this.step === 1 && !this.prescriptionId) {
+            this.error = 'Please select a prescription before proceeding.';
+            return;
+        }
+        this.error = '';
+        this.step++; 
+    }
+    prevStep(): void { this.error = ''; this.step--; }
 
     submit(): void {
         this.loading = true;
         this.error = '';
+
+        if (!this.prescriptionId) {
+            this.error = 'Please select a prescription before proceeding.';
+            this.loading = false;
+            return;
+        }
 
         const req: MedScheduleRequest = {
             prescriptionId: this.prescriptionId,
@@ -114,7 +160,14 @@ export class MedicationScheduleCreateComponent implements OnInit {
                 setTimeout(() => this.router.navigate(['/schedules']), 1500);
             },
             error: (err) => {
-                this.error = err.error || 'Failed to create schedule. Please try again.';
+                console.error('Schedule creation error:', err);
+                if (typeof err.error === 'string') {
+                    this.error = err.error;
+                } else if (err.error && err.error.message) {
+                    this.error = err.error.message;
+                } else {
+                    this.error = err.message || 'Failed to create schedule. Please try again.';
+                }
                 this.loading = false;
             }
         });

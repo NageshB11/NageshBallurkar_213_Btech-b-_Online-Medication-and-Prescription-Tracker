@@ -50,4 +50,10 @@ public class DoseLogController {
             @RequestHeader("Authorization") String token) {
         return ResponseEntity.ok(doseTrackingService.getDoseHistory(emailFrom(token)));
     }
+
+    @GetMapping("/adherence-blocks")
+    public ResponseEntity<java.util.List<java.util.Map<String, Object>>> getAdherenceBlocks(
+            @RequestHeader("Authorization") String token) {
+        return ResponseEntity.ok(doseTrackingService.getAdherenceBlocks(emailFrom(token)));
+    }
 }

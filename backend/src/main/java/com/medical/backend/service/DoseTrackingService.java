@@ -73,7 +73,19 @@ public class DoseTrackingService {
         }
         if (notes != null)
             log.setNotes(notes);
-        return toDTO(doseLogRepo.save(log));
+
+        DoseLog saved = doseLogRepo.save(log);
+
+        // Audit Log v1.1
+        SystemAudit audit = new SystemAudit();
+        audit.setAction("ADHERENCE_ACTION");
+        audit.setAdminEmail(email);
+        audit.setDetails(String.format("Patient %s marked dose %s as %s. Medicine: %s",
+                email, log.getId(), status, log.getSafeMedicineName()));
+        audit.setVersionLabel("1.1");
+        auditRepo.save(audit);
+
+        return toDTO(saved);
     }
 
     @Transactional
@@ -103,8 +115,8 @@ public class DoseTrackingService {
     public DoseLogDTO toDTO(DoseLog log) {
         DoseLogDTO dto = new DoseLogDTO();
         dto.setDoseId(log.getId());
-        dto.setMedicineName(log.getScheduleItem().getMedicineName());
-        dto.setDosage(log.getScheduleItem().getDosage());
+        dto.setMedicineName(log.getSafeMedicineName());
+        dto.setDosage(log.getSafeDosage());
         dto.setMealSlot(log.getMealSlot());
         dto.setFoodInstruction(log.getFoodInstruction());
         dto.setDisplayLabel(buildDisplayLabel(log.getMealSlot(), log.getFoodInstruction()));
@@ -115,7 +127,7 @@ public class DoseTrackingService {
         dto.setSnoozeCount(log.getSnoozeCount());
         dto.setStatus(log.getStatus() != null ? log.getStatus().name() : "PENDING");
         dto.setNotes(log.getNotes());
-        dto.setScheduleItemId(log.getScheduleItem().getId());
+        dto.setScheduleItemId(log.getSafeScheduleItemId());
         return dto;
     }
 
@@ -174,7 +186,7 @@ public class DoseTrackingService {
         byDate.replaceAll((date, dayLogs) -> {
             java.util.Map<String, DoseLog> deduped = new java.util.LinkedHashMap<>();
             for (DoseLog log : dayLogs) {
-                String key = (log.getScheduleItem().getMedicineName() + "|" +
+                String key = (log.getSafeMedicineName() + "|" +
                         (log.getMealSlot() != null ? log.getMealSlot().toUpperCase() : "")).trim();
                 DoseLog existing = deduped.get(key);
                 if (existing == null || statusPriority(log.getStatus()) > statusPriority(existing.getStatus())) {
@@ -215,8 +227,8 @@ public class DoseTrackingService {
             List<java.util.Map<String, Object>> doses = dayLogs.stream().map(log -> {
                 java.util.Map<String, Object> d = new java.util.LinkedHashMap<>();
                 d.put("doseId", log.getId());
-                d.put("medicineName", log.getScheduleItem().getMedicineName());
-                d.put("dosage", log.getScheduleItem().getDosage());
+                d.put("medicineName", log.getSafeMedicineName());
+                d.put("dosage", log.getSafeDosage());
                 d.put("mealSlot", log.getMealSlot());
                 d.put("scheduledTime", log.getScheduledTime().toString());
                 d.put("status", log.getStatus().name());

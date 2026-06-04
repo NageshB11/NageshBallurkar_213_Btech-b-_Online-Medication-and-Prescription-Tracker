@@ -68,10 +68,17 @@ public class AdherenceService {
         List<com.medical.backend.entity.DoseLog> todaysDoses = doseLogRepository.findByPatientAndDateRange(patient, start, end);
         for (com.medical.backend.entity.DoseLog d : todaysDoses) {
             // Check if this dose belongs to the prescription we just logged
+            Long rxId = null;
             if (d.getScheduleItem() != null && d.getScheduleItem().getSchedule() != null &&
-                d.getScheduleItem().getSchedule().getPrescription() != null &&
-                d.getScheduleItem().getSchedule().getPrescription().getId().equals(prescriptionId)) {
-                
+                d.getScheduleItem().getSchedule().getPrescription() != null) {
+                rxId = d.getScheduleItem().getSchedule().getPrescription().getId();
+            } else if (d.getPrescription() != null) {
+                rxId = d.getPrescription().getId();
+            } else if (d.getPrescriptionId() != null) {
+                rxId = d.getPrescriptionId();
+            }
+
+            if (prescriptionId.equals(rxId)) {
                 if (d.getStatus() == com.medical.backend.entity.DoseLog.DoseStatus.PENDING ||
                     d.getStatus() == com.medical.backend.entity.DoseLog.DoseStatus.SNOOZED) {
                     d.setStatus(com.medical.backend.entity.DoseLog.DoseStatus.TAKEN);

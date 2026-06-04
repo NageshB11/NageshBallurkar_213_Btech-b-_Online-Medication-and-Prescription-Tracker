@@ -67,7 +67,7 @@ public class ScheduleAnalyticsService {
     public List<Map<String, Object>> getTopScheduledMedicines() {
         return doseLogRepo.findAll().stream()
                 .collect(Collectors.groupingBy(
-                        l -> l.getScheduleItem().getMedicineName(),
+                        l -> l.getSafeMedicineName(),
                         Collectors.counting()))
                 .entrySet().stream()
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())

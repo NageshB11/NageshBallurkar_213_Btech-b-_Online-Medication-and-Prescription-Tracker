@@ -1,19 +1,26 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
 export class LoginComponent {
   loginForm: FormGroup;
   errorMessage: string = '';
+
+  // Forgot password modal state
+  showForgotModal: boolean = false;
+  forgotEmail: string = '';
+  forgotLoading: boolean = false;
+  forgotSuccessMsg: string = '';
+  forgotErrorMsg: string = '';
 
   constructor(
     private fb: FormBuilder,
@@ -60,5 +67,44 @@ export class LoginComponent {
         }
       });
     }
+  }
+
+  openForgotModal(event: Event): void {
+    event.preventDefault(); // Prevents navigating back to landing page
+    this.showForgotModal = true;
+    this.forgotEmail = '';
+    this.forgotSuccessMsg = '';
+    this.forgotErrorMsg = '';
+    this.forgotLoading = false;
+  }
+
+  closeForgotModal(): void {
+    this.showForgotModal = false;
+  }
+
+  submitForgotPassword(): void {
+    if (!this.forgotEmail || !this.forgotEmail.includes('@')) {
+      this.forgotErrorMsg = 'Please enter a valid email address.';
+      return;
+    }
+
+    this.forgotLoading = true;
+    this.forgotErrorMsg = '';
+    this.forgotSuccessMsg = '';
+
+    this.authService.forgotPassword(this.forgotEmail).subscribe({
+      next: (res: any) => {
+        this.forgotLoading = false;
+        this.forgotSuccessMsg = `Password reset successfully! Use the temporary password below to log in: <br><strong>${res.tempPassword}</strong>`;
+      },
+      error: (err: any) => {
+        this.forgotLoading = false;
+        if (err.error && err.error.message) {
+          this.forgotErrorMsg = err.error.message;
+        } else {
+          this.forgotErrorMsg = 'An error occurred. Please try again later.';
+        }
+      }
+    });
   }
 }

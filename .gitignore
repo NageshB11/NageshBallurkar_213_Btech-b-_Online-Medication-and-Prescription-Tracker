@@ -35,3 +35,7 @@ frontend/.angular/
 # Temp
 tmp/
 /tmp/
+
+# Uploads
+backend/uploads/
+

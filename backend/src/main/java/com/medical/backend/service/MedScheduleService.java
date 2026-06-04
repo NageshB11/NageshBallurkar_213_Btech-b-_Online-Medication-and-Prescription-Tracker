@@ -51,7 +51,6 @@ public class MedScheduleService {
             return defaults; // not persisted yet — patient fills them in
         });
     }
-
     @Transactional
     public PatientMealPrefs saveMealPrefs(String email, PatientMealPrefs prefs) {
         User patient = getUser(email);
@@ -93,8 +92,43 @@ public class MedScheduleService {
         List<ScheduleItem> items = buildItems(schedule, req, prescription);
         itemRepo.saveAll(items);
 
-        // 4. Pre-generate Day 1 dose logs
-        generateDoseLogsForDate(items, mealPrefs, LocalDate.now());
+        // 4. Pre-generate ALL dose logs for the full medication duration
+        LocalDate scheduleStart = schedule.getStartDate() != null ? schedule.getStartDate() : LocalDate.now();
+        for (ScheduleItem item : items) {
+            int totalDays = item.getDurationDays() != null && item.getDurationDays() > 0
+                    ? item.getDurationDays()
+                    : 30; // default 30 days if duration not set
+
+            for (int dayOffset = 0; dayOffset < totalDays; dayOffset++) {
+                LocalDate targetDate = scheduleStart.plusDays(dayOffset);
+
+                // Check frequency to decide if this day should have doses
+                boolean shouldGenerate = switch (item.getFrequency()) {
+                    case DAILY -> true;
+                    case ALTERNATE_DAY -> dayOffset % 2 == 0;
+                    case WEEKLY -> dayOffset % 7 == 0;
+                    case CUSTOM -> {
+                        // For CUSTOM, check daysOfWeek (e.g. "MON,WED,FRI")
+                        if (item.getDaysOfWeek() == null || item.getDaysOfWeek().isEmpty()) {
+                            yield true; // fallback to daily
+                        }
+                        String dayName = targetDate.getDayOfWeek().name()
+                                .substring(0, 3).toUpperCase(); // MON, TUE, etc.
+                        yield item.getDaysOfWeek().toUpperCase().contains(dayName);
+                    }
+                };
+
+                if (shouldGenerate) {
+                    generateDoseLogsForDate(List.of(item), mealPrefs, targetDate);
+                }
+            }
+        }
+        // Also set endDate on the schedule from the maximum item duration
+        int maxDuration = items.stream()
+                .map(i -> i.getDurationDays() != null ? i.getDurationDays() : 30)
+                .max(Integer::compareTo).orElse(30);
+        schedule.setEndDate(scheduleStart.plusDays(maxDuration));
+        schedule = scheduleRepo.save(schedule);
 
         // 5. Audit v1.0 CREATED
         recordAudit(schedule, patient, ScheduleAudit.ChangeType.CREATED,
@@ -156,15 +190,16 @@ public class MedScheduleService {
         }
         return schedule;
     }
-
     // ── Internal helpers ──────────────────────────────────────────────
-
     private List<ScheduleItem> buildItems(MedicationSchedule schedule, MedScheduleDTO req,
             Prescription prescription) {
         List<ScheduleItem> items = new ArrayList<>();
         if (req.getItems() == null || req.getItems().isEmpty()) {
             // Auto-build from all prescription items
             for (PrescriptionItem pi : prescription.getItems()) {
+                // Skip medications marked as optional by the doctor in auto-generation
+                if (pi.isOptional()) continue;
+                
                 items.add(buildItemFromPrescriptionItem(schedule, pi, null));
             }
         } else {
@@ -172,6 +207,12 @@ public class MedScheduleService {
                 PrescriptionItem pi = ir.getPrescriptionItemId() != null
                         ? prescriptionItemRepo.findById(ir.getPrescriptionItemId()).orElse(null)
                         : null;
+                
+                // Skip optional medications if not explicitly requested in overrides
+                if (pi != null && pi.isOptional() && ir.getPrescriptionItemId() == null) {
+                    continue;
+                }
+
                 ScheduleItem item = pi != null
                         ? buildItemFromPrescriptionItem(schedule, pi, ir)
                         : buildItemFromRequest(schedule, ir);
@@ -180,7 +221,6 @@ public class MedScheduleService {
         }
         return items;
     }
-
     private ScheduleItem buildItemFromPrescriptionItem(MedicationSchedule schedule,
             PrescriptionItem pi,
             MedScheduleDTO.ScheduleItemRequest override) {
@@ -191,8 +231,12 @@ public class MedScheduleService {
         item.setDosage(pi.getDosage());
         item.setMealSlots(pi.getMealSlots());
         item.setFoodInstruction(pi.getFoodInstruction());
-        if (pi.getFrequency() != null) {
-            item.setFrequency(ScheduleItem.Frequency.valueOf(pi.getFrequency()));
+        if (pi.getFrequency() != null && !pi.getFrequency().isEmpty()) {
+            try {
+                item.setFrequency(ScheduleItem.Frequency.valueOf(pi.getFrequency().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                item.setFrequency(ScheduleItem.Frequency.DAILY);
+            }
         }
         if (pi.getDaysOfWeek() != null) {
             item.setDaysOfWeek(pi.getDaysOfWeek());

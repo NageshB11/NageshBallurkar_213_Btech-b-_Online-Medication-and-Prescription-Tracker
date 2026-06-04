@@ -259,7 +259,7 @@
                                                 <h6 class="mb-1 fw-bold" style="color: #1e3a8a; font-size: 0.9rem;">
                                                     Doctor Issued</h6>
                                                 <p class="text-muted mb-0" style="font-size: 0.8rem;">Dr. {{
-                                                    p.doctor?.fullName }} prescribed {{ p.items[0]?.medicineName ||
+                                                    p.doctor?.fullName || 'Unknown' }} prescribed {{ (p.items && p.items.length > 0) ? p.items[0].medicineName :
                                                     'medication' }}.</p>
                                             </div>
                                         </div>
@@ -308,11 +308,16 @@
                                                 <h6 class="mb-1 fw-bold" style="font-size: 0.9rem;"
                                                     [ngStyle]="{'color': p.status === 'DISPENSED' ? '#10b981' : '#b2bec3'}">
                                                     Medication Dispensed</h6>
-                                                <p class="text-muted mb-0" style="font-size: 0.8rem;">
-                                                    <span *ngIf="p.status === 'DISPENSED'">Ready for pickup. Dispensed
-                                                        by {{ p.pharmacist?.fullName }}.</span>
-                                                    <span *ngIf="p.status !== 'DISPENSED'">Not yet dispensed.</span>
-                                                </p>
+                                                 <p class="text-muted mb-0" style="font-size: 0.8rem;">
+                                                     <span *ngIf="p.status === 'DISPENSED'" class="badge bg-success-subtle text-success border border-success animate-pulse py-1 px-2">
+                                                         <i class="bi bi-shop me-1"></i> Ready for Physical Pickup
+                                                     </span>
+                                                     <span *ngIf="p.status === 'DISPENSED' && p.totalCost" class="ms-2 fw-bold text-dark">
+                                                         Bill Amount: ₹{{ p.totalCost }}
+                                                     </span>
+                                                     <span *ngIf="p.status === 'DISPENSED' && !p.totalCost">Dispensed by {{ p.pharmacist?.fullName }}.</span>
+                                                     <span *ngIf="p.status !== 'DISPENSED'">Not yet dispensed.</span>
+                                                 </p>
                                             </div>
                                         </div>
                                     </div>
@@ -363,7 +368,7 @@
                             <div class="clinical-row-item mb-3" *ngFor="let p of activePrescriptions.slice(0, 2)">
                                 <app-patient-guide-card 
                                     class="d-block"
-                                    [medicineName]="p.items[0]?.medicineName || 'Medication'" 
+                                    [medicineName]="(p.items && p.items.length > 0) ? p.items[0].medicineName : 'Medication'" 
                                     [batchId]="p.id?.toString() || 'DOC-' + p.id">
                                 </app-patient-guide-card>
                             </div>
@@ -433,16 +438,28 @@
                                             </div>
                                             <div>
                                                 <div style="font-weight:700; color:#2d3436; font-size:0.95rem;">
-                                                    {{ p.items[0].medicineName }}
+                                                    {{ (p.items && p.items.length > 0) ? p.items[0].medicineName : 'Medication' }}
                                                 </div>
                                                 <div style="font-size:0.75rem; color:#636e72;">
-                                                    {{ p.items[0].dosage }}
+                                                    {{ (p.items && p.items.length > 0) ? p.items[0].dosage : 'N/A' }}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
                                     <td style="color:#636e72; font-size:0.85rem;">
-                                        <div class="mb-1">{{ getNextDoseTime(p) }}</div>
+                                        <div class="mb-1">{{ getNextDoseTime(p) || 'No dose scheduled' }}</div>
+                                        <span *ngIf="p.status === 'DISPENSED'" class="text-success fw-bold small">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Ready for Pickup
+                                        </span>
+                                        <div *ngIf="p.status === 'DISPENSED' && p.totalCost" class="mt-1 fw-bold" style="color: #2d3436; font-size: 0.8rem;">
+                                            Cost: ₹{{ p.totalCost }}
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center">
+                                            <app-adherence-gauge [percent]="getDosageProgress(p)" [size]="32"></app-adherence-gauge>
+                                        </div>
+                                    </td>
                                     <td class="pe-4">
                                         <div class="d-flex align-items-center justify-content-end" style="gap: 1.5rem;">
                                             <button *ngIf="p.status === 'DISPENSED' && !hasActiveSchedule(p.id)"
@@ -501,7 +518,7 @@
                                                 <i class="bi bi-bag-check-fill"></i>
                                             </div>
                                             <span style="font-weight:600;color:#2d3436;font-size:0.88rem;">{{
-                                                p.items[0]?.medicineName || 'Medication' }}</span>
+                                                (p.items && p.items.length > 0) ? p.items[0].medicineName : 'Medication' }}</span>
                                         </div>
                                     </td>
                                     <td style="font-size:0.85rem;color:#636e72;">{{ p.pharmacist?.fullName }}</td>
@@ -536,7 +553,7 @@
                     <div class="clinical-row-item" *ngFor="let p of activePrescriptions">
                         <app-patient-guide-card 
                             class="d-block"
-                            [medicineName]="p.items[0]?.medicineName || 'Medication'" 
+                            [medicineName]="(p.items && p.items.length > 0) ? p.items[0].medicineName : 'Medication'" 
                             [batchId]="p.id?.toString() || 'DOC-' + p.id">
                         </app-patient-guide-card>
                     </div>
@@ -590,6 +607,9 @@
                                         'rejected':  appt.status === 'REJECTED',
                                         'completed': appt.status === 'COMPLETED'
                                     }">{{ appt.status }}</span>
+                                    <span class="badge bg-light text-dark border ms-2" style="font-size: 0.65rem;">
+                                        <i class="bi bi-geo-alt-fill me-1 text-danger"></i> Offline Meeting
+                                    </span>
                                 </p>
                                 <p class="v-meta">
                                     <i class="bi bi-calendar3 me-1"></i>{{ appt.appointmentDate | date:'fullDate' }}
@@ -796,8 +816,8 @@
                             <i class="bi bi-capsule-pill fs-5"></i>
                         </div>
                         <div>
-                            <div style="font-weight:800;color:#2d3436;font-size:1.1rem;letter-spacing:-0.3px;">{{ p.items[0].medicineName }}</div>
-                            <div style="font-size:0.85rem;color:#636e72;font-weight:500;">{{ p.items[0].dosage }} · Issued by Dr. {{ p.doctor?.fullName }}</div>
+                            <div style="font-weight:800;color:#2d3436;font-size:1.1rem;letter-spacing:-0.3px;">{{ (p.items && p.items.length > 0) ? p.items[0].medicineName : 'Medication' }}</div>
+                            <div style="font-size:0.85rem;color:#636e72;font-weight:500;">{{ (p.items && p.items.length > 0) ? p.items[0].dosage : 'N/A' }} · Issued by Dr. {{ p.doctor?.fullName || 'Unknown' }}</div>
                         </div>
                     </div>
 
@@ -1117,9 +1137,28 @@
                                 style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#636e72;">Preferred
                                 Date &amp; Time</span>
                         </div>
-                        <input type="datetime-local" class="form-control rounded-3" [(ngModel)]="newAppointmentDate"
-                            name="appDate" required
-                            style="border:1.5px solid rgba(0,0,0,0.1);font-size:0.9rem;font-family:'Inter',sans-serif;">
+                        <div class="row g-2">
+                            <!-- Date Picker -->
+                            <div class="col-md-6">
+                                <input type="date" class="form-control rounded-3"
+                                    [(ngModel)]="newAppointmentDateOnly"
+                                    [min]="minAppointmentDateOnly" [attr.min]="minAppointmentDateOnly"
+                                    (change)="onAppointmentDateOnlyChange()"
+                                    name="appDateOnly" required
+                                    style="border:1.5px solid rgba(0,0,0,0.1);font-size:0.9rem;font-family:'Inter',sans-serif;">
+                            </div>
+                            <!-- Time Picker Dropdown -->
+                            <div class="col-md-6">
+                                <select class="form-select rounded-3"
+                                    [(ngModel)]="newAppointmentTimeOnly"
+                                    (change)="onAppointmentTimeOnlyChange()"
+                                    name="appTimeOnly" required
+                                    style="border:1.5px solid rgba(0,0,0,0.1);font-size:0.9rem;font-family:'Inter',sans-serif;height:100%;min-height:38px;">
+                                    <option value="" disabled selected>Select time...</option>
+                                    <option *ngFor="let time of availableTimeSlots" [value]="time">{{time}}</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- ── Step 3: Notes ── -->
@@ -1141,7 +1180,7 @@
 
                     <!-- Submit -->
                     <button type="submit" class="btn-primary-glass w-100 py-2"
-                        [disabled]="!selectedDoctorId || !newAppointmentDate" style="font-size:0.95rem;">
+                        [disabled]="!selectedDoctorId || !newAppointmentDateOnly || !newAppointmentTimeOnly" style="font-size:0.95rem;">
                         <i class="bi bi-send me-2"></i>Send Appointment Request
                     </button>
                 </form>
@@ -1151,7 +1190,7 @@
 </div>
 
 <!-- ══ History Modal ═════════════════════════════════════════════ -->
-<div class="modal show d-block" tabindex="-1" *ngIf="selectedHistory && selectedHistory.length > 0"
+<div class="modal show d-block" tabindex="-1" *ngIf="selectedHistory"
     style="background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);">
     <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width:680px;">
         <div class="modal-content border-0 rounded-4 shadow-lg"

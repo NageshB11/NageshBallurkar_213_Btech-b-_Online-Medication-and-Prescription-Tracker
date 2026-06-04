@@ -78,10 +78,17 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
     profileForm: any = {};
 
     private pollSub?: Subscription;
+    private doseCheckSub?: Subscription;
+    private minDateRefreshInterval: any = null;
 
     // For Appointment Modal
     showAppointmentModal = false;
     newAppointmentDate: string = '';
+    minAppointmentDate: string = '';
+    newAppointmentDateOnly: string = '';
+    minAppointmentDateOnly: string = '';
+    newAppointmentTimeOnly: string = '';
+    availableTimeSlots: string[] = [];
     newAppointmentNotes: string = '';
     selectedDoctorId: number | null = null;
     doctors: DoctorUser[] = [];
@@ -335,20 +342,153 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
         });
     }
 
+    private getLocalDateTimeString(date: Date): string {
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    private getLocalDateString(date: Date): string {
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
+
+    private isTodayDate(dateStr: string): boolean {
+        if (!dateStr) return false;
+        const todayStr = this.getLocalDateString(new Date());
+        return dateStr === todayStr;
+    }
+
+    generateTimeSlots(selectedDateStr: string): string[] {
+        const slots: string[] = [];
+        const isToday = this.isTodayDate(selectedDateStr);
+        const now = new Date();
+        
+        // Standard medical operational hours (08:00 to 21:00)
+        for (let hour = 8; hour <= 21; hour++) {
+            for (let min of ['00', '30']) {
+                if (hour === 21 && min === '30') continue;
+                
+                const timeStr = `${hour.toString().padStart(2, '0')}:${min}`;
+                
+                if (isToday) {
+                    // Filter out past times for today (with 15-minute lead buffer)
+                    const slotTime = new Date();
+                    slotTime.setHours(hour, parseInt(min), 0, 0);
+                    if (slotTime.getTime() > now.getTime() + 15 * 60 * 1000) {
+                        slots.push(timeStr);
+                    }
+                } else {
+                    slots.push(timeStr);
+                }
+            }
+        }
+        return slots;
+    }
+
     openAppointmentModal(): void {
         this.showAppointmentModal = true;
-        // Set default date to tomorrow
-        const tomorrow = new Date();
+
+        const now = new Date();
+        this.minAppointmentDateOnly = this.getLocalDateString(now);
+
+        // Default appointment date: tomorrow
+        const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        this.newAppointmentDate = tomorrow.toISOString().slice(0, 16); // Format for datetime-local
+        
+        this.newAppointmentDateOnly = this.getLocalDateString(tomorrow);
+        this.availableTimeSlots = this.generateTimeSlots(this.newAppointmentDateOnly);
+        
+        // Default time slot: 09:00
+        this.newAppointmentTimeOnly = '09:00';
+        this.newAppointmentDate = `${this.newAppointmentDateOnly}T${this.newAppointmentTimeOnly}`;
+
+        // Periodically refresh the time slot list to block slots that fall into the past
+        if (this.minDateRefreshInterval) {
+            clearInterval(this.minDateRefreshInterval);
+        }
+        this.minDateRefreshInterval = setInterval(() => {
+            const currentNow = new Date();
+            this.minAppointmentDateOnly = this.getLocalDateString(currentNow);
+            
+            if (this.isTodayDate(this.newAppointmentDateOnly)) {
+                this.availableTimeSlots = this.generateTimeSlots(this.newAppointmentDateOnly);
+                
+                if (this.newAppointmentTimeOnly && !this.availableTimeSlots.includes(this.newAppointmentTimeOnly)) {
+                    if (this.availableTimeSlots.length > 0) {
+                        this.newAppointmentTimeOnly = this.availableTimeSlots[0];
+                    } else {
+                        // Switch to tomorrow if no slots remain today
+                        const tomorrowDay = new Date(currentNow);
+                        tomorrowDay.setDate(tomorrowDay.getDate() + 1);
+                        this.newAppointmentDateOnly = this.getLocalDateString(tomorrowDay);
+                        this.availableTimeSlots = this.generateTimeSlots(this.newAppointmentDateOnly);
+                        this.newAppointmentTimeOnly = '09:00';
+                    }
+                }
+                this.newAppointmentDate = `${this.newAppointmentDateOnly}T${this.newAppointmentTimeOnly}`;
+            }
+        }, 30000);
     }
 
     closeAppointmentModal(): void {
         this.showAppointmentModal = false;
+        if (this.minDateRefreshInterval) {
+            clearInterval(this.minDateRefreshInterval);
+            this.minDateRefreshInterval = null;
+        }
+    }
+
+    onAppointmentDateOnlyChange(): void {
+        if (!this.newAppointmentDateOnly) return;
+        
+        const now = new Date();
+        const todayStr = this.getLocalDateString(now);
+        
+        // Block choosing past dates
+        if (this.newAppointmentDateOnly < todayStr) {
+            this.newAppointmentDateOnly = todayStr;
+        }
+        
+        this.availableTimeSlots = this.generateTimeSlots(this.newAppointmentDateOnly);
+        
+        // Auto-correct time selection if no longer valid
+        if (this.availableTimeSlots.length > 0) {
+            if (!this.availableTimeSlots.includes(this.newAppointmentTimeOnly)) {
+                this.newAppointmentTimeOnly = this.availableTimeSlots[0];
+            }
+        } else {
+            alert("No appointment slots are available for the rest of today. Advancing to tomorrow's slots.");
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            this.newAppointmentDateOnly = this.getLocalDateString(tomorrow);
+            this.availableTimeSlots = this.generateTimeSlots(this.newAppointmentDateOnly);
+            this.newAppointmentTimeOnly = '09:00';
+        }
+        
+        this.newAppointmentDate = `${this.newAppointmentDateOnly}T${this.newAppointmentTimeOnly}`;
+    }
+
+    onAppointmentTimeOnlyChange(): void {
+        this.newAppointmentDate = `${this.newAppointmentDateOnly}T${this.newAppointmentTimeOnly}`;
     }
 
     submitAppointment(): void {
         if (!this.userId) return;
+
+        if (!this.newAppointmentDateOnly || !this.newAppointmentTimeOnly) {
+            alert('Please select a valid date and time slot!');
+            return;
+        }
+
+        // Construct final date value
+        this.newAppointmentDate = `${this.newAppointmentDateOnly}T${this.newAppointmentTimeOnly}`;
+
+        const selectedDate = new Date(this.newAppointmentDate);
+        const now = new Date();
+        if (selectedDate < now) {
+            alert('Cannot request an appointment in the past!');
+            return;
+        }
 
         const request = {
             patientId: this.userId,
@@ -376,6 +516,67 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
         setTimeout(() => {
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }, 150);
+    }
+
+    // --- Schedule Timers ---
+
+    hasActiveSchedule(prescriptionId?: number): boolean {
+        if (!prescriptionId) return false;
+        return this.mySchedules.some(s => s.prescription && s.prescription.id === prescriptionId && s.status === 'ACTIVE');
+    }
+
+    openScheduleModal(prescription: Prescription): void {
+        this.scheduleTargetPrescription = prescription;
+        this.medScheduleService.getMealPrefs().subscribe({
+            next: (prefs) => {
+                if (prefs && prefs.breakfastTime) {
+                    this.schedulePrefs = prefs;
+                    if (this.schedulePrefs.breakfastTime.length > 5) this.schedulePrefs.breakfastTime = this.schedulePrefs.breakfastTime.substring(0, 5);
+                    if (this.schedulePrefs.lunchTime.length > 5) this.schedulePrefs.lunchTime = this.schedulePrefs.lunchTime.substring(0, 5);
+                    if (this.schedulePrefs.dinnerTime.length > 5) this.schedulePrefs.dinnerTime = this.schedulePrefs.dinnerTime.substring(0, 5);
+                }
+                this.showScheduleModal = true;
+            },
+            error: () => this.showScheduleModal = true // Open with defaults if error
+        });
+    }
+
+    closeScheduleModal(): void {
+        this.showScheduleModal = false;
+        this.scheduleTargetPrescription = null;
+    }
+
+    submitSchedule(): void {
+        if (!this.scheduleTargetPrescription || !this.scheduleTargetPrescription.id) return;
+
+        const formatTime = (time: string | null | undefined) => {
+            if (!time) return '08:00:00';
+            if (time.length === 5) return time + ':00';
+            if (time.length === 8) return time;
+            return time;
+        };
+
+        const req: MedScheduleRequest = {
+            prescriptionId: this.scheduleTargetPrescription.id,
+            startDate: new Date().toISOString().split('T')[0],
+            breakfastTime: formatTime(this.schedulePrefs.breakfastTime),
+            lunchTime: formatTime(this.schedulePrefs.lunchTime),
+            dinnerTime: formatTime(this.schedulePrefs.dinnerTime),
+            preMealOffsetMinutes: this.schedulePrefs.preMealOffsetMinutes || 15
+        };
+
+        this.medScheduleService.createSchedule(req).subscribe({
+            next: (res) => {
+                alert('Schedule created successfully! Timers are now active.');
+                this.closeScheduleModal();
+                this.loadData();
+                this.checkDueDoses();
+            },
+            error: (err) => {
+                console.error('Error creating schedule', err);
+                alert('Failed to create schedule. Please check console for details.');
+            }
+        });
     }
 
     requestRenewal(prescriptionId: number | undefined): void {
@@ -863,6 +1064,10 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
         this.showProfileModal = false;
         this.selectedBlock = null;
         this.isUserMenuOpen = false;
+        if (this.minDateRefreshInterval) {
+            clearInterval(this.minDateRefreshInterval);
+            this.minDateRefreshInterval = null;
+        }
 
         // Force clean global DOM
         document.body.style.filter = 'none';

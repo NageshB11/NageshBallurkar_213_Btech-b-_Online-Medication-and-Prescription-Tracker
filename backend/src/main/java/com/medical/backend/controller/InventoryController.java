@@ -24,6 +24,11 @@ public class InventoryController {
         return inventoryService.getPharmacistInventory(id);
     }
 
+    @GetMapping("/search")
+    public List<Inventory> searchByMedicine(@RequestParam("name") String name) {
+        return inventoryService.searchByMedicineName(name);
+    }
+
     @PostMapping
     public Inventory add(@RequestBody Inventory inventory) {
         return inventoryService.addStock(inventory);

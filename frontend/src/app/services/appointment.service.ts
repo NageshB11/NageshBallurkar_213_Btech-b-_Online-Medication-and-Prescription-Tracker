@@ -31,6 +31,10 @@ export class AppointmentService {
         return this.http.put<Appointment>(`${this.apiUrl}/${id}/reject`, {}, { headers: this.getHeaders() });
     }
 
+    rescheduleAppointment(id: number, appointmentDate: string, notes?: string): Observable<Appointment> {
+        return this.http.put<Appointment>(`${this.apiUrl}/${id}/reschedule`, { appointmentDate, notes }, { headers: this.getHeaders() });
+    }
+
     getDoctorAppointments(): Observable<Appointment[]> {
         return this.http.get<Appointment[]>(`${this.apiUrl}/doctor/me`, { headers: this.getHeaders() });
     }

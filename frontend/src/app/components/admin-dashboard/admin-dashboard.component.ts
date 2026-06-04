@@ -654,12 +654,7 @@ type ViewMode = 'LAUNCHPAD' | 'ANALYTICS' | 'USERS' | 'ALERTS' | 'COMPLIANCE';
     }
     .m-360-drawer.open { right: 0; }
     
-    /* SUPPRESSION OF ALL OVERLAYS UNLESS ACTIVE */
-    :host ::ng-deep .modal-backdrop, 
-    :host ::ng-deep .drawer-overlay,
-    :host ::ng-deep .m-360-overlay { 
-      display: none !important; 
-    }
+
     
     .font-mono { font-family: 'SFMono-Regular', Consolas, monospace; }
     .x-small { font-size: 0.7rem; }

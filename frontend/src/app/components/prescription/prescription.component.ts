@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { SafetyReport } from '../../models/safety-report.model';
+import { InventoryService, Inventory } from '../../services/inventory.service';
 
 @Component({
     selector: 'app-prescription',
@@ -34,10 +35,19 @@ export class PrescriptionComponent implements OnInit {
     activeSafetyReport: SafetyReport | null = null;
     showSafetyConflict: boolean = false;
 
+    // Inventory States
+    pharmacistInventory: Inventory[] = [];
+    isLoadingInventory: boolean = false;
+    medicineSearchCache: { [key: string]: Inventory[] } = {};
+    showOtherPharmaciesModal: boolean = false;
+    currentSearchingMed: string = '';
+    otherPharmaciesStock: Inventory[] = [];
+
     constructor(
         private fb: FormBuilder,
         private prescriptionService: PrescriptionService,
         private pharmacistService: PharmacistService,
+        private inventoryService: InventoryService,
         private route: ActivatedRoute
     ) {
         this.prescriptionForm = this.fb.group({
@@ -126,7 +136,8 @@ export class PrescriptionComponent implements OnInit {
                     quantity: [item.quantity, [Validators.required, Validators.min(1)]],
                     dosageTiming: [item.dosageTiming, Validators.required],
                     startDate: [item.startDate, Validators.required],
-                    endDate: [item.endDate, Validators.required]
+                    endDate: [item.endDate, Validators.required],
+                    isOptional: [item.isOptional || false]
                 }));
             });
         } else {
@@ -151,7 +162,8 @@ export class PrescriptionComponent implements OnInit {
             quantity: [1, [Validators.required, Validators.min(1)]],
             dosageTiming: ['', Validators.required],
             startDate: ['', Validators.required],
-            endDate: ['', Validators.required]
+            endDate: ['', Validators.required],
+            isOptional: [false]
         });
     }
 
@@ -334,5 +346,53 @@ export class PrescriptionComponent implements OnInit {
                 }
             });
         }
+    }
+
+    onPharmacistChange(): void {
+        if (this.selectedPharmacistId) {
+            this.isLoadingInventory = true;
+            this.inventoryService.getPharmacistInventory(this.selectedPharmacistId).subscribe({
+                next: (data) => {
+                    this.pharmacistInventory = data.filter(i => i.status !== 'EXPIRED' && i.status !== 'ARCHIVED');
+                    this.isLoadingInventory = false;
+                },
+                error: (err) => {
+                    console.error('Failed to load inventory', err);
+                    this.isLoadingInventory = false;
+                }
+            });
+        } else {
+            this.pharmacistInventory = [];
+        }
+    }
+
+    checkStock(index: number): boolean {
+        const medName = this.items.at(index).get('medicineName')?.value;
+        if (!medName || !this.selectedPharmacistId) return true; // Default to true if not selected
+        return this.pharmacistInventory.some(i => i.drugName.toLowerCase() === medName.toLowerCase() && i.quantity > 0);
+    }
+
+    searchOtherPharmacies(index: number): void {
+        const medName = this.items.at(index).get('medicineName')?.value;
+        if (!medName) return;
+
+        this.currentSearchingMed = medName;
+        this.inventoryService.searchByMedicine(medName).subscribe({
+            next: (data) => {
+                this.otherPharmaciesStock = data.filter(i => 
+                    i.pharmacist.id !== this.selectedPharmacistId && 
+                    i.quantity > 0 && 
+                    i.status !== 'EXPIRED'
+                );
+                this.showOtherPharmaciesModal = true;
+            },
+            error: (err) => console.error('Search failed', err)
+        });
+    }
+
+    selectOtherPharmacy(inventory: Inventory): void {
+        this.selectedPharmacistId = inventory.pharmacist.id;
+        this.showOtherPharmaciesModal = false;
+        this.onPharmacistChange();
     }
 }

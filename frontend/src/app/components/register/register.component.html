@@ -107,9 +107,13 @@
                         <input type="text" class="form-control" formControlName="medicalLicenseNumber"
                             placeholder="License Number">
                         <label>License Number</label>
-                        <div *ngIf="registerForm.get('medicalLicenseNumber')?.invalid && registerForm.get('medicalLicenseNumber')?.touched"
+                        <div *ngIf="registerForm.get('medicalLicenseNumber')?.errors?.['required'] && registerForm.get('medicalLicenseNumber')?.touched"
                             class="text-danger small mt-1">
                             License Number is required
+                        </div>
+                        <div *ngIf="registerForm.get('medicalLicenseNumber')?.errors?.['pattern'] && registerForm.get('medicalLicenseNumber')?.touched"
+                            class="text-danger small mt-1">
+                            Invalid format! Use: MED-123456
                         </div>
                     </div>
                     <div class="form-floating">
@@ -140,9 +144,13 @@
                         <input type="text" class="form-control" formControlName="pharmacyLicenseNumber"
                             placeholder="License Number">
                         <label>Pharmacy License Number</label>
-                        <div *ngIf="registerForm.get('pharmacyLicenseNumber')?.invalid && registerForm.get('pharmacyLicenseNumber')?.touched"
+                        <div *ngIf="registerForm.get('pharmacyLicenseNumber')?.errors?.['required'] && registerForm.get('pharmacyLicenseNumber')?.touched"
                             class="text-danger small mt-1">
                             Pharmacy License Number is required
+                        </div>
+                        <div *ngIf="registerForm.get('pharmacyLicenseNumber')?.errors?.['pattern'] && registerForm.get('pharmacyLicenseNumber')?.touched"
+                            class="text-danger small mt-1">
+                            Invalid format! Use: PHARM-123456
                         </div>
                     </div>
                     <div class="form-floating">

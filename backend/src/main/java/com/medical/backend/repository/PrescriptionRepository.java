@@ -15,7 +15,7 @@ import java.util.List;
 @Repository
 public interface PrescriptionRepository extends JpaRepository<Prescription, Long>, JpaSpecificationExecutor<Prescription> {
 
-    @Query("SELECT p FROM Prescription p WHERE p.patient.id = :patientId ORDER BY p.id DESC")
+    @Query("SELECT DISTINCT p FROM Prescription p LEFT JOIN FETCH p.items LEFT JOIN FETCH p.doctor LEFT JOIN FETCH p.pharmacist WHERE p.patient.id = :patientId ORDER BY p.id DESC")
     List<Prescription> findByPatientIdSorted(@Param("patientId") Long patientId);
 
     List<Prescription> findByPatient_Email(String email);

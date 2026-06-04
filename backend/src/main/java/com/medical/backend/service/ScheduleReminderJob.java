@@ -126,9 +126,21 @@ public class ScheduleReminderJob {
                 if (now.isAfter(deadline)) {
                     log.setStatus(DoseLog.DoseStatus.MISSED);
                     doseLogRepo.save(log);
+
+                    // Audit Log v1.1
+                    SystemAudit audit = new SystemAudit();
+                    audit.setAction("ADHERENCE_MISSED_AUTO");
+                    audit.setDetails(String.format(
+                            "Dose %s auto-marked as MISSED (1hr window lapsed). Patient: %s, Medicine: %s",
+                            log.getId(), 
+                            log.getPatient() != null ? log.getPatient().getEmail() : "unknown", 
+                            log.getSafeMedicineName()));
+                    audit.setVersionLabel("1.1");
+                    auditRepo.save(audit);
+
                     String label = buildDisplayLabel(log.getMealSlot(), log.getFoodInstruction());
                     notificationService.createNotification(log.getPatient(),
-                            "⚠️ Missed dose: " + log.getScheduleItem().getMedicineName()
+                            "⚠️ Missed dose: " + log.getSafeMedicineName()
                                     + " (" + label + ") — taken no action within 60 minutes.",
                             "WARNING");
                 }
@@ -149,9 +161,20 @@ public class ScheduleReminderJob {
         for (DoseLog log : stale) {
             log.setStatus(DoseLog.DoseStatus.MISSED);
             doseLogRepo.save(log);
+
+            // Audit Log v1.1
+            SystemAudit audit = new SystemAudit();
+            audit.setAction("ADHERENCE_MISSED_SWEEP");
+            audit.setDetails(String.format("Dose %s marked as MISSED by midnight sweep. Patient: %s, Medicine: %s",
+                    log.getId(), 
+                    log.getPatient() != null ? log.getPatient().getEmail() : "unknown", 
+                    log.getSafeMedicineName()));
+            audit.setVersionLabel("1.1");
+            auditRepo.save(audit);
+
             String label = buildDisplayLabel(log.getMealSlot(), log.getFoodInstruction());
             notificationService.createNotification(log.getPatient(),
-                    "You missed your " + label + " dose of " + log.getScheduleItem().getMedicineName(),
+                    "You missed your " + label + " dose of " + log.getSafeMedicineName(),
                     "WARNING");
         }
     }

@@ -31,6 +31,18 @@ public class AuthService {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new RuntimeException("Email already in use");
         }
+
+        // Professional License Validation
+        if (user.getRole() == com.medical.backend.entity.Role.DOCTOR) {
+            if (user.getMedicalLicenseNumber() == null || !user.getMedicalLicenseNumber().matches("^MED-\\d{6}$")) {
+                throw new RuntimeException("Invalid Medical License format. Expected: MED-123456");
+            }
+        } else if (user.getRole() == com.medical.backend.entity.Role.PHARMACIST) {
+            if (user.getPharmacyLicenseNumber() == null || !user.getPharmacyLicenseNumber().matches("^PHARM-\\d{6}$")) {
+                throw new RuntimeException("Invalid Pharmacy License format. Expected: PHARM-123456");
+            }
+        }
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         // Patients are automatically verified

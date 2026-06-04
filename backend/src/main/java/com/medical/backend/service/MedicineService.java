@@ -56,4 +56,16 @@ public class MedicineService {
             }
         });
     }
+
+    public void incrementStock(String medicineName, int quantity) {
+        medicineRepository.findByName(medicineName).ifPresent(medicine -> {
+            medicine.setStockQuantity(medicine.getStockQuantity() + quantity);
+            Medicine saved = medicineRepository.save(medicine);
+            stockAlertService.checkAndRaiseAlerts(saved.getId(), saved.getStockQuantity());
+        });
+    }
+
+    public Medicine getMedicineByName(String name) {
+        return medicineRepository.findByName(name).orElse(null);
+    }
 }

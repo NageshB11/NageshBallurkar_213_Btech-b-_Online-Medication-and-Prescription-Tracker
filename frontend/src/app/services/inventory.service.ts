@@ -46,4 +46,8 @@ export class InventoryService {
     delete(id: number): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
     }
+
+    searchByMedicine(name: string): Observable<Inventory[]> {
+        return this.http.get<Inventory[]>(`${this.apiUrl}/search?name=${name}`, { headers: this.getHeaders() });
+    }
 }

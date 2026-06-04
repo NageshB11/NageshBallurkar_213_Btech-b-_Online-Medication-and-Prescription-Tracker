@@ -53,10 +53,13 @@ public class PharmacistController {
     }
 
     @PatchMapping("/dispense/{id}")
-    public ResponseEntity<?> dispensePrescription(@PathVariable("id") Long id, Authentication authentication) {
+    public ResponseEntity<?> dispensePrescription(
+            @PathVariable("id") Long id, 
+            @RequestParam(value = "cost", required = false) Double cost,
+            Authentication authentication) {
         try {
             String pharmacistEmail = authentication.getName();
-            Prescription p = pharmacistService.dispensePrescription(id, pharmacistEmail);
+            Prescription p = pharmacistService.dispensePrescription(id, pharmacistEmail, cost);
             return ResponseEntity.ok(p);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -71,6 +74,20 @@ public class PharmacistController {
             pharmacistService.requestClarification(id, pharmacistEmail, reason);
             return ResponseEntity.ok("Clarification request sent to doctor");
         } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/items/{itemId}/availability")
+    public ResponseEntity<?> updateItemAvailability(
+            @PathVariable("itemId") Long itemId,
+            @RequestParam("available") boolean available,
+            Authentication authentication) {
+        try {
+            String pharmacistEmail = authentication.getName();
+            Prescription p = pharmacistService.updateItemAvailability(itemId, available, pharmacistEmail);
+            return ResponseEntity.ok(p);
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

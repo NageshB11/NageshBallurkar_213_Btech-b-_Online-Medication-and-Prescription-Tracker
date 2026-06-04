@@ -38,7 +38,7 @@ public class MissedDoseTrackingService {
             doseLogRepository.save(dose);
 
             // Fetch Clinical Tip from OpenFDA via ExternalDrugService
-            String drugName = dose.getScheduleItem().getMedicine().getName();
+            String drugName = dose.getSafeMedicineName();
             DrugProfileDTO profile = externalDrugService.fetchDrugProfile(drugName);
             String clinicalTip = profile.getMissedDoseTip();
 

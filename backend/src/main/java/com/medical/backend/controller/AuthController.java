@@ -144,4 +144,32 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email") != null ? request.get("email").toLowerCase().trim() : "";
+        if (email.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+        }
+        
+        System.out.println("DEBUG: Forgot password request for email: [" + email + "]");
+        
+        return userRepository.findByEmail(email)
+                .map(user -> {
+                    // Generate a temporary password (e.g. Reset483921!)
+                    String tempPassword = "Reset" + (100000 + new java.util.Random().nextInt(900000)) + "!";
+                    user.setPassword(passwordEncoder.encode(tempPassword));
+                    userRepository.save(user);
+                    
+                    System.out.println("DEBUG: Password reset successful for user: " + email + ", Temp password generated.");
+                    return ResponseEntity.ok(Map.of(
+                            "message", "Password reset successful.",
+                            "tempPassword", tempPassword
+                    ));
+                })
+                .orElseGet(() -> {
+                    System.out.println("DEBUG: Forgot password failed - email not found: [" + email + "]");
+                    return ResponseEntity.status(404).body(Map.of("message", "No account found with this email address"));
+                });
+    }
 }

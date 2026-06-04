@@ -65,13 +65,26 @@ public class PrescriptionService {
         }
     }
 
-    public org.springframework.core.io.Resource getPrescriptionFile(Long prescriptionId, String userEmail) {
-        Prescription prescription = getPrescription(prescriptionId);
+    public org.springframework.core.io.Resource getPrescriptionFile(Long id, String email) {
+        Prescription prescription = getPrescription(id);
+        
+        // Self-healing: If accepted or dispensed, ensure the PDF is regenerated on download to include correct pharmacy pickup/billing info
+        if (((prescription.getStatus() == Prescription.PrescriptionStatus.PROCEEDED_TO_PHARMACIST) || 
+             (prescription.getStatus() == Prescription.PrescriptionStatus.DISPENSED)) && 
+             prescription.getPharmacist() != null) {
+            try {
+                String fileName = pdfService.generatePrescriptionPdf(prescription);
+                prescription.setFilePath(fileName);
+                prescriptionRepository.save(prescription);
+            } catch (Exception e) {
+                System.err.println("[REGEN] Failed to regenerate PDF for download: " + e.getMessage());
+            }
+        }
 
-        boolean isPatient = prescription.getPatient() != null && prescription.getPatient().getEmail().equals(userEmail);
-        boolean isDoctor = prescription.getDoctor() != null && prescription.getDoctor().getEmail().equals(userEmail);
+        boolean isPatient = prescription.getPatient() != null && prescription.getPatient().getEmail().equals(email);
+        boolean isDoctor = prescription.getDoctor() != null && prescription.getDoctor().getEmail().equals(email);
 
-        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
         boolean isPharmacist = user.getRole() == com.medical.backend.entity.Role.PHARMACIST;
 
         if (!isPatient && !isDoctor && !isPharmacist) {
@@ -297,12 +310,30 @@ public class PrescriptionService {
                     }
                 }
             } else if (newStatus == Prescription.PrescriptionStatus.PROCEEDED_TO_PHARMACIST) {
+                // Regenerate PDF to include pharmacist/pharmacy pickup information
+                try {
+                    String fileName = pdfService.generatePrescriptionPdf(saved);
+                    saved.setFilePath(fileName);
+                    prescriptionRepository.save(saved);
+                } catch (Exception e) {
+                    System.err.println("[WARN] PDF regeneration failed on pharmacist acceptance for #" + saved.getId());
+                }
+
                 if (saved.getPatient() != null) {
                     notificationService.createNotification(saved.getPatient(),
                             "Your pharmacist has accepted the request and is preparing your medication.",
                             "PHARMACY_PREPARING");
                 }
             } else if (newStatus == Prescription.PrescriptionStatus.DISPENSED) {
+                // Regenerate PDF to include billing info
+                try {
+                    String fileName = pdfService.generatePrescriptionPdf(saved);
+                    saved.setFilePath(fileName);
+                    prescriptionRepository.save(saved);
+                } catch (Exception e) {
+                    System.err.println("[WARN] PDF regeneration failed on dispensing for #" + saved.getId());
+                }
+
                 if (saved.getPatient() != null) {
                     notificationService.createNotification(saved.getPatient(),
                             "Your prescription #" + saved.getId() + " has been dispensed.", "DISPENSED");
@@ -397,7 +428,7 @@ public class PrescriptionService {
     private NotificationService notificationService;
 
     @Transactional
-    public Prescription dispensePrescription(Long id, String pharmacistEmail) throws IOException {
+    public Prescription dispensePrescription(Long id, String pharmacistEmail, Double cost) throws IOException {
         Prescription existing = prescriptionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Prescription not found with id " + id));
 
@@ -405,14 +436,18 @@ public class PrescriptionService {
             throw new RuntimeException("Only PROCEEDED_TO_PHARMACIST prescriptions can be dispensed.");
         }
 
+        if (cost != null) {
+            existing.setTotalCost(cost);
+            existing.setCurrency("INR");
+        }
+
         if (existing.getItems() != null) {
             for (PrescriptionItem item : existing.getItems()) {
-                inventoryService.decrementStock(item.getMedicineName(), 1); // Assuming 1 unit per prescription item for
-                                                                            // now, or use item quantity if available
+                inventoryService.decrementStock(item.getMedicineName(), item.calculateTotalQuantity());
             }
         }
 
-        return broadcastStatusChange(existing, Prescription.PrescriptionStatus.DISPENSED, "Prescription Dispensed",
+        return broadcastStatusChange(existing, Prescription.PrescriptionStatus.DISPENSED, "Prescription Dispensed with Cost ₹" + cost,
                 pharmacistEmail);
     }
 
@@ -565,6 +600,9 @@ public class PrescriptionService {
         // Collect all prescribed slots across all items for this matrix
         java.util.Set<String> activeSlots = new java.util.HashSet<>();
         for (PrescriptionItem item : prescription.getItems()) {
+            // Skip optional medications for the mandatory adherence matrix
+            if (item.isOptional()) continue;
+
             if (item.getMealSlots() != null && !item.getMealSlots().trim().isEmpty()) {
                 for (String s : item.getMealSlots().split(",")) {
                     String trimmed = s.trim().toUpperCase();

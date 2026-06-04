@@ -69,11 +69,11 @@ export class RegisterComponent {
     medicalHistoryControl?.clearValidators();
 
     if (role === Role.DOCTOR) {
-      medicalLicenseControl?.setValidators([Validators.required]);
+      medicalLicenseControl?.setValidators([Validators.required, Validators.pattern(/^MED-\d{6}$/)]);
       specializationControl?.setValidators([Validators.required]);
     } else if (role === Role.PHARMACIST) {
       pharmacyNameControl?.setValidators([Validators.required]);
-      pharmacyLicenseControl?.setValidators([Validators.required]);
+      pharmacyLicenseControl?.setValidators([Validators.required, Validators.pattern(/^PHARM-\d{6}$/)]);
       shopDetailsControl?.setValidators([Validators.required]);
     } else if (role === Role.PATIENT) {
       // Medical history is optional in the user request ("A 'Medical History' textarea appears"), 

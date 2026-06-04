@@ -8,6 +8,7 @@ export interface PrescriptionItem {
     quantity: number;
     startDate?: string;
     endDate?: string;
+    available?: boolean;
 }
 
 export interface Prescription {
@@ -29,4 +30,5 @@ export interface Prescription {
     pharmacist?: any;
     doseSchedule?: any[]; // Temporal blocks per prescription
     overrideInteraction?: boolean;
+    totalCost?: number;
 }

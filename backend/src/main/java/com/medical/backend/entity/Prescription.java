@@ -76,6 +76,11 @@ public class Prescription {
     @JoinColumn(name = "pharmacist_id")
     private User pharmacist;
 
+    private Double totalCost;
+    
+    @Column(columnDefinition = "varchar(10) default 'INR'")
+    private String currency = "INR";
+
     public enum PrescriptionStatus {
         PENDING,
         APPROVED,

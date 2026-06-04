@@ -27,6 +27,10 @@ public class InventoryService {
         return inventoryRepository.findByPharmacistId(pharmacistId);
     }
 
+    public List<Inventory> searchByMedicineName(String drugName) {
+        return inventoryRepository.findByDrugName(drugName);
+    }
+
     @Transactional
     public Inventory addStock(Inventory inventory) {
         checkAndSetStatus(inventory);

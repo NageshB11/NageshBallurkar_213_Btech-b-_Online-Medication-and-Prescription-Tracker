@@ -71,6 +71,29 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.rejectAppointment(id));
     }
 
+    @PutMapping("/{id}/reschedule")
+    public ResponseEntity<Appointment> rescheduleAppointment(
+            @PathVariable("id") Long id,
+            @RequestBody Map<String, Object> request) {
+        try {
+            String dateStr = request.get("appointmentDate").toString();
+            LocalDateTime newDate = LocalDateTime.parse(dateStr);
+            String notes = (String) request.get("notes");
+            return ResponseEntity.ok(appointmentService.rescheduleAppointment(id, newDate, notes));
+        } catch (Exception e) {
+            try {
+                java.nio.file.Files.writeString(
+                    java.nio.file.Paths.get("c:/Users/Nagesh/OneDrive/Desktop/Project/Online_Medication/error.log"),
+                    e.toString() + "\n" + java.util.Arrays.toString(e.getStackTrace()) + "\n",
+                    java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND
+                );
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            throw e;
+        }
+    }
+
     @GetMapping("/doctor/me")
     public ResponseEntity<List<Appointment>> getDoctorAppointments(@RequestHeader("Authorization") String token) {
         String email = jwtUtil.extractUsername(token.substring(7));

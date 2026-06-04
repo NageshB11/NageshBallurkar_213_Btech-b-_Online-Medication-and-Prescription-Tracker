@@ -28,6 +28,25 @@
             <h2 class="step-heading">🌅 Set Your Daily Meal Times</h2>
             <p class="step-desc">We'll use these to send you medication reminders at the right time.</p>
 
+            <div class="error-msg mb-4" *ngIf="error" style="background: rgba(255, 71, 87, 0.1); color: #ff4757; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,71,87,0.2);">
+                ⚠️ {{ error }}
+            </div>
+
+            <div class="offset-row mb-4" *ngIf="availablePrescriptions.length > 1 && !prescriptionId">
+                <label>📋 Select Dispensed Prescription</label>
+                <div class="offset-input-wrap" style="width: 100%;">
+                    <select class="form-select" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; width: 100%;" [(ngModel)]="prescriptionId" (change)="onPrescriptionChange()">
+                        <option [ngValue]="undefined" disabled selected>Select a prescription to schedule...</option>
+                        <option *ngFor="let p of availablePrescriptions" [ngValue]="p.id">Rx #{{p.id}} - Issued on {{p.createdAt | date:'mediumDate'}}</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="offset-row mb-4" *ngIf="availablePrescriptions.length > 1 && prescriptionId">
+                 <label style="color: #4cd137;">✅ Selected Prescription: Rx #{{prescriptionId}}</label>
+                 <a href="javascript:void(0)" (click)="prescriptionId = undefined" style="color: #0984e3; font-size: 0.85rem; margin-left: 10px;">Change</a>
+            </div>
+
             <div class="meal-time-grid">
                 <div class="meal-time-row">
                     <span class="meal-icon">🌅</span>

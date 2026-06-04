@@ -86,8 +86,12 @@ export class DoseTrackerComponent implements OnInit {
                 dose.status = updated.status;
                 dose.actualTime = updated.actualTime;
                 delete this.noteInput[dose.doseId];
+                this.error = ''; // Clear previous errors
             },
-            error: () => alert('Failed to update dose status.')
+            error: () => {
+                this.error = 'Failed to update dose status. Please try again.';
+                setTimeout(() => this.error = '', 5000);
+            }
         });
     }
 
@@ -97,8 +101,12 @@ export class DoseTrackerComponent implements OnInit {
                 dose.status = updated.status;
                 dose.snoozedUntil = updated.snoozedUntil;
                 dose.snoozeCount = updated.snoozeCount;
+                this.error = ''; // Clear previous errors
             },
-            error: () => alert('Failed to snooze dose.')
+            error: () => {
+                this.error = 'Failed to snooze dose. Please try again.';
+                setTimeout(() => this.error = '', 5000);
+            }
         });
     }
 

@@ -27,9 +27,14 @@
                         </span>
                     </div>
                     
-                    <div class="appointment-time">
-                        <i class="bi bi-clock-history"></i>
-                        {{ apt.appointmentDate | date:'EEEE, MMM d, y • h:mm a' }}
+                    <div class="appointment-time d-flex align-items-center flex-wrap gap-2">
+                        <span>
+                            <i class="bi bi-clock-history"></i>
+                            {{ apt.appointmentDate | date:'EEEE, MMM d, y • h:mm a' }}
+                        </span>
+                        <span *ngIf="hasConflict(apt)" class="badge bg-danger-subtle text-danger border border-danger-subtle py-1 px-2 rounded-pill" style="font-size: 0.75rem;">
+                            <i class="bi bi-exclamation-triangle-fill me-1 text-danger"></i> Time Conflict
+                        </span>
                     </div>
 
                     <div *ngIf="apt.notes" class="notes-container">
@@ -48,6 +53,9 @@
                 <!-- Actions Section -->
                 <div class="action-buttons">
                     <ng-container *ngIf="apt.status === 'REQUESTED'">
+                        <button (click)="openRescheduleModal(apt)" class="btn-action btn-reschedule">
+                            <i class="bi bi-calendar-event"></i> Reschedule
+                        </button>
                         <button (click)="approve(apt.id!)" class="btn-action btn-approve">
                             <i class="bi bi-check-lg"></i> Approve
                         </button>
@@ -56,11 +64,77 @@
                         </button>
                     </ng-container>
 
-                    <ng-container *ngIf="apt.status === 'APPROVED' || apt.status === 'COMPLETED'">
+                    <ng-container *ngIf="apt.status === 'APPROVED'">
+                        <button (click)="openRescheduleModal(apt)" class="btn-action btn-reschedule me-2">
+                            <i class="bi bi-calendar-event"></i> Reschedule
+                        </button>
                         <button (click)="issuePrescription(apt.patient?.email)" class="btn-action btn-prescription">
                             <i class="bi bi-file-earmark-medical"></i> Issue Prescription
                         </button>
                     </ng-container>
+
+                    <ng-container *ngIf="apt.status === 'COMPLETED'">
+                        <button (click)="issuePrescription(apt.patient?.email)" class="btn-action btn-prescription">
+                            <i class="bi bi-file-earmark-medical"></i> Issue Prescription
+                        </button>
+                    </ng-container>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESCHEDULE APPOINTMENT MODAL -->
+        <div class="modal-backdrop fade show" *ngIf="showRescheduleModal" style="background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); z-index: 1040;"></div>
+        <div class="modal fade show d-block" *ngIf="showRescheduleModal" tabindex="-1" style="z-index: 1050;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+                    <div class="modal-header border-0 pt-4 px-4 pb-0">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-warning-subtle text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="bi bi-calendar-range-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold text-dark m-0">Reschedule Appointment</h5>
+                                <p class="text-muted small mb-0">Change time & notify patient</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close ms-auto shadow-none" (click)="closeRescheduleModal()"></button>
+                    </div>
+                    
+                    <div class="modal-body p-4">
+                        <div class="mb-3 bg-light rounded p-3 border-start border-warning border-4" *ngIf="rescheduleTargetAppointment">
+                            <h6 class="fw-bold mb-1" style="font-size:0.85rem;"><i class="bi bi-person me-1"></i> {{ rescheduleTargetAppointment.patient?.fullName }}</h6>
+                            <p class="text-secondary small mb-0"><i class="bi bi-clock-history me-1"></i> Current: {{ rescheduleTargetAppointment.appointmentDate | date:'medium' }}</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">Select New Date</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0" style="border-radius: 12px 0 0 12px;"><i class="bi bi-calendar3"></i></span>
+                                <input type="date" class="form-control border-start-0 ps-0" [min]="minAppointmentDateOnly" [(ngModel)]="rescheduleDateOnly" (change)="onRescheduleDateOnlyChange()" style="border-radius: 0 12px 12px 0; height: 45px;">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">Select Available Slot</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0" style="border-radius: 12px 0 0 12px;"><i class="bi bi-clock"></i></span>
+                                <select class="form-select border-start-0 ps-0" [(ngModel)]="rescheduleTimeOnly" style="border-radius: 0 12px 12px 0; height: 45px;">
+                                    <option *ngFor="let slot of availableTimeSlots" [value]="slot">{{ slot }}</option>
+                                    <option *ngIf="availableTimeSlots.length === 0" disabled>No slots available today</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">Rescheduling Note / Reason (Sent to Patient)</label>
+                            <textarea class="form-control" rows="3" [(ngModel)]="rescheduleNotes" placeholder="e.g., Schedule conflict. Moving your slot 30 minutes later." style="border-radius: 12px; resize: none;"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer border-0 p-4 pt-0 d-flex gap-2">
+                        <button type="button" class="btn btn-light w-100 py-2.5 rounded-pill fw-bold" (click)="closeRescheduleModal()">Cancel</button>
+                        <button type="button" class="btn btn-warning w-100 py-2.5 rounded-pill text-white fw-bold shadow-sm" (click)="submitReschedule()">Confirm & Send</button>
+                    </div>
                 </div>
             </div>
         </div>

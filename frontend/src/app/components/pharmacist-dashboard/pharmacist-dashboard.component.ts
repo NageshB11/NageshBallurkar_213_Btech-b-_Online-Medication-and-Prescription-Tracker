@@ -8,6 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { MedicationDetailModalComponent } from '../medication-detail-modal/medication-detail-modal.component';
 
 import { RouterModule } from '@angular/router';
+import { InventoryService } from '../../services/inventory.service';
 
 @Component({
   selector: 'app-pharmacist-dashboard',
@@ -32,14 +33,14 @@ import { RouterModule } from '@angular/router';
           </div>
         </div>
 
-    <div *ngIf="error" class="alert alert-danger shadow-sm">{{ error }}</div>
+        <div *ngIf="error" class="alert alert-danger shadow-sm">{{ error }}</div>
 
-    <div *ngIf="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status"></div>
-      <p class="mt-2 text-muted">Loading queue...</p>
-    </div>
+        <div *ngIf="loading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2 text-muted">Loading queue...</p>
+        </div>
 
-        <!-- Action Required Queue -->
+        <!-- Incoming Requests Grid -->
         <h5 class="fw-bold mb-3 text-dark mt-2" style="letter-spacing: -0.3px;">Incoming Requests</h5>
         
         <div *ngIf="incomingRequests.length === 0 && !loading" class="alert alert-light text-center p-5 apollo-card border-0">
@@ -50,99 +51,240 @@ import { RouterModule } from '@angular/router';
            <p class="text-secondary mb-0">No pending prescriptions require your immediate attention.</p>
         </div>
 
-        <div class="d-flex flex-column gap-3 mb-5">
-          <div *ngFor="let p of incomingRequests" class="apollo-card position-relative overflow-hidden">
-              <!-- Glow Effect for Processing -->
-              <div *ngIf="p.status === 'PROCEEDED_TO_PHARMACIST'" class="position-absolute top-0 start-0 w-100" style="height: 4px; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
-              <div *ngIf="p.status === 'ISSUED'" class="position-absolute top-0 start-0 w-100" style="height: 4px; background: linear-gradient(90deg, #1e3a8a, #3b82f6);"></div>
-              
-              <!-- Row 1: Header -->
-              <div class="d-flex justify-content-between align-items-center mb-0 mt-1 pb-2">
-                <div class="d-flex align-items-center gap-3">
-                    <h6 class="fw-bold mb-0 text-dark" style="margin: 0; font-size: 1.1rem; letter-spacing: -0.3px;">Prescription #{{ p.id }}</h6>
+        <div *ngIf="incomingRequests.length > 0 && !loading" class="apollo-card border-0 overflow-hidden mb-5 p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead style="background: rgba(248, 250, 252, 0.8); border-bottom: 2px solid rgba(226, 232, 240, 0.8);">
+                <tr>
+                  <th class="ps-4 py-3 text-secondary text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Prescription Ref</th>
+                  <th class="py-3 text-secondary text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Patient Email/Name</th>
+                  <th class="py-3 text-secondary text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Prescription Date</th>
+                  <th class="py-3 text-secondary text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Doctor Name</th>
+                  <th class="py-3 text-secondary text-uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">Status</th>
+                  <th class="py-3 text-secondary text-uppercase fw-bold text-center" style="font-size: 0.75rem; letter-spacing: 0.5px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let p of incomingRequests" 
+                    (click)="openDrawer(p)" 
+                    class="clickable-row transition-all"
+                    style="cursor: pointer;">
+                  <td class="ps-4 py-3 fw-bold text-dark">
+                    #{{ p.id }}
+                  </td>
+                  <td class="py-3 fw-semibold text-dark">
+                    <div class="d-flex align-items-center">
+                      <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px;">
+                        <i class="bi bi-person-fill"></i>
+                      </div>
+                      <div>
+                        <div class="text-truncate" style="max-width: 250px;">{{ p.patient?.fullName || 'Valued Patient' }}</div>
+                        <small class="text-secondary">{{ p.patient?.email || p.patientEmail }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="py-3 text-secondary" style="font-size: 0.85rem;">
+                    {{ (p.createdAt ? (p.createdAt | date:'dd-MM-yyyy | HH:mm') : '-') }}
+                  </td>
+                  <td class="py-3 text-dark fw-medium">
+                    Dr. {{ (p.doctor?.fullName || 'Unknown').replace('Dr. ', '').replace('DR. ', '') }}
+                  </td>
+                  <td class="py-3">
                     <span class="badge rounded-pill fw-bold" 
-                      [ngStyle]="{'background-color': p.status === 'PROCEEDED_TO_PHARMACIST' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(30, 58, 138, 0.1)', 'color': p.status === 'PROCEEDED_TO_PHARMACIST' ? '#d97706' : '#1e3a8a', 'border': p.status === 'PROCEEDED_TO_PHARMACIST' ? '1px solid #fcd34d' : '1px solid #bfdbfe', 'font-size': '0.7rem', 'padding': '0.4em 1em', 'letter-spacing': '0.5px'}">
+                      [ngStyle]="{'background-color': p.status === 'PROCEEDED_TO_PHARMACIST' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(30, 58, 138, 0.1)', 'color': p.status === 'PROCEEDED_TO_PHARMACIST' ? '#d97706' : '#1e3a8a', 'border': p.status === 'PROCEEDED_TO_PHARMACIST' ? '1px solid #fcd34d' : '1px solid #bfdbfe', 'font-size': '0.7rem', 'padding': '0.4em 1em'}">
                       <i class="bi bi-circle-fill me-1" style="font-size: 0.4rem; vertical-align: middle;"></i>
                       {{ p.status === 'PROCEEDED_TO_PHARMACIST' ? 'IN PREPARATION' : 'AWAITING DISPENSING' }}
                     </span>
+                  </td>
+                  <td class="py-3 text-center">
+                    <div class="d-flex justify-content-center gap-2">
+                      <button (click)="$event.stopPropagation(); openDrawer(p)" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm" style="font-size: 0.75rem;">
+                        <i class="bi bi-eye-fill"></i> View Details
+                      </button>
+                      <button *ngIf="p.filePath" (click)="$event.stopPropagation(); downloadPdf(p.id!)" class="btn btn-sm btn-light rounded-circle border shadow-sm" title="Download PDF">
+                        <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Side Details Drawer -->
+        <div class="drawer-overlay" *ngIf="selectedPrescription" (click)="closeDrawer()">
+          <div class="drawer-content" (click)="$event.stopPropagation()">
+            <!-- Header -->
+            <div class="drawer-header d-flex justify-content-between align-items-center">
+              <div>
+                <h5 class="fw-bold mb-0 text-dark">Prescription Details</h5>
+                <small class="text-secondary">Ref ID: #{{ selectedPrescription.id }}</small>
+              </div>
+              <button class="btn-close" (click)="closeDrawer()"></button>
+            </div>
+
+            <!-- Drawer Body -->
+            <div class="drawer-body">
+              <!-- Patient and Doctor Info Card -->
+              <div class="info-card p-3 mb-4">
+                <div class="row g-3">
+                  <div class="col-12 border-bottom pb-2">
+                    <small class="text-secondary d-block uppercase-label mb-1">Patient Details</small>
+                    <div class="fw-bold text-dark">{{ selectedPrescription.patient?.fullName || 'Valued Patient' }}</div>
+                    <div class="text-secondary small">{{ selectedPrescription.patient?.email || selectedPrescription.patientEmail }}</div>
+                  </div>
+                  <div class="col-12">
+                    <small class="text-secondary d-block uppercase-label mb-1">Doctor Details</small>
+                    <div class="fw-bold text-dark">Dr. {{ (selectedPrescription.doctor?.fullName || 'Unknown').replace('Dr. ', '').replace('DR. ', '') }}</div>
+                    <div class="text-secondary small">{{ selectedPrescription.doctor?.specialization || 'General Practitioner' }}</div>
+                  </div>
                 </div>
-                <button *ngIf="p.filePath" (click)="downloadPdf(p.id!)" class="btn btn-light btn-sm rounded-pill border shadow-sm fw-bold text-secondary px-3" title="Download PDF" style="font-size: 0.75rem;">
-                  <i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i> View PDF
+              </div>
+
+              <!-- Action Required Section -->
+              <div *ngIf="selectedPrescription.status === 'ISSUED'" class="text-center p-4 bg-light rounded-4 border border-warning-subtle mb-4">
+                <i class="bi bi-info-circle text-warning fs-3 mb-2 d-block"></i>
+                <h6 class="fw-bold text-dark">Action Required: Accept Request</h6>
+                <p class="text-secondary small">You need to accept this prescription request before you can verify medicine stock and dispense.</p>
+                <button (click)="accept(selectedPrescription.id!)" class="btn btn-warning w-100 rounded-pill fw-bold py-2 mt-2">
+                  <i class="bi bi-box-arrow-in-down-right me-2"></i> Accept Request
                 </button>
               </div>
 
-              <!-- Row 2: Identity Grid -->
-              <div class="row align-items-center py-3 my-2" style="background: rgba(0,0,0,0.015); border-radius: 8px; border: 1px solid rgba(0,0,0,0.03);">
-                <div class="col-6 border-end border-secondary-subtle">
-                  <div class="d-flex align-items-center">
-                    <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px;">
-                        <i class="bi bi-person-fill"></i>
-                    </div>
-                    <div>
-                        <small class="text-secondary d-block uppercase-label mb-1">Patient Identity</small>
-                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.9rem;">
-                            {{ p.patient?.email || p.patientEmail }}
-                        </div>
-                    </div>
-                  </div>
+              <!-- Stock Verification Section -->
+              <div *ngIf="selectedPrescription.status === 'PROCEEDED_TO_PHARMACIST'">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="fw-bold mb-0 text-dark">Verify Stock (Medicine-by-Medicine)</h6>
+                  <span class="badge" [ngClass]="isAllVerified(selectedPrescription) ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'">
+                    {{ isAllVerified(selectedPrescription) ? 'All Verified' : 'Pending Verification' }}
+                  </span>
                 </div>
-                <div class="col-6 ps-4">
-                  <div class="d-flex align-items-center">
-                    <div class="bg-secondary-subtle text-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px;">
-                        <i class="bi bi-hospital-fill"></i>
-                    </div>
-                    <div>
-                        <small class="text-secondary d-block uppercase-label mb-1">Originating Doctor</small>
-                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.9rem;">
-                            {{ p.doctor?.fullName || 'Dr. Unknown' }}
-                        </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              <!-- Row 3: Medications -->
-              <div class="mt-3">
-                <small class="text-secondary d-block uppercase-label mb-2 ps-1">Requested Medications</small>
-                <div class="table-responsive border rounded-3 overflow-hidden">
-                  <table class="table table-hover table-borderless table-sm mb-0 compact-table align-middle">
-                    <thead class="text-secondary" style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-                      <tr>
-                        <th class="ps-3 py-2 fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Medicine Type</th>
-                        <th class="py-2 fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Dosage</th>
-                        <th class="py-2 fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Quantity</th>
-                        <th class="py-2 fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Instructions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let item of p.items" class="border-bottom" style="border-color: #f1f5f9 !important;">
-                        <td class="ps-3 py-2 fw-bold text-dark">
+                <!-- Auto-Verify Stock Button -->
+                <div class="mb-3">
+                  <button 
+                    [disabled]="isAutoVerifying"
+                    (click)="autoVerifyStock(selectedPrescription)" 
+                    class="btn btn-primary btn-sm w-100 rounded-pill py-2 shadow-sm fw-bold d-flex align-items-center justify-content-center gap-2" 
+                    style="background: linear-gradient(135deg, #2563eb, #1d4ed8); border: none;">
+                    <span *ngIf="isAutoVerifying" class="spinner-border spinner-border-sm" role="status" style="width: 1rem; height: 1rem;"></span>
+                    <i *ngIf="!isAutoVerifying" class="bi bi-magic text-info"></i>
+                    <span>{{ isAutoVerifying ? 'Auto-Verifying Stock...' : 'Auto-Verify Stock via Inventory' }}</span>
+                  </button>
+                </div>
+
+                <div class="medicine-verify-list d-flex flex-column gap-3 mb-4">
+                  <div *ngFor="let item of selectedPrescription.items" class="medicine-item-card p-3 border rounded-3 bg-white shadow-sm position-relative">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <div class="fw-bold text-dark d-flex align-items-center">
                           {{ item.medicineName }}
-                          <button class="btn btn-sm btn-link text-primary p-0 ms-2 text-decoration-none" style="font-size: 0.75rem;" title="Verify Drug Details" (click)="openInfoModal(item.medicineName)">
-                            <i class="bi bi-info-circle-fill"></i> Details
-                          </button>
-                        </td>
-                        <td class="py-2 text-dark fw-medium">{{ item.dosage }}</td>
-                        <td class="py-2 text-dark fw-medium">{{ item.quantity }}</td>
-                        <td class="py-2"><span class="badge bg-light text-secondary border fw-medium px-2 py-1" style="font-size: 0.75rem;">{{ item.dosageTiming || 'As directed' }}</span></td>
-                      </tr>
-                    </tbody>
-                  </table>
+                          <span class="badge ms-2" [ngClass]="item.available === true ? 'bg-success-subtle text-success border border-success' : (item.available === false ? 'bg-danger-subtle text-danger border border-danger' : 'bg-secondary-subtle text-secondary border')">
+                            {{ item.available === true ? 'In Stock' : (item.available === false ? 'Out of Stock' : 'Unverified') }}
+                          </span>
+                        </div>
+                        <div class="text-secondary small mt-1">Dosage: {{ item.dosage }} | Qty: {{ item.quantity }}</div>
+                        <div class="text-secondary small">Instructions: {{ item.dosageTiming || 'As directed' }}</div>
+                        
+                        <!-- System Stock Info -->
+                        <div class="mt-2 p-2 rounded-3 border" 
+                             [ngStyle]="{
+                               'background-color': getStockInfo(item.medicineName) ? (getStockInfo(item.medicineName)!.stockQuantity >= item.quantity ? 'rgba(16, 185, 129, 0.06)' : 'rgba(239, 68, 68, 0.06)') : 'rgba(241, 245, 249, 0.9)',
+                               'border-color': getStockInfo(item.medicineName) ? (getStockInfo(item.medicineName)!.stockQuantity >= item.quantity ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)') : 'rgba(226, 232, 240, 1)'
+                             }"
+                             style="font-size: 0.85rem;">
+                          <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-secondary fw-semibold">
+                              <i class="bi bi-box-seam me-1"></i> System Stock:
+                            </span>
+                            <span class="fw-bold" 
+                                  [ngClass]="getStockInfo(item.medicineName) ? (getStockInfo(item.medicineName)!.stockQuantity >= item.quantity ? 'text-success' : 'text-danger') : 'text-muted'">
+                              {{ getStockInfo(item.medicineName) ? (getStockInfo(item.medicineName)!.stockQuantity + ' units') : 'Not Found in Inventory' }}
+                            </span>
+                          </div>
+                          <div *ngIf="getStockInfo(item.medicineName)" class="d-flex justify-content-between align-items-center mt-1">
+                            <span class="text-secondary fw-semibold">
+                              <i class="bi bi-tag me-1"></i> Unit Price:
+                            </span>
+                            <span class="text-dark fw-bold">
+                              ₹{{ getStockInfo(item.medicineName)!.unitPrice.toFixed(2) }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <button class="btn btn-sm btn-link text-primary p-0 text-decoration-none" style="font-size: 0.75rem;" (click)="openInfoModal(item.medicineName)">
+                          <i class="bi bi-info-circle-fill"></i> Info
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Toggle Buttons -->
+                    <div class="d-flex gap-2 mt-3 pt-2 border-top">
+                      <button 
+                        type="button"
+                        [disabled]="verifyingItemId === item.id || isAutoVerifying"
+                        [ngClass]="item.available === true ? 'btn-success text-white' : 'btn-outline-success'"
+                        class="btn btn-sm flex-fill rounded-pill d-flex align-items-center justify-content-center gap-1 fw-bold transition-all"
+                        (click)="toggleAvailability(selectedPrescription, item, true)">
+                        <i class="bi" [ngClass]="item.available === true ? 'bi-check-circle-fill' : 'bi-check-circle'"></i>
+                        Available
+                      </button>
+                      <button 
+                        type="button"
+                        [disabled]="verifyingItemId === item.id || isAutoVerifying"
+                        [ngClass]="item.available === false ? 'btn-danger text-white' : 'btn-outline-danger'"
+                        class="btn btn-sm flex-fill rounded-pill d-flex align-items-center justify-content-center gap-1 fw-bold transition-all"
+                        (click)="toggleAvailability(selectedPrescription, item, false)">
+                        <i class="bi" [ngClass]="item.available === false ? 'bi-x-circle-fill' : 'bi-x-circle'"></i>
+                        Not Available
+                      </button>
+                    </div>
+                    
+                    <div *ngIf="verifyingItemId === item.id" class="position-absolute top-50 start-50 translate-middle">
+                      <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- PDF Download Button inside Drawer when available -->
+                <div *ngIf="selectedPrescription.filePath" class="mb-3 border-top pt-3">
+                  <button 
+                    (click)="downloadPdf(selectedPrescription.id!)"
+                    class="btn btn-outline-danger w-100 py-2 rounded-pill shadow-sm fw-bold d-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                    <span>Download Prescription PDF</span>
+                  </button>
+                </div>
+
+                <!-- Dispense and Cost form -->
+                <div class="dispense-form border-top pt-3 mt-3">
+                  <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary text-uppercase">Total Cost (INR)</label>
+                    <div class="input-group">
+                      <span class="input-group-text bg-light border-end-0">₹</span>
+                      <input type="number" class="form-control" placeholder="Enter custom billing amount or leave empty for auto-calc" [(ngModel)]="selectedPrescription.totalCost">
+                    </div>
+                    <div class="form-text small text-secondary mt-1">If empty, cost will auto-calculate based on inventory unit prices.</div>
+                  </div>
+
+                  <div *ngIf="!isAllVerified(selectedPrescription)" class="alert alert-warning py-2 px-3 small border-0 mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                    <span>Dispensing locked. Verify stock for all medicines first.</span>
+                  </div>
+
+                  <button 
+                    [disabled]="!isAllVerified(selectedPrescription) || isAutoVerifying"
+                    (click)="dispense(selectedPrescription)" 
+                    class="btn btn-success w-100 py-3 rounded-pill shadow-sm fw-bold d-flex align-items-center justify-content-center gap-2" 
+                    style="background: linear-gradient(135deg, #10b981, #059669); border: none;">
+                    <i class="bi" [ngClass]="!isAllVerified(selectedPrescription) ? 'bi-lock-fill' : 'bi-check2-circle'"></i>
+                    <span>Dispense Medication</span>
+                  </button>
                 </div>
               </div>
-
-              <!-- Bottom Button Row -->
-              <div class="d-flex justify-content-end mt-4 pt-3 border-top border-secondary-subtle">
-                 <button *ngIf="p.status === 'ISSUED'" 
-                   (click)="accept(p.id!)" class="btn btn-primary px-4 py-2 rounded-pill shadow-sm fw-bold">
-                   <i class="bi bi-box-arrow-in-down-right me-2"></i> Accept Request
-                 </button>
-
-                 <button *ngIf="p.status === 'PROCEEDED_TO_PHARMACIST' && !p.isDispensed" 
-                   (click)="dispense(p.id!)" class="btn btn-success px-4 py-2 rounded-pill shadow-sm fw-bold" style="background: linear-gradient(135deg, #10b981, #059669); border: none;">
-                   <i class="bi bi-check2-circle me-2"></i> Dispense Medication
-                 </button>
-              </div>
+            </div>
           </div>
         </div>
 
@@ -152,7 +294,7 @@ import { RouterModule } from '@angular/router';
           <div *ngFor="let p of dispensedRequests" class="apollo-card p-3 d-flex justify-content-between align-items-center border-start border-4 shadow-sm" style="border-left-color: #10b981 !important; border-radius: 8px;">
               <div>
                  <h6 class="fw-bold mb-1 text-dark" style="font-size: 0.95rem;">Prescription #{{ p.id }} <span class="badge ms-2 bg-success-subtle text-success border border-success-subtle rounded-pill">Treatment Active</span></h6>
-                 <small class="text-secondary fw-medium">Patient: {{ p.patient?.email }} <span class="mx-1">•</span> <i class="bi bi-clock"></i> {{ p.dispensedAt | date:'medium' }}</small>
+                 <small class="text-secondary fw-medium">Patient: {{ p.patient?.email || p.patientEmail }} <span class="mx-1">•</span> <i class="bi bi-clock"></i> {{ p.dispensedAt | date:'medium' }}</small>
               </div>
               <button class="btn btn-light rounded-circle border shadow-sm" (click)="downloadPdf(p.id!)"><i class="bi bi-download text-primary"></i></button>
           </div>
@@ -200,54 +342,79 @@ import { RouterModule } from '@angular/router';
     .compact-table td {
       font-size: 0.85rem;
     }
-    .glass-tabs {
-      background: rgba(255, 255, 255, 0.4);
-      backdrop-filter: blur(20px);
-      border-radius: 50px;
-      display: inline-flex;
-      border: 1px solid rgba(255, 255, 255, 0.6);
-      padding: 6px;
-      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+    .clickable-row:hover {
+      background-color: rgba(37, 99, 235, 0.04) !important;
     }
-    .tab-btn {
-      padding: 12px 32px;
-      border-radius: 50px;
-      border: none;
-      background: transparent;
-      color: #1e293b;
-      font-weight: 700;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    .drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 1050;
       display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.95rem;
+      justify-content: flex-end;
+      animation: fadeIn 0.3s ease-out;
     }
-    .tab-btn.active {
-      background: linear-gradient(135deg, #2563eb, #3b82f6);
-      color: white;
-      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
-      transform: scale(1.05);
+    .drawer-content {
+      width: 100%;
+      max-width: 500px;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-left: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: -10px 0 40px rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .btn-primary-glass {
-      background: linear-gradient(135deg, #2563eb, #3b82f6);
-      color: white;
-      border: none;
-      padding: 10px 24px;
-      border-radius: 50px;
-      font-weight: 700;
-      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
-      transition: all 0.3s ease;
+    .drawer-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
     }
-    .btn-primary-glass:hover {
+    .drawer-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .info-card {
+      background: rgba(248, 250, 252, 0.9);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 12px;
+    }
+    .medicine-item-card {
+      transition: all 0.2s ease;
+      background: #ffffff;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+    }
+    .medicine-item-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.05) !important;
+      border-color: rgba(37, 99, 235, 0.3);
+    }
+    .btn-close {
+      background-color: transparent;
+      border: 0;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .transition-all {
+      transition: all 0.2s ease-in-out;
     }
     .animate-fade {
       animation: fadeIn 0.4s ease-out;
     }
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
     }
   `]
 })
@@ -257,16 +424,24 @@ export class PharmacistDashboardComponent implements OnInit {
   error: string | null = null;
   loading: boolean = true;
 
+  // Selected prescription for side drawer
+  selectedPrescription: Prescription | null = null;
+  verifyingItemId: number | null = null;
+
   // Modal State
   isModalOpen = false;
   selectedDrugName = '';
 
   pharmacistName: string = '';
 
+  medicineStockMap: Map<string, { stockQuantity: number, unitPrice: number }> = new Map();
+  isAutoVerifying: boolean = false;
+
   constructor(
     private pharmacistService: PharmacistService,
     private prescriptionService: PrescriptionService,
-    private authService: AuthService
+    private authService: AuthService,
+    private inventoryService: InventoryService
   ) { }
 
   ngOnInit(): void {
@@ -275,9 +450,122 @@ export class PharmacistDashboardComponent implements OnInit {
     this.loadQueue();
   }
 
+  loadInventory() {
+    // 1. Fetch general medicine catalog for unit prices
+    this.pharmacistService.getInventory().subscribe({
+      next: (medicines) => {
+        const pricesMap = new Map<string, number>();
+        if (medicines) {
+          medicines.forEach(m => {
+            if (m.name) {
+              pricesMap.set(m.name.toLowerCase().trim(), m.unitPrice || 0);
+            }
+          });
+        }
+
+        // 2. Fetch pharmacist's batch-wise inventory for actual stock quantities
+        const profile = this.authService.getProfile();
+        if (profile && profile.id) {
+          this.inventoryService.getPharmacistInventory(profile.id).subscribe({
+            next: (inventoryItems) => {
+              this.medicineStockMap.clear();
+              if (inventoryItems) {
+                inventoryItems.forEach(item => {
+                  if (item.drugName) {
+                    const key = item.drugName.toLowerCase().trim();
+                    const existing = this.medicineStockMap.get(key);
+                    const qty = item.quantity || 0;
+                    const price = pricesMap.get(key) || 10.0; // Fallback price to 10.0 INR if not in catalog
+
+                    if (item.status === 'ACTIVE' || item.status === 'LOW_STOCK') {
+                      if (existing) {
+                        existing.stockQuantity += qty;
+                      } else {
+                        this.medicineStockMap.set(key, {
+                          stockQuantity: qty,
+                          unitPrice: price
+                        });
+                      }
+                    }
+                  }
+                });
+              }
+            },
+            error: (err) => {
+              console.error('Failed to load pharmacist inventory:', err);
+            }
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load general inventory catalog:', err);
+      }
+    });
+  }
+
+  getStockInfo(medicineName: string) {
+    if (!medicineName) return null;
+    return this.medicineStockMap.get(medicineName.toLowerCase().trim()) || null;
+  }
+
+  autoVerifyStock(prescription: Prescription) {
+    if (!prescription || !prescription.items || prescription.items.length === 0) return;
+    
+    this.isAutoVerifying = true;
+    this.error = null;
+    
+    // Create a copy of the items queue that need verification
+    const itemsToVerify = [...prescription.items];
+    
+    const verifyNext = () => {
+      if (itemsToVerify.length === 0) {
+        this.isAutoVerifying = false;
+        this.loadInventory(); // Refresh local stock numbers
+        return;
+      }
+      
+      const item = itemsToVerify.shift();
+      if (!item || !item.id) {
+        verifyNext();
+        return;
+      }
+      
+      const stockInfo = this.getStockInfo(item.medicineName);
+      const isAvailable = stockInfo ? (stockInfo.stockQuantity >= item.quantity) : false;
+      
+      this.verifyingItemId = item.id;
+      this.pharmacistService.updateItemAvailability(item.id, isAvailable).subscribe({
+        next: (updatedPrescription) => {
+          this.verifyingItemId = null;
+          
+          // Update prescription state locally
+          const pIndex = this.incomingRequests.findIndex(pr => pr.id === prescription.id);
+          if (pIndex !== -1) {
+            this.incomingRequests[pIndex] = updatedPrescription;
+          }
+          if (this.selectedPrescription && this.selectedPrescription.id === prescription.id) {
+            this.selectedPrescription = updatedPrescription;
+          }
+          
+          // Continue to next item in queue
+          verifyNext();
+        },
+        error: (err) => {
+          this.verifyingItemId = null;
+          console.error(`Failed to auto-verify item ${item.medicineName}:`, err);
+          // Even on failure, continue processing remaining items so we don't block everything
+          verifyNext();
+        }
+      });
+    };
+    
+    verifyNext();
+  }
+
   loadQueue() {
     this.loading = true;
     this.error = null;
+    this.loadInventory();
     this.prescriptionService.getPharmacistQueue().subscribe({
       next: (data) => {
         this.incomingRequests = data.filter(p => p.status === 'ISSUED' || p.status === 'PROCEEDED_TO_PHARMACIST');
@@ -285,6 +573,15 @@ export class PharmacistDashboardComponent implements OnInit {
         this.incomingRequests.sort((a, b) => (b.id || 0) - (a.id || 0));
 
         this.dispensedRequests = data.filter(p => p.status === 'DISPENSED');
+        
+        // If drawer is open, find the updated prescription from the queue and refresh it
+        if (this.selectedPrescription) {
+          const updated = this.incomingRequests.find(pr => pr.id === this.selectedPrescription!.id);
+          if (updated) {
+            this.selectedPrescription = updated;
+          }
+        }
+        
         this.loading = false;
       },
       error: (err) => {
@@ -294,18 +591,61 @@ export class PharmacistDashboardComponent implements OnInit {
     });
   }
 
+  openDrawer(p: Prescription) {
+    this.selectedPrescription = p;
+  }
+
+  closeDrawer() {
+    this.selectedPrescription = null;
+  }
+
+  isAllVerified(p: Prescription): boolean {
+    if (!p || !p.items || p.items.length === 0) return false;
+    return p.items.every(item => item.available === true || item.available === false);
+  }
+
+  toggleAvailability(prescription: Prescription, item: any, available: boolean) {
+    if (!item.id) return;
+    this.verifyingItemId = item.id;
+    this.pharmacistService.updateItemAvailability(item.id, available).subscribe({
+      next: (updatedPrescription) => {
+        this.verifyingItemId = null;
+        
+        // Update local items in incomingRequests list
+        const pIndex = this.incomingRequests.findIndex(pr => pr.id === prescription.id);
+        if (pIndex !== -1) {
+          this.incomingRequests[pIndex] = updatedPrescription;
+        }
+        
+        // Update selectedPrescription
+        if (this.selectedPrescription && this.selectedPrescription.id === prescription.id) {
+          this.selectedPrescription = updatedPrescription;
+        }
+      },
+      error: (err) => {
+        this.verifyingItemId = null;
+        alert('Failed to update stock status: ' + (err.error || 'Unknown error'));
+      }
+    });
+  }
+
   accept(id: number) {
     this.pharmacistService.acceptPrescription(id).subscribe({
-      next: () => {
+      next: (updatedPrescription) => {
         this.loadQueue();
+        if (this.selectedPrescription && this.selectedPrescription.id === id) {
+          this.selectedPrescription = updatedPrescription;
+        }
       },
       error: (err) => alert('Failed to accept: ' + (err.error || 'Unknown error'))
     });
   }
 
-  dispense(id: number) {
-    this.pharmacistService.dispensePrescription(id).subscribe({
+  dispense(p: Prescription) {
+    if (!p.id) return;
+    this.pharmacistService.dispensePrescription(p.id, p.totalCost).subscribe({
       next: () => {
+        this.closeDrawer();
         this.loadQueue();
       },
       error: (err) => alert('Failed to dispense: ' + (err.error || 'Unknown error'))

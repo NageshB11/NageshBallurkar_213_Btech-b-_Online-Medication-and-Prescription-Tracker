@@ -28,8 +28,12 @@ export class PharmacistService {
         return this.http.patch<Prescription>(`${this.apiUrl}/accept/${id}`, {}, { headers: this.getHeaders() });
     }
 
-    dispensePrescription(id: number): Observable<Prescription> {
-        return this.http.patch<Prescription>(`${this.apiUrl}/dispense/${id}`, {}, { headers: this.getHeaders() });
+    dispensePrescription(id: number, cost?: number): Observable<Prescription> {
+        let url = `${this.apiUrl}/dispense/${id}`;
+        if (cost !== undefined) {
+            url += `?cost=${cost}`;
+        }
+        return this.http.patch<Prescription>(url, {}, { headers: this.getHeaders() });
     }
 
     downloadPrescription(id: number): Observable<Blob> {
@@ -56,5 +60,9 @@ export class PharmacistService {
 
     updateInventory(medicine: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/inventory/update`, medicine, { headers: this.getHeaders() });
+    }
+
+    updateItemAvailability(itemId: number, available: boolean): Observable<Prescription> {
+        return this.http.put<Prescription>(`${this.apiUrl}/items/${itemId}/availability?available=${available}`, {}, { headers: this.getHeaders() });
     }
 }

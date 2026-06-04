@@ -169,10 +169,11 @@ public class PrescriptionController {
 
     @PutMapping("/{id}/dispense")
     public ResponseEntity<Prescription> dispensePrescription(@PathVariable("id") Long id,
+            @RequestParam(value = "cost", required = false) Double cost,
             @RequestHeader("Authorization") String token) throws IOException {
         String jwt = token.substring(7);
         String email = jwtUtil.extractUsername(jwt);
-        return ResponseEntity.ok(prescriptionService.dispensePrescription(id, email));
+        return ResponseEntity.ok(prescriptionService.dispensePrescription(id, email, cost));
     }
 
     @GetMapping("/pharmacist-queue")
